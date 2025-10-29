@@ -270,8 +270,25 @@ dialog[open] .content {
 .info-list a { display: inline; }
 /* === End fix === */
 </style>
+<style>
+/* Projects page specific nav adjustments */
+.projects-page header.nav-min {
+  position: sticky;
+  top: 0;
+  z-index: 120;
+}
+
+.projects-page .segment {
+  top: calc(var(--header-h) + 12px) !important;
+  transition: top .25s ease;
+}
+
+.projects-page.projects-nav-hidden .segment {
+  top: 12px !important;
+}
+</style>
 </head>
-<body>
+<body class="projects-page">
 <header class="nav-min see-through" role="banner">
 <nav aria-label="Top navigation" class="container navbar">
 <a class="btn-tab" href="index.html"><span class="lang-en">Home</span><span class="lang-de">Start</span></a>
@@ -668,42 +685,44 @@ window.addEventListener('load', function() {
 });
 </script>
 <script>
-// v16: Fixed header + hide after scrolling far enough
-(function(){
-  var header = document.querySelector('header.nav-min');
-  if (!header) return;
-  var threshold = 600; // px from top before we hide
-  function apply(){
-    var y = window.pageYOffset || document.documentElement.scrollTop || 0;
-    if (y > threshold) header.classList.add('nav-hidden'); else header.classList.remove('nav-hidden');
-  }
-  window.addEventListener('scroll', apply, {passive:true});
-  window.addEventListener('load', apply);
-  apply();
-})();
-</script>
-<script>
 (function() {
   var header = document.querySelector('header.nav-min');
   if (!header) return;
-  var lastY = window.scrollY || 0;
+
+  var body = document.body;
+  var lastY = window.scrollY || document.documentElement.scrollTop || 0;
   var hidden = false;
-  var threshold = 140; // how far you must scroll before hide behavior can trigger
+  var hideStart = Math.max(280, (header.offsetHeight || 64) * 4);
+
+  header.classList.remove('nav-hidden');
+
+  function setHidden(state) {
+    if (hidden === state) return;
+    hidden = state;
+    header.classList.toggle('is-hidden', state);
+    body.classList.toggle('projects-nav-hidden', state);
+  }
 
   function onScroll() {
-    var y = window.scrollY || 0;
-    // Only allow hide when we've gone past threshold and scrolling down
-    if (y > threshold && y > lastY + 6 && !hidden) {
-      header.classList.add('is-hidden');
-      hidden = true;
-    } else if ((y < threshold || y < lastY - 6) && hidden) {
-      // show on scroll up or when returning near top
-      header.classList.remove('is-hidden');
-      hidden = false;
+    var y = window.scrollY || document.documentElement.scrollTop || 0;
+    var delta = y - lastY;
+
+    if (y <= hideStart) {
+      setHidden(false);
+    } else {
+      if (delta > 6) {
+        setHidden(true);
+      } else if (delta < -6) {
+        setHidden(false);
+      }
     }
+
     lastY = y;
   }
+
   window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('load', onScroll);
+  onScroll();
 })();
 </script>
 <!-- Datapack detail modal -->
