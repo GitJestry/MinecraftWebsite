@@ -12,6 +12,7 @@ import {
   verifyAuthenticationResponse,
 } from '@simplewebauthn/server';
 import { totp } from 'otplib';
+import DownloadStore from './download-store.js';
 
 const {
   NODE_ENV,
@@ -44,6 +45,20 @@ const rpName = RP_NAME || 'Minecraft Website Editor';
 const userStore = new Map();
 const credentialStore = new Map();
 const totpSecretStore = new Map();
+const downloadStore = new DownloadStore(new URL('../data/download-counts.json', import.meta.url));
+
+const PROJECT_ID_PATTERN = /^[a-z0-9][a-z0-9-_]{0,63}$/;
+const FILE_ID_PATTERN = /^[a-zA-Z0-9._-]{1,128}$/;
+
+const downloadCatalog = new Map([
+  [
+    'jetpack-datapack',
+    {
+      files: new Set(['jetpack-datapack-1.21.8.zip']),
+      paths: new Set(['downloads/jetpack-datapack-1.21.8.zip']),
+    },
+  ],
+]);
 
 if (TOTP_SHARED_SECRETS) {
   try {
@@ -83,6 +98,8 @@ if (WEBAUTHN_CREDENTIALS) {
 }
 
 const app = express();
+
+await downloadStore.init();
 
 const oidcIssuer = await Issuer.discover(OIDC_ISSUER_URL);
 const oidcClient = new oidcIssuer.Client({
@@ -145,6 +162,13 @@ const loginLimiter = rateLimit({
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   message: { error: 'too_many_requests' },
+});
+
+const downloadRecordLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 120,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
 });
 
 app.use((req, res, next) => {
@@ -429,6 +453,78 @@ app.post('/auth/logout', csrfProtection, (req, res) => {
     });
     return res.status(204).end();
   });
+});
+
+app.get('/analytics/downloads', async (req, res) => {
+  try {
+    const idsParam = typeof req.query.ids === 'string' ? req.query.ids : '';
+    if (!idsParam) {
+      return res.json({ counts: {} });
+    }
+    const ids = idsParam
+      .split(',')
+      .map((value) => value.trim().toLowerCase())
+      .filter((value) => PROJECT_ID_PATTERN.test(value));
+    if (!ids.length) {
+      return res.json({ counts: {} });
+    }
+    const counts = await downloadStore.getCounts(ids);
+    return res.json({ counts });
+  } catch (error) {
+    console.error('Failed to load download statistics', error);
+    return res.status(500).json({ error: 'download_stats_unavailable' });
+  }
+});
+
+app.post('/analytics/downloads', downloadRecordLimiter, async (req, res) => {
+  try {
+    const { projectId: projectIdRaw, fileId: fileIdRaw, path: pathRaw } = req.body || {};
+    if (typeof projectIdRaw !== 'string') {
+      return res.status(400).json({ error: 'invalid_project' });
+    }
+    const projectId = projectIdRaw.trim().toLowerCase();
+    if (!PROJECT_ID_PATTERN.test(projectId)) {
+      return res.status(400).json({ error: 'invalid_project' });
+    }
+    const catalogEntry = downloadCatalog.get(projectId);
+    if (!catalogEntry) {
+      return res.status(404).json({ error: 'project_not_found' });
+    }
+
+    let fileId;
+    if (typeof fileIdRaw === 'string' && fileIdRaw.trim().length > 0) {
+      const trimmed = fileIdRaw.trim();
+      if (!FILE_ID_PATTERN.test(trimmed)) {
+        return res.status(400).json({ error: 'invalid_file' });
+      }
+      if (catalogEntry.files && !catalogEntry.files.has(trimmed)) {
+        return res.status(400).json({ error: 'file_not_registered' });
+      }
+      fileId = trimmed;
+    }
+
+    let downloadPath;
+    if (typeof pathRaw === 'string' && pathRaw.trim().length > 0) {
+      const trimmedPath = pathRaw.trim();
+      if (trimmedPath.length > 256) {
+        return res.status(400).json({ error: 'invalid_path' });
+      }
+      if (catalogEntry.paths && !catalogEntry.paths.has(trimmedPath)) {
+        return res.status(400).json({ error: 'path_not_registered' });
+      }
+      downloadPath = trimmedPath;
+    }
+
+    const result = await downloadStore.record(projectId, {
+      fileId,
+      path: downloadPath,
+    });
+
+    return res.status(202).json({ count: result.count });
+  } catch (error) {
+    console.error('Failed to record download event', error);
+    return res.status(500).json({ error: 'download_record_failed' });
+  }
 });
 
 app.use((err, req, res, next) => {
