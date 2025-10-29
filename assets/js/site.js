@@ -94,6 +94,7 @@
       home: { en: 'Home', de: 'Start' },
       links: { en: 'Links', de: 'Links' },
       projects: { en: 'Projects', de: 'Projekte' },
+      admin: { en: 'Admin', de: 'Admin' },
       imprint: { en: 'Imprint', de: 'Impressum' },
       privacy: { en: 'Privacy', de: 'Datenschutz' }
     };
@@ -105,6 +106,7 @@
         if (href.includes('index')) key='home';
         else if (href.includes('links')) key='links';
         else if (href.includes('projects')) key='projects';
+        else if (href.includes('admin')) key='admin';
         else if (href.includes('impressum')) key='imprint';
         else if (href.includes('datenschutz')) key='privacy';
         if (key && map[key]) {

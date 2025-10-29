@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>Admin · Minecraft In Real Life</title>
+<meta content="Manage projects for Minecraft In Real Life." name="description"/>
+<link href="assets/css/style.css" rel="stylesheet"/>
+<style>
+  .admin-section { margin-top: 3rem; }
+  .admin-section h1 { font-size: clamp(2rem, 5vw, 2.6rem); margin-bottom: 0.5rem; }
+  .admin-section p.lead { max-width: 720px; opacity: 0.8; }
+  .admin-card {
+    background: rgba(255,255,255,0.65);
+    border-radius: 18px;
+    padding: 1.5rem;
+    box-shadow: 0 20px 45px rgba(15,23,42,0.08);
+    backdrop-filter: blur(8px);
+    margin-top: 1.5rem;
+  }
+  @media (prefers-color-scheme: dark) {
+    .admin-card {
+      background: rgba(30,32,40,0.7);
+      box-shadow: 0 20px 45px rgba(0,0,0,0.45);
+    }
+  }
+  .admin-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+    align-items: start;
+  }
+  @media (max-width: 960px) {
+    .admin-layout { grid-template-columns: 1fr; }
+  }
+  .admin-list h2, .admin-form h2 { margin-top: 0; }
+  .project-groups details {
+    background: rgba(255,255,255,0.55);
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    padding: 0.9rem 1.1rem;
+  }
+  @media (prefers-color-scheme: dark) {
+    .project-groups details {
+      background: rgba(255,255,255,0.08);
+    }
+  }
+  .project-groups summary { font-weight: 600; cursor: pointer; }
+  .project-list { list-style: none; padding: 0; margin: 0.75rem 0 0; display: grid; gap: 0.6rem; }
+  .project-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(15,23,42,0.06);
+    border-radius: 10px;
+    padding: 0.65rem 0.8rem;
+  }
+  @media (prefers-color-scheme: dark) {
+    .project-list li { background: rgba(255,255,255,0.06); }
+  }
+  .project-list .project-empty {
+    justify-content: center;
+    background: rgba(15,23,42,0.04);
+    font-style: italic;
+    opacity: 0.75;
+  }
+  @media (prefers-color-scheme: dark) {
+    .project-list .project-empty { background: rgba(255,255,255,0.04); opacity: 0.8; }
+  }
+  .project-list .meta { flex: 1 1 auto; }
+  .project-list .meta .title { font-weight: 600; }
+  .project-list .meta .summary { font-size: 0.9rem; opacity: 0.75; }
+  .project-list .actions { display: flex; gap: 0.4rem; }
+  .project-list button {
+    border: 0;
+    border-radius: 8px;
+    padding: 0.45rem 0.8rem;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .project-list button.edit { background: #2563eb; color: #fff; }
+  .project-list button.delete { background: #ef4444; color: #fff; }
+  .project-list button:hover { opacity: 0.9; }
+  .project-list button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .admin-form form label { display: grid; gap: 0.35rem; font-weight: 600; margin-top: 1rem; }
+  .admin-form form input,
+  .admin-form form textarea,
+  .admin-form form select {
+    border-radius: 10px;
+    border: 1px solid rgba(15,23,42,0.15);
+    padding: 0.6rem 0.75rem;
+    font: inherit;
+    background: rgba(255,255,255,0.85);
+  }
+  @media (prefers-color-scheme: dark) {
+    .admin-form form input,
+    .admin-form form textarea,
+    .admin-form form select {
+      background: rgba(17,24,39,0.75);
+      border-color: rgba(255,255,255,0.18);
+      color: #f8fafc;
+    }
+  }
+  .admin-form form textarea { min-height: 140px; resize: vertical; }
+  .admin-form .field-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+  .admin-form .form-actions { display: flex; gap: 0.75rem; margin-top: 1.5rem; flex-wrap: wrap; }
+  .admin-form .form-actions .btn { border: 0; border-radius: 10px; padding: 0.65rem 1.2rem; cursor: pointer; font-weight: 600; }
+  .admin-form .form-actions .primary { background: #2563eb; color: #fff; }
+  .admin-form .form-actions .secondary { background: rgba(15,23,42,0.08); }
+  .admin-toolbar { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1rem; }
+  .admin-toolbar button {
+    border: 0;
+    border-radius: 999px;
+    padding: 0.55rem 1.1rem;
+    background: rgba(15,23,42,0.1);
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .admin-toolbar .import-label {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 0.55rem 1.1rem;
+    background: rgba(15,23,42,0.1);
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .admin-toolbar button.logout { background: #ef4444; color: #fff; }
+  .admin-toolbar button.primary { background: #2563eb; color: #fff; }
+  .admin-toolbar button:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+  #import-projects { display: none; }
+  .hint { font-size: 0.9rem; opacity: 0.7; margin-top: 0.5rem; }
+  .status-banner {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    background: rgba(37,99,235,0.15);
+    color: #1e3a8a;
+    font-weight: 600;
+    display: none;
+  }
+  .status-banner[data-visible="true"] { display: block; }
+  .status-banner[data-tone="warn"] { background: rgba(248,113,113,0.2); color: #7f1d1d; }
+  .status-banner[data-tone="success"] { background: rgba(34,197,94,0.2); color: #14532d; }
+  @media (prefers-color-scheme: dark) {
+    .status-banner { background: rgba(96,165,250,0.18); color: #bfdbfe; }
+    .status-banner[data-tone="warn"] { background: rgba(248,113,113,0.22); color: #fecaca; }
+    .status-banner[data-tone="success"] { background: rgba(34,197,94,0.22); color: #bbf7d0; }
+  }
+  .backup-card { margin-top: 1.5rem; }
+  .backup-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
+  .backup-actions button,
+  .backup-actions label {
+    border-radius: 999px;
+    padding: 0.55rem 1.1rem;
+    cursor: pointer;
+    font-weight: 600;
+    background: rgba(15,23,42,0.1);
+    border: 0;
+  }
+  .backup-actions input[type="file"] { display: none; }
+  .backup-actions button.primary { background: #2563eb; color: #fff; }
+  .password-card label { display: grid; gap: 0.35rem; font-weight: 600; margin-top: 1rem; }
+  .password-card button { margin-top: 1rem; border: 0; border-radius: 10px; padding: 0.6rem 1.1rem; font-weight: 600; cursor: pointer; background: #2563eb; color: #fff; }
+</style>
+</head>
+<body>
+<header class="nav-min see-through" role="banner">
+<nav aria-label="Top navigation" class="container navbar">
+<a class="btn-tab" href="index.html"><span class="lang-en">Home</span><span class="lang-de">Start</span></a>
+<a class="btn-tab" href="links.html"><span class="lang-en">Links</span><span class="lang-de">Links</span></a>
+<a class="btn-tab" href="projects.html"><span class="lang-en">Projects</span><span class="lang-de">Projekte</span></a>
+<a aria-current="page" class="btn-tab" href="admin.html"><span class="lang-en">Admin</span><span class="lang-de">Admin</span></a>
+</nav>
+</header>
+<div class="viewport"><main class="container">
+<section class="compact admin-section">
+<h1><span class="lang-en">Website editor</span><span class="lang-de">Website-Editor</span></h1>
+<p class="lead"><span class="lang-en">Sign in to add new datapacks and 3D prints without touching code. After logging in you can create, edit or remove projects and export backups.</span><span class="lang-de">Melde dich an, um neue Datapacks und 3D-Drucke ohne Code hinzuzufügen. Nach dem Login kannst du Projekte erstellen, bearbeiten oder löschen und Sicherungen exportieren.</span></p>
+<div aria-live="polite" class="status-banner" id="admin-status"></div>
+<div class="admin-card" id="login-card">
+<h2><span class="lang-en">Admin login</span><span class="lang-de">Admin-Login</span></h2>
+<form id="login-form">
+<label><span class="lang-en">Password</span><span class="lang-de">Passwort</span>
+<input autocomplete="current-password" name="password" required type="password"/>
+</label>
+<button class="btn primary" type="submit"><span class="lang-en">Sign in</span><span class="lang-de">Anmelden</span></button>
+<p class="hint"><span class="lang-en">Default password: <code>admin123</code>. Change it after your first login.</span><span class="lang-de">Standardpasswort: <code>admin123</code>. Bitte nach dem ersten Login ändern.</span></p>
+</form>
+</div>
+<div class="admin-card" id="editor-card" hidden>
+<div class="admin-toolbar" role="toolbar">
+<button class="primary" id="new-project" type="button"><span class="lang-en">New project</span><span class="lang-de">Neues Projekt</span></button>
+<button id="reset-projects" type="button"><span class="lang-en">Reset to defaults</span><span class="lang-de">Auf Standard zurücksetzen</span></button>
+<button id="export-projects" type="button"><span class="lang-en">Export JSON</span><span class="lang-de">JSON exportieren</span></button>
+<label class="import-label" for="import-projects"><span class="lang-en">Import JSON</span><span class="lang-de">JSON importieren</span></label>
+<input accept="application/json" id="import-projects" type="file"/>
+<button class="logout" id="logout-btn" type="button"><span class="lang-en">Log out</span><span class="lang-de">Abmelden</span></button>
+</div>
+<div class="admin-layout">
+<div class="admin-list">
+<h2><span class="lang-en">Projects</span><span class="lang-de">Projekte</span></h2>
+<div class="hint"><span class="lang-en">Select a project to edit it. Drag-and-drop ordering is coming soon.</span><span class="lang-de">Wähle ein Projekt zum Bearbeiten. Sortieren per Drag &amp; Drop folgt später.</span></div>
+<div class="project-groups" id="project-groups"></div>
+</div>
+<div class="admin-form">
+<h2 id="form-title"><span class="lang-en">Add project</span><span class="lang-de">Projekt hinzufügen</span></h2>
+<form id="project-form">
+<input id="project-id" name="id" type="hidden"/>
+<div class="field-row">
+<label><span class="lang-en">Category</span><span class="lang-de">Kategorie</span>
+<select id="project-category" name="category" required>
+<option value="datapacks">Datapack</option>
+<option value="printing">3D Print</option>
+</select>
+</label>
+<label><span class="lang-en">Type label</span><span class="lang-de">Typbezeichnung</span>
+<input id="project-type" name="type" placeholder="Datapack" required type="text"/>
+</label>
+</div>
+<label><span class="lang-en">Title</span><span class="lang-de">Titel</span>
+<input id="project-title" name="title" required type="text"/>
+</label>
+<label><span class="lang-en">Summary</span><span class="lang-de">Kurzbeschreibung</span>
+<textarea id="project-summary" name="summary" rows="2"></textarea>
+</label>
+<label><span class="lang-en">Full description</span><span class="lang-de">Beschreibung</span>
+<textarea id="project-description" name="description"></textarea>
+</label>
+<label><span class="lang-en">Image URL</span><span class="lang-de">Bild-URL</span>
+<input id="project-image" name="image" placeholder="assets/img/logo.jpg" type="url"/>
+</label>
+<label><span class="lang-en">Tags (comma separated)</span><span class="lang-de">Tags (Komma-getrennt)</span>
+<input id="project-tags" name="tags" placeholder="1.21.8, Survival" type="text"/>
+</label>
+<label><span class="lang-en">Links (one per line: Label | URL | download)</span><span class="lang-de">Links (eine Zeile: Beschriftung | URL | download)</span>
+<textarea id="project-links" name="links" placeholder="Download | https://example.com/file.zip | download"></textarea>
+</label>
+<div class="form-actions">
+<button class="btn primary" type="submit"><span class="lang-en">Save project</span><span class="lang-de">Projekt speichern</span></button>
+<button class="btn secondary" id="cancel-edit" type="button"><span class="lang-en">Cancel edit</span><span class="lang-de">Bearbeitung abbrechen</span></button>
+</div>
+</form>
+</div>
+</div>
+<div class="admin-card backup-card">
+<h2><span class="lang-en">Backups</span><span class="lang-de">Backups</span></h2>
+<div class="backup-actions">
+<button class="primary" id="download-backup" type="button"><span class="lang-en">Download backup</span><span class="lang-de">Backup herunterladen</span></button>
+<label for="restore-backup"><span class="lang-en">Restore from file</span><span class="lang-de">Backup wiederherstellen</span></label>
+<input accept="application/json" id="restore-backup" type="file"/>
+</div>
+<p class="hint"><span class="lang-en">Backups contain only project data. Images and downloads remain unchanged.</span><span class="lang-de">Backups enthalten nur Projektdaten. Bilder und Downloads bleiben unverändert.</span></p>
+</div>
+<div class="admin-card password-card">
+<h2><span class="lang-en">Change password</span><span class="lang-de">Passwort ändern</span></h2>
+<form id="password-form">
+<label><span class="lang-en">Current password</span><span class="lang-de">Aktuelles Passwort</span>
+<input autocomplete="current-password" name="current" required type="password"/>
+</label>
+<label><span class="lang-en">New password</span><span class="lang-de">Neues Passwort</span>
+<input autocomplete="new-password" name="next" required type="password"/>
+</label>
+<label><span class="lang-en">Confirm new password</span><span class="lang-de">Neues Passwort bestätigen</span>
+<input autocomplete="new-password" name="confirm" required type="password"/>
+</label>
+<button type="submit"><span class="lang-en">Update password</span><span class="lang-de">Passwort aktualisieren</span></button>
+<p class="hint"><span class="lang-en">Passwords are stored locally on this device only.</span><span class="lang-de">Passwörter werden nur lokal auf diesem Gerät gespeichert.</span></p>
+</form>
+</div>
+</div>
+</section>
+</main></div>
+<footer id="pageend" role="contentinfo">
+<div class="container footer-grid">
+<div class="f-left">
+<a href="impressum.html"><span class="lang-en">Imprint</span><span class="lang-de">Impressum</span></a>
+      ·
+      <a href="datenschutz.html"><span class="lang-en">Privacy</span><span class="lang-de">Datenschutz</span></a>
+</div>
+<div class="f-center">
+<span class="lang-en">NOT AN OFFICIAL MINECRAFT PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH MOJANG OR MICROSOFT.</span>
+<span class="lang-de">KEIN OFFIZIELLES MINECRAFT‑PRODUKT. NICHT GENEHMIGT ODER VERBUNDEN MIT MOJANG ODER MICROSOFT.</span>
+</div>
+<div class="f-right">
+<span class="lang-en">Language:</span><span class="lang-de">Sprache:</span>
+<button class="btn-mini" id="footer-lang-btn" type="button">EN</button>
+</div>
+</div>
+</footer>
+<script>
+// v16: Fixed header + hide after scrolling far enough
+(function(){
+  var header = document.querySelector('header.nav-min');
+  if (!header) return;
+  var threshold = 600;
+  function apply(){
+    var y = window.pageYOffset || document.documentElement.scrollTop || 0;
+    if (y > threshold) header.classList.add('nav-hidden'); else header.classList.remove('nav-hidden');
+  }
+  window.addEventListener('scroll', apply, {passive:true});
+  window.addEventListener('load', apply);
+  apply();
+})();
+</script>
+<script>
+(function() {
+  var header = document.querySelector('header.nav-min');
+  if (!header) return;
+  var lastY = window.scrollY || 0;
+  var hidden = false;
+  var threshold = 140;
+  function onScroll() {
+    var y = window.scrollY || 0;
+    if (y > threshold && y > lastY + 6 && !hidden) {
+      header.classList.add('is-hidden');
+      hidden = true;
+    } else if ((y < threshold || y < lastY - 6) && hidden) {
+      header.classList.remove('is-hidden');
+      hidden = false;
+    }
+    lastY = y;
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+})();
+</script>
+<script src="assets/js/projects-data.js"></script>
+<script src="assets/js/admin.js"></script>
+<script src="assets/js/site.js"></script>
+</body>
+</html>
