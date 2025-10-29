@@ -34,6 +34,11 @@ a { color: var(--link); text-decoration: none; }
 a:hover { text-decoration: underline; }
 a:focus { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 10px; box-shadow: var(--accent-glow); }
 
+/* Default to English content before JavaScript initializes */
+.lang-de { display: none; }
+html[lang="de"] .lang-de { display: initial; }
+html[lang="de"] .lang-en { display: none; }
+
 .container { width: min(1320px, 92%); margin: 0 auto; }
 
 /* Minimal nav (Home) */
@@ -2459,59 +2464,56 @@ footer#pageend { position: relative; margin-top: auto !important; z-index: 100; 
 
 
 
-/* === Uniform sticky footer (fixed height & bottom aligned) === */
+/* === Sticky footer layout (unified across pages) === */
 html, body { height: 100%; }
-body { min-height: 100vh; display: flex; flex-direction: column; }
-
-div.viewport { flex: 1 0 auto; display: block; }
-
-footer#pageend { 
-  margin-top: auto !important; 
-  position: relative; 
-  z-index: 100; 
-  min-height: 0 !important; 
-  padding: 0 !important;
-  border: 0 !important;
-}
-footer#pageend .container { padding-top: 0 !important; padding-bottom: 0 !important; }
-
-/* Single-line, same height everywhere */
-footer#pageend .footer-grid { 
-  display: grid; 
-  grid-template-columns: 1fr auto 1fr; 
-  align-items: center; 
-  gap: .75rem; 
-  height: 56px; 
-  min-height: 56px; 
-  border-top: 1px solid var(--border); 
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-footer#pageend .f-left, 
-footer#pageend .f-center, 
-footer#pageend .f-right { 
-  white-space: nowrap; 
-  overflow: hidden; 
-  text-overflow: ellipsis; 
+body > .viewport {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
-footer#pageend .f-left { justify-self: start; font-size: .9rem; color: var(--muted); }
-footer#pageend .f-center { justify-self: center; font-size: .8rem; color: var(--muted); text-align: center; max-width: 100%; }
-footer#pageend .f-right { justify-self: end; display:flex; align-items:center; gap:.5rem; font-size: .9rem; color: var(--muted); }
+body > .viewport > main {
+  flex: 1 1 auto;
+}
 
-/* Ensure footer links are visible but subdued */
-footer#pageend a { color: var(--muted); text-decoration: none; }
-footer#pageend a:hover { text-decoration: underline; }
+footer#pageend {
+  margin-top: auto !important;
+  position: relative;
+  z-index: 100;
+}
 
+/* Keep footer content neatly aligned */
+footer#pageend .footer-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: .75rem;
+  padding: 1rem 0;
+  border-top: 1px solid var(--border);
+}
 
+footer#pageend .f-left { justify-self: start; }
+footer#pageend .f-center { justify-self: center; text-align: center; font-size: .85rem; color: var(--muted); line-height: 1.3; }
+footer#pageend .f-right { justify-self: end; display: flex; align-items: center; gap: .5rem; }
 
-/* === Layout override: normal flow + sticky footer (unified across pages) === */
-html, body { height: 100%; }
-body { min-height: 100dvh; display: flex; flex-direction: column; }
-header.nav-min, header.nav { position: sticky; top: 0; left: 0; right: 0; z-index: 50; }
-.viewport { position: static !important; flex: 1 0 auto; min-height: auto; overflow: visible; top: unset; bottom: unset; }
-footer { position: static !important; left: auto; right: auto; bottom: auto; background: transparent; backdrop-filter: none; }
-footer#pageend { margin-top: 2rem; border-top: 1px solid var(--border); }
-footer#pageend .footer-grid { margin-top: .5rem; }
+@media (max-width: 720px) {
+  footer#pageend .footer-grid {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  footer#pageend .f-left,
+  footer#pageend .f-center,
+  footer#pageend .f-right {
+    justify-self: center;
+  }
+}
 
 /* Hide any legacy bottom notice UI if present */
 #bottomNotice { display: none !important; }
