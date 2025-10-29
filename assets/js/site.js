@@ -291,6 +291,7 @@
   window.__MIRL = { setLang, getLang };
 
   document.addEventListener('DOMContentLoaded', function(){
+    document.documentElement.setAttribute('lang', getLang());
 // Footer might already be present in HTML; ensure language button in footer is wired
     if (!document.querySelector('#pageend .footer-grid')) { addFooter(); }
     const btn = document.querySelector('#pageend #footer-lang-btn');
