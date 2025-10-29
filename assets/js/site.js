@@ -17,6 +17,14 @@
     updateNavLabels(lang);
     updateDocTitles(lang);
     updateBannerTexts(lang);
+    if (typeof window.CustomEvent === 'function') {
+      document.dispatchEvent(new CustomEvent('langchange', { detail: { lang } }));
+    } else {
+      const evt = document.createEvent('Event');
+      evt.initEvent('langchange', true, true);
+      evt.detail = { lang };
+      document.dispatchEvent(evt);
+    }
   }
   
   // --- i18n strings for small UI bits ---
