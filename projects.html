@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>Projects · Minecraft In Real Life</title>
+<meta content="Datapacks and 3D Printing projects." name="description"/>
+<link href="assets/css/style.css" rel="stylesheet"/>
+<style>
+/* PRIVACY_IMPRINT_MAIN_TEXT_NORMAL */
+main p, main li, .content p, .content li, .main-content p, .main-content li, article p, article li {
+  font-weight: 400 !important;
+  font-style: normal !important;
+  text-transform: none !important;
+}
+
+/* --- Datapack Detail Modal (Modrinth-style) --- */
+.modal { position: fixed; inset: 0; display: none; z-index: 9999; }
+.modal[open] { display: block; }
+.modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.45); backdrop-filter: blur(2px); }
+.modal-content { position: relative; margin: 6vh auto; width: min(1100px, 92vw); background: rgba(255,255,255,.82); color: #111; border-radius: 18px; box-shadow: 0 20px 60px rgba(0,0,0,.35); overflow: hidden; }
+@media (prefers-color-scheme: dark) {
+  .modal-content { background: rgba(22,22,26,.86); color: #f6f6f6; }
+}
+.modal-close { position: absolute; top: 10px; right: 10px; border: 0; background: rgba(0,0,0,.08); border-radius: 999px; width: 36px; height: 36px; font-size: 20px; line-height: 36px; cursor: pointer; }
+.modal-close:hover { transform: scale(1.06); }
+.modal-hero { padding: 24px; background: radial-gradient(1200px 400px at -10% -30%, rgba(0,153,255,.35), transparent), linear-gradient(140deg, rgba(99,102,241,.18), rgba(236,72,153,.10)); border-bottom: 1px solid rgba(0,0,0,.06); }
+.modal-hero .title { font-size: clamp(22px, 2.2vw, 32px); font-weight: 800; letter-spacing: .3px; }
+.modal-hero .muted { opacity: .85; font-size: .95rem; }
+.badges { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .75rem; }
+.badge { display: inline-flex; align-items: center; gap: .4rem; padding: .35rem .6rem; border-radius: 999px; background: rgba(255,255,255,.55); box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); font-size: .85rem; }
+@media (prefers-color-scheme: dark) { .badge { background: rgba(255,255,255,.08); } }
+.badge .dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 2px rgba(34,197,94,.25); }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-top: 14px; }
+.stat { padding: .7rem .8rem; border-radius: 12px; background: rgba(255,255,255,.55); box-shadow: inset 0 0 0 1px rgba(0,0,0,.06); text-align: center; }
+@media (prefers-color-scheme: dark) { .stat { background: rgba(255,255,255,.06); } }
+.stat .label { font-size: .75rem; opacity: .75; }
+.stat .value { font-weight: 700; margin-top: .25rem; }
+.modal-body { display: grid; grid-template-columns: 280px 1fr; gap: 22px; padding: 20px 24px 26px; }
+@media (max-width: 980px) { .modal-body { grid-template-columns: 1fr; } }
+.sidebar { display: grid; align-content: start; gap: 14px; }
+.info-card { background: rgba(255,255,255,.55); border-radius: 14px; padding: 14px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.06); }
+@media (prefers-color-scheme: dark) { .info-card { background: rgba(255,255,255,.06); } }
+.info-card h4 { margin: 0 0 8px; font-size: .9rem; text-transform: uppercase; letter-spacing: .08em; opacity: .8; }
+.info-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: .95rem; }
+.info-list li { display: flex; justify-content: space-between; gap: 10px; }
+.info-list .k { opacity: .7; }
+.info-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.info-tags .chip { background: rgba(0,0,0,.07); border-radius: 999px; padding: .25rem .6rem; font-size: .8rem; }
+@media (prefers-color-scheme: dark) { .info-tags .chip { background: rgba(255,255,255,.12); } }
+.content { min-width: 0; }
+.tabs { display: flex; gap: 6px; border-bottom: 1px solid rgba(0,0,0,.08); position: sticky; top: 0; padding-bottom: 6px; backdrop-filter: blur(6px); }
+.tabs [role="tab"] { appearance: none; border: 0; background: transparent; padding: .6rem .8rem; border-radius: 10px; cursor: pointer; font-weight: 600; opacity: .7; }
+.tabs [role="tab"].active { background: rgba(0,0,0,.06); opacity: 1; }
+@media (prefers-color-scheme: dark) { .tabs [role="tab"].active { background: rgba(255,255,255,.12); } }
+.tabpanels > [role="tabpanel"] { display: none; padding: 14px 4px 0; }
+.tabpanels > [role="tabpanel"].active { display: block; }
+.prose p { line-height: 1.6; margin: .6rem 0; }
+.steps { counter-reset: step; display: grid; gap: 10px; }
+.step { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start; background: rgba(0,0,0,.04); padding: 12px; border-radius: 12px; }
+@media (prefers-color-scheme: dark) { .step { background: rgba(255,255,255,.08); } }
+.step::before { counter-increment: step; content: counter(step); width: 28px; height: 28px; display: inline-grid; place-items: center; border-radius: 999px; background: #111; color:#fff; font-weight: 700; margin-top: 2px; }
+.versions-table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+.versions-table th, .versions-table td { padding: 10px 8px; border-bottom: 1px solid rgba(0,0,0,.08); text-align: left; }
+.gallery { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; }
+.gallery img { width: 100%; height: 180px; object-fit: cover; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
+@media (max-width: 720px) { .gallery { grid-template-columns: repeat(2,1fr); } }
+.modal .btn-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.modal .btn { border-radius: 10px; }
+
+
+/* --- Overrides for Projects layout --- */
+main section.compact { padding-top: 0.5rem !important; }
+
+/* --- 3D Printing grid alignment & size (match Datapacks) --- */
+
+
+/* --- 3D Printing: match Datapacks card size and left alignment --- */
+
+</style>
+<style>
+  /* Page-level visual zoom to ~90% to avoid clipping */
+  .zoom90 { transform: scale(0.9); transform-origin: top center; display: block; }
+</style>
+<style>
+  /* Scale datapack modal (Modrinth-style) to 90% */
+  .modal .modal-content,
+  dialog.modal .modal-content,
+  .modal .content,
+  dialog.modal .content,
+  dialog[open] .content,
+  dialog[open] .modal-content {
+    transform: scale(0.9);
+    transform-origin: top center;
+  }
+</style>
+<style>
+/* --- FIX: prevent overlapping description in 3D Printing cards --- */
+/* Keep a single description block; hide any extra long text node (.muted) inside dp-card */
+.dp-card .meta .muted { display: none !important; }
+/* Ensure the visible description (.quick or .desc) is clamped with ellipsis */
+.dp-card .meta .quick,
+.dp-card .meta .desc {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--proj-desc-lines);
+}
+@supports not (-webkit-line-clamp: 1) {
+  .dp-card .meta .quick,
+  .dp-card .meta .desc {
+    max-height: calc(1.1em * var(--proj-desc-lines));
+    overflow: hidden;
+  }
+}
+</style><style>
+/* === MODAL SIZING FIX: keep popups within viewport, make body scrollable === */
+:root {
+  --modal-vmargin: 6vh;
+  --modal-hgap: 16px;
+  --modal-maxw: 980px;
+}
+
+/* Let overlay scroll as a fallback on ultra-small screens */
+.modal { overflow: auto; }
+
+/* Contain the dialog and turn inner content into a flex column */
+.modal-content {
+  box-sizing: border-box;
+  max-width: min(var(--modal-maxw), calc(100vw - (2 * var(--modal-hgap)) - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px)));
+  max-height: calc(100vh - (2 * var(--modal-vmargin)));
+  /* Prefer dynamic viewport units when supported */
+}
+@supports (height: 100dvh) {
+  .modal-content {
+    max-height: calc(100dvh - (2 * var(--modal-vmargin)) - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
+  }
+}
+
+/* Make the dialog vertically compact and columnar */
+.modal-content {
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  margin: var(--modal-vmargin) auto;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+/* Header should not shrink; content should scroll */
+.modal-hero { flex: 0 0 auto; }
+.modal .content,
+.dialog .content,
+.modal-content .content {
+  flex: 1 1 auto;
+  min-height: 0;            /* enables proper flexbox overflow */
+  overflow: auto;           /* scroll inner area, not the viewport */
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+}
+
+/* Remove any transforms that were shrinking the modal in a way that could cause clipping */
+.modal-content,
+.modal .content,
+dialog.modal .content,
+dialog[open] .content {
+  transform: none !important;
+}
+
+/* Small screens: reduce margins, lean into full-height */
+@media (max-width: 560px) {
+  :root { --modal-vmargin: 2vh; }
+  .modal-content { border-radius: 12px; }
+}
+
+/* Very short viewports (e.g., tiling WMs): tighter margins */
+@media (max-height: 540px) {
+  :root { --modal-vmargin: 2vh; }
+}
+</style><style>
+/* === MODAL REFINEMENT: prevent cut-off by making .modal-body the scrollable flex child === */
+.modal-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-hero { flex: 0 0 auto; }
+
+/* The body is the flex child that grows and scrolls */
+.modal-body {
+  flex: 1 1 auto;
+  min-height: 0;                 /* allows flexbox child to shrink below content height */
+  overflow: auto;                /* scroll inside the dialog, not the viewport */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Keep the inner section free of artificial clamps */
+.modal-body > .content {
+  height: auto;
+  overflow: visible;
+}
+
+/* Media inside the modal should not force horizontal overflow */
+.modal-content img, 
+.modal-content video, 
+.modal-content canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+/* If a grid/gallery exists, keep it contained */
+.modal-content .gallery {
+  overflow: hidden;
+}
+
+/* Ensure the close button is always reachable */
+.modal-close { position: sticky; top: 8px; align-self: flex-end; z-index: 1; }
+</style><style>
+/* === MODAL CLEANUP === */
+/* Make the tab/category bar non-sticky inside the modal, so it scrolls away */
+.modal .tabs {
+  position: static !important;
+  top: auto !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+  border-bottom: none !important;
+  z-index: auto !important;
+}
+
+/* Ensure tab panels take natural flow */
+.modal .tabpanels { position: static !important; }
+
+/* Revert the close button to absolute so it doesn't reserve space at the top */
+.modal-close {
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
+  align-self: auto !important;
+}
+
+/* Remove any decorative top bar or leftover pseudo-elements in the modal */
+.modal-content::before,
+.modal-content::after {
+  content: none !important;
+}
+
+/* Safety: avoid accidental sticky on any descendant marked 'sticky' */
+.modal .sticky { position: static !important; top: auto !important; }
+</style>
+<style>
+/* === Fix: Project Info right-align white text (value column) === */
+.info-list li {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  align-items: start;
+  gap: 10px;
+}
+.info-list li > *:first-child {
+  justify-self: start;
+  text-align: left;
+}
+.info-list li > *:last-child {
+  justify-self: end;
+  text-align: right;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.info-list a { display: inline; }
+/* === End fix === */
+</style>
+</head>
+<body>
+<header class="nav-min see-through" role="banner">
+<nav aria-label="Top navigation" class="container navbar">
+<a class="btn-tab" href="index.html"><span class="lang-en">Home</span><span class="lang-de">Start</span></a>
+<a class="btn-tab" href="links.html"><span class="lang-en">Links</span><span class="lang-de">Links</span></a>
+<a aria-current="page" class="btn-tab" href="projects.html"><span class="lang-en"><span class="lang-en">Projects</span><span class="lang-de">Projekte</span></span><span class="lang-de">Projekte</span></a>
+</nav>
+</header>
+<div class="viewport"><main class="container">
+<div class="zoom90" id="projects-zoom90">
+<section class="compact">
+<div class="scrollbar"><div class="scrollbar-bar" id="pgbar"></div></div>
+<div aria-label="Project categories" class="segment" id="seg" role="tablist">
+<div aria-hidden="true" class="pill" id="pill"></div>
+<a aria-controls="datapacks" data-key="0" href="#datapacks" role="tab"><span class="segicon">⛏️</span>Datapacks</a>
+<a aria-controls="printing" data-key="1" href="#printing" role="tab"><span class="segicon">🖨️</span><span class="lang-en">3D Printing</span><span class="lang-de">3D-Druck</span></a>
+</div>
+<div class="section-block" id="datapacks" role="tabpanel">
+<div class="head">
+<div class="left"><div class="badge-dot"></div>
+<!-- Subcategory navigation (Modrinth-inspired, themed) -->
+</div>
+<div class="count">1 item</div>
+</div>
+<div class="itemgrid">
+<article aria-controls="dp-jetpack" aria-expanded="false" class="card dp-card" data-modal-target="dp-jetpack" data-subcats="movement,utility" role="button" tabindex="0">
+<div class="thumb"><img alt="Jetpack Datapack cover" src="assets/img/logo.jpg"/></div>
+<div class="meta">
+<div class="title">Jetpack Datapack</div>
+<div class="chips"><span class="chip">1.21.8</span><span class="chip">Survival</span></div>
+<div class="quick">Lightweight jetpack for survival. Vanilla-friendly, no mods required.</div>
+</div>
+</article>
+<div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 1</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div>
+<div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 2</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div>
+<div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 3</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div>
+<div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 4</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div>
+<div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 5</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div>
+<div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 6</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div>
+<div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 7</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div>
+<div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 8</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div>
+<div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 9</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div>
+<div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 10</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div>
+<div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 11</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div>
+<div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 12</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div>
+<div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 13</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div>
+<div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 14</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div>
+<div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 15</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div>
+<div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 16</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div>
+<div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 17</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div>
+<div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 18</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section-block" hidden="" id="printing" role="tabpanel">
+<div class="head">
+<div class="left"><div class="badge-dot"></div></div>
+<div class="count">1 item</div>
+</div>
+<div class="itemgrid"><article aria-controls="pr-spool-holder" aria-expanded="false" class="card dp-card" data-modal-target="pr-spool-holder" data-subcats="hardware,utility" role="button" tabindex="0"><div class="thumb"><img alt="Minecraft Pickaxe 3D print thumbnail" loading="lazy" src="assets/img/logo.jpg"/></div><div class="meta"><div class="title">Minecraft Pickaxe</div><div class="chips"><span class="chip">STL</span><span class="chip">No supports</span><span class="chip">0.2mm</span></div><div class="quick">Tool-free spool holder; two printed parts, fits most 1kg rolls.</div><div class="muted">A simple two-part Minecraft pickaxe desk model – prints support-free and snaps together.</div></div></article><div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 1</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div><div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 2</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div><div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 3</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div><div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 4</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div><div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 5</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div><div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 6</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div><div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 7</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div><div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 8</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div><div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 9</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div><div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 10</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div><div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 11</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div><div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 12</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div><div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 13</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div><div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 14</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div><div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 15</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div><div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 16</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div><div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 17</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div><div class="item">
+<div class="thumb"><img alt="" src="assets/img/logo.jpg"/></div>
+<div>
+<div class="title">Placeholder Item 18</div>
+<div class="muted">TBA</div>
+<div class="actions"><span class="btn">Soon</span></div>
+</div>
+</div></div></div>
+<div class="notice" id="license" style="margin-top:1.6rem;">
+<strong>Licensing:</strong> Code is under MIT. Original assets (icons, images, text) are under CC BY-NC-SA 4.0. No redistribution of Minecraft/Mojang assets.
+      </div>
+</section>
+</div>
+</main>
+<footer id="pageend" role="contentinfo">
+<div class="container footer-grid">
+<div class="f-left">
+<a href="impressum.html"><span class="lang-en">Imprint</span><span class="lang-de">Impressum</span></a>
+      ·
+      <a href="datenschutz.html"><span class="lang-en">Privacy</span><span class="lang-de">Datenschutz</span></a>
+</div>
+<div class="f-center">
+<span class="lang-en">NOT AN OFFICIAL MINECRAFT PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH MOJANG OR MICROSOFT.</span>
+<span class="lang-de">KEIN OFFIZIELLES MINECRAFT‑PRODUKT. NICHT GENEHMIGT ODER VERBUNDEN MIT MOJANG ODER MICROSOFT.</span>
+</div>
+<div class="f-right">
+<span class="lang-en">Language:</span><span class="lang-de">Sprache:</span>
+<button class="btn-mini" id="footer-lang-btn" type="button">EN</button>
+</div>
+</div>
+</footer>
+<script>
+window.addEventListener('load', function() {
+  const ids = ['datapacks','printing'];
+  const seg = document.getElementById('seg');
+  const pill = document.getElementById('pill');
+  if (!seg || !pill) return;
+  const links = Array.from(seg.querySelectorAll('a[role="tab"]'));
+
+  function setTab(idx) {
+    const i = Math.max(0, Math.min(idx, ids.length-1));
+    links.forEach((a,j)=>{
+      const active = j===i;
+      a.classList.toggle('active', active);
+      a.setAttribute('aria-selected', active ? 'true' : 'false');
+      const panel = document.getElementById(ids[j]);
+      if (panel) panel.hidden = !active;
+    });
+    const t = links[i];
+    pill.style.left = t.offsetLeft + 'px';
+    pill.style.width = t.offsetWidth + 'px';
+    if (history.replaceState) history.replaceState(null, '', '#'+ids[i]);
+  }
+
+  seg.addEventListener('click', (e) => {
+    const a = e.target.closest('a[role="tab"]');
+    if (!a) return;
+    e.preventDefault();
+    const i = parseInt(a.dataset.key||'0', 10) || 0;
+    setTab(i);
+  });
+
+  // Keyboard support
+  seg.addEventListener('keydown', (e) => {
+    const cur = links.findIndex(a => a.classList.contains('active'));
+    if (e.key === 'ArrowRight') { e.preventDefault(); setTab((cur+1)%links.length); }
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); setTab((cur-1+links.length)%links.length); }
+  });
+
+  const hash = (location.hash||'#datapacks').replace('#','');
+  setTab(Math.max(0, ids.indexOf(hash)));
+  window.addEventListener('resize', ()=> setTab(links.findIndex(a => a.classList.contains('active')) || 0));
+});
+</script>
+<script>
+// v16: Fixed header + hide after scrolling far enough
+(function(){
+  var header = document.querySelector('header.nav-min');
+  if (!header) return;
+  var threshold = 600; // px from top before we hide
+  function apply(){
+    var y = window.pageYOffset || document.documentElement.scrollTop || 0;
+    if (y > threshold) header.classList.add('nav-hidden'); else header.classList.remove('nav-hidden');
+  }
+  window.addEventListener('scroll', apply, {passive:true});
+  window.addEventListener('load', apply);
+  apply();
+})();
+</script>
+<script>
+(function() {
+  var header = document.querySelector('header.nav-min');
+  if (!header) return;
+  var lastY = window.scrollY || 0;
+  var hidden = false;
+  var threshold = 140; // how far you must scroll before hide behavior can trigger
+
+  function onScroll() {
+    var y = window.scrollY || 0;
+    // Only allow hide when we've gone past threshold and scrolling down
+    if (y > threshold && y > lastY + 6 && !hidden) {
+      header.classList.add('is-hidden');
+      hidden = true;
+    } else if ((y < threshold || y < lastY - 6) && hidden) {
+      // show on scroll up or when returning near top
+      header.classList.remove('is-hidden');
+      hidden = false;
+    }
+    lastY = y;
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+})();
+</script>
+<!-- Datapack detail modal -->
+<div aria-hidden="true" aria-labelledby="dp-jetpack-title" class="modal" id="dp-jetpack" role="dialog">
+<div class="modal-backdrop" data-close="dp-jetpack"></div>
+<div class="modal-content" role="document">
+<button aria-label="Close" class="modal-close" data-close="dp-jetpack">×</button>
+<header class="modal-hero">
+<div class="title" id="dp-jetpack-title">Jetpack Datapack</div>
+<div class="muted">Lightweight jetpack for survival. Vanilla-friendly, no mods required.</div>
+<div class="badges">
+<span class="badge"><span class="dot"></span> Stable</span>
+<span class="badge">Minecraft 1.21.8</span>
+<span class="badge">Single &amp; Multiplayer</span>
+<span class="badge">Survival</span>
+</div>
+<div class="hero-actions"><a class="btn primary dl" download="" href="downloads/jetpack-datapack-1.21.8.zip"><svg aria-hidden="true" focusable="false" height="18" viewbox="0 0 24 24" width="18"><path d="M12 3v10m0 0l4-4m-4 4l-4-4M5 21h14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg><span><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></span></a></div><div class="stats">
+<div class="stat"><div class="label">Version</div><div class="value">v1.0.3</div></div>
+<div class="stat"><div class="label">Last updated</div><div class="value">Sep 2025</div></div>
+<div class="stat"><div class="label"><span class="lang-en">Downloads</span><span class="lang-de">Downloads</span></div><div class="value">—</div></div>
+<div class="stat"><div class="label">Size</div><div class="value">~20 KB</div></div>
+</div>
+</header>
+<div class="modal-body">
+<aside class="sidebar">
+<div class="info-card">
+<h4>Project info</h4>
+<ul class="info-list">
+<li><span class="k">Game</span><span>Minecraft Java</span></li>
+<li><span class="k">Type</span><span>Datapack</span></li>
+<li><span class="k">Compat</span><span>1.21.x</span></li>
+<li><span class="k">Requires</span><span>None</span></li>
+<li><span class="k"><span class="lang-en">License</span><span class="lang-de">Lizenz</span></span><span><a href="#license">MIT • CC BY-NC-SA</a></span></li>
+</ul>
+</div>
+<div class="info-card">
+<h4>Tags</h4>
+<div class="info-tags">
+<span class="chip">Survival</span>
+<span class="chip">Lightweight</span>
+<span class="chip">Vanilla+</span>
+</div>
+</div>
+</aside>
+<section class="content">
+<nav aria-label="Jetpack Datapack Tabs" class="tabs" role="tablist">
+<button aria-selected="true" class="active" data-tab="description" role="tab">Description</button>
+<button aria-selected="false" data-tab="gallery" role="tab">Gallery</button>
+<button aria-selected="false" data-tab="changelog" role="tab"><span class="lang-en">Changelog</span><span class="lang-de">Änderungsprotokoll</span></button>
+<button aria-selected="false" data-tab="versions" role="tab">Versions</button>
+</nav>
+<div class="tabpanels">
+<div class="active prose" id="dp-jetpack-description" role="tabpanel">
+<p>Jetpack Datapack adds a balanced flight mechanic powered by fuel crafted in survival. It’s designed to feel native to Minecraft and to work on servers without any mods.</p>
+<p><strong>Highlights:</strong> compact recipes, configurable fuel cost, and zero client-side requirements.</p>
+</div>
+<div class="prose" id="dp-jetpack-installation" role="tabpanel">
+<div class="steps">
+<div class="step"><div></div><div><strong><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></strong> the <em>.zip</em> and keep it zipped.</div></div>
+<div class="step"><div></div><div>Open your world folder and put the file into <code>world/datapacks</code>.</div></div>
+<div class="step"><div></div><div>Start or reload the world with <code>/reload</code>.</div></div>
+<div class="step"><div></div><div>Optional: run <code>/function jetpack:setup</code> to see config options.</div></div>
+</div>
+</div>
+<div id="dp-jetpack-versions" role="tabpanel">
+<table class="versions-table">
+<thead><tr><th>Release</th><th>Minecraft</th><th>Date</th><th>File</th></tr></thead>
+<tbody>
+<tr><td>v1.0.3</td><td>1.21.8</td><td>2025‑09‑10</td><td><a download="" href="downloads/jetpack-datapack-1.21.8.zip"><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></a></td></tr>
+<tr><td>v1.0.2</td><td>1.21.4</td><td>2025‑07‑22</td><td><a download="" href="downloads/jetpack-datapack-1.21.8.zip"><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></a></td></tr>
+</tbody>
+</table>
+</div>
+<div class="prose" id="dp-jetpack-changelog" role="tabpanel">
+<p><strong>v1.0.3</strong> – Balance tweaks, better fuel UI, bugfix for nether portals.</p>
+<p><strong>v1.0.2</strong> – Initial public release for 1.21.4.</p>
+</div>
+<div id="dp-jetpack-gallery" role="tabpanel">
+<div class="gallery">
+<img alt="Jetpack showcase 1" loading="lazy" src="assets/img/logo.jpg"/>
+<img alt="Jetpack showcase 2" loading="lazy" src="assets/img/logo.jpg"/>
+<img alt="Jetpack showcase 3" loading="lazy" src="assets/img/logo.jpg"/>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+</div><div aria-hidden="true" aria-labelledby="pr-spool-holder-title" class="modal" id="pr-spool-holder" role="dialog"><div class="modal-backdrop" data-close="pr-spool-holder"></div><div class="modal-content" role="document"><button aria-label="Close" class="modal-close" data-close="pr-spool-holder">×</button><header class="modal-hero"><div class="title" id="pr-spool-holder-title">Minecraft Pickaxe</div><div class="muted">Simple, sturdy filament spool holder designed for easy printing and assembly.</div><div class="badges"><span class="badge">Print-ready</span><span class="badge">STL included</span><span class="badge">No supports</span><span class="badge">0.2 mm layer</span></div><div class="hero-actions"><a class="btn primary dl" href="#"><svg aria-hidden="true" focusable="false" height="18" viewbox="0 0 24 24" width="18"><path d="M12 3v10m0 0l4-4m-4 4l-4-4M5 21h14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg><span><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></span></a></div><div class="stats"><div class="stat"><div class="label">Version</div><div class="value">v1.0.3</div></div><div class="stat"><div class="label">Last updated</div><div class="value">Sep 2025</div></div><div class="stat"><div class="label"><span class="lang-en">Downloads</span><span class="lang-de">Downloads</span></div><div class="value">—</div></div><div class="stat"><div class="label">Size</div><div class="value">~20 KB</div></div></div></header><div class="modal-body"><aside class="sidebar"><div class="info-card"><h4>Project info</h4><ul class="info-list"><li><span class="k">Print time</span><span>≈ 4–5 h</span></li><li><span class="k">Material</span><span>PLA or PETG</span></li><li><span class="k">Nozzle</span><span>0.4 mm</span></li><li><span class="k">Layer height</span><span>0.20 mm (0.28 quick)</span></li><li><span class="k">Perimeters</span><span>3–4</span></li><li><span class="k">Infill</span><span>15–25% (Gyroid/Cubic)</span></li><li><span class="k">Supports</span><span>None</span></li><li><span class="k">Bed adhesion</span><span>Brim optional (PETG)</span></li><li><span class="k"><span class="lang-en">License</span><span class="lang-de">Lizenz</span></span><a href="#license">MIT • CC BY-NC-SA</a></li></ul></div><div class="info-card"><h4>Tags</h4><div class="info-tags"><span class="chip">STL</span><span class="chip">No supports</span><span class="chip">0.2 mm</span><span class="chip">Hardware: M8</span></div></div></aside><section class="content"><nav aria-label="3D Print Tabs" class="tabs" role="tablist"><button aria-selected="true" class="active" data-tab="description" role="tab">Description</button><button aria-selected="false" class="" data-tab="gallery" role="tab">Gallery</button><button aria-selected="false" class="" data-tab="settings" role="tab">Print Settings</button><button aria-selected="false" data-tab="bom" role="tab">BOM</button><button aria-selected="false" data-tab="files" role="tab">Files</button><button aria-selected="false" data-tab="changelog" role="tab"><span class="lang-en">Changelog</span><span class="lang-de">Änderungsprotokoll</span></button></nav><div class="tabpanels"><div class="active prose" id="pr-spool-holder-description" role="tabpanel"><div style="max-width: 60ch; margin: 0 auto;"><p>A clean, display-friendly take on the classic Minecraft pickaxe. Designed for easy printing and quick assembly.</p><ul><li>Two parts: handle and head – align with a keyed joint.</li><li>Support-free on most FDM printers; recommended 0.2 mm layer height.</li><li>Best in PLA or PETG; a quick color swap gives the iconic look.</li><li>Optional: a dab of CA glue for a permanent fit.</li></ul><p>Print time ~2–4 hours depending on nozzle and layer settings. Scale up to use as a wall prop or down for a desk trinket.</p></div></div><div id="pr-spool-holder-gallery" role="tabpanel"><img alt="Spool holder render" src="assets/img/logo.jpg" style="max-width:100%;height:auto;border-radius:12px;"/><p class="muted">Placeholder render — replace with real photos when ready.</p><div class="gallery"><img alt="Minecraft Pickaxe – Front view" loading="lazy" src="assets/img/logo.jpg"/><img alt="Minecraft Pickaxe – Angle view" loading="lazy" src="assets/img/logo.jpg"/><img alt="Minecraft Pickaxe – Assembly detail" loading="lazy" src="assets/img/logo.jpg"/></div></div><div id="pr-spool-holder-settings" role="tabpanel"><ul class="info-list"><li><div class="k">Material</div><div class="v">PLA or PETG</div></li><li><div class="k">Nozzle</div><div class="v">0.4 mm</div></li><li><div class="k">Layer Height</div><div class="v">0.2 mm (0.28 mm draft OK)</div></li><li><div class="k">Perimeters</div><div class="v">3–4</div></li><li><div class="k">Infill</div><div class="v">15–25% (Gyroid/Cubic)</div></li><li><div class="k">Supports</div><div class="v">None</div></li><li><div class="k">Bed Adhesion</div><div class="v">Brim optional (PETG)</div></li></ul></div><div id="pr-spool-holder-bom" role="tabpanel"><ul class="info-list"><li><div class="k">M8 rod/bolt</div><div class="v">1× ~220–260 mm length</div></li><li><div class="k">M8 nuts</div><div class="v">2×</div></li><li><div class="k">M8 washers</div><div class="v">2×</div></li><li><div class="k">Rubber feet</div><div class="v">4× (optional)</div></li><li><div class="k">608 bearings</div><div class="v">2× (optional, upgrade)</div></li></ul><p class="muted">Dimensions can be adjusted to your printer or spool width.</p></div><div id="pr-spool-holder-files" role="tabpanel"><div class="prose"><ul><li>Spool_Holder_v1.0.stl — ~1.2 MB</li><li>Spool_Holder_Source.step — ~0.8 MB</li></ul></div></div><div id="pr-spool-holder-changelog" role="tabpanel"><ol class="steps"><li><strong>v1.0.1 — 2025-10-28</strong><ul><li>Tweaked tolerances for easier assembly</li><li>Optional bearing upgrade documented</li><li>Minor geometry cleanup</li></ul></li><li><strong>v1.0.0 — 2025-10-20</strong><ul><li>Initial release</li><li>No-support printable design</li></ul></li></ol></div></div></section></div></div></div>
+<script>
+(function(){
+  // Modal open/close
+  function openModal(id) {
+    const m = document.getElementById(id);
+    if (!m) return;
+    m.setAttribute('open','');
+    m.setAttribute('aria-hidden','false');
+    document.body.style.overflow = 'hidden';
+    // Focus first active tab for accessibility
+    const t = m.querySelector('.tabs [role="tab"].active');
+    if (t) t.focus({ preventScroll: true });
+  }
+  function closeModal(id) {
+    const m = document.getElementById(id);
+    if (!m) return;
+    m.removeAttribute('open');
+    m.setAttribute('aria-hidden','true');
+    document.body.style.overflow = '';
+  }
+
+  document.addEventListener('click', (e)=>{
+    const opener = e.target.closest('[data-open]');
+    if (opener) {
+      e.preventDefault();
+      openModal(opener.getAttribute('data-open'));
+      return;
+    }
+    const closer = e.target.closest('[data-close]');
+    if (closer) {
+      e.preventDefault();
+      closeModal(closer.getAttribute('data-close'));
+      return;
+    }
+  });
+
+  document.addEventListener('keydown', (e)=>{
+    if (e.key === 'Escape') {
+      const open = document.querySelector('.modal[open]');
+      if (open) closeModal(open.id);
+    }
+  });
+
+  // Tabs for Jetpack detail
+  (function initTabs(rootId){
+    const root = document.getElementById(rootId);
+    if (!root) return;
+    const tabs = Array.from(root.querySelectorAll('.tabs [role="tab"]'));
+    const panels = {
+      overview: root.querySelector('#dp-jetpack-description'),
+      installation: root.querySelector('#dp-jetpack-installation'),
+      versions: root.querySelector('#dp-jetpack-versions'),
+      changelog: root.querySelector('#dp-jetpack-changelog'),
+      gallery: root.querySelector('#dp-jetpack-gallery')
+    };
+    function setTab(name){
+      tabs.forEach(t=>{
+        const active = t.getAttribute('data-tab') === name;
+        t.classList.toggle('active', active);
+        t.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+      Object.keys(panels).forEach(k=>{
+        panels[k].classList.toggle('active', k===name);
+      });
+    }
+    tabs.forEach(t=> t.addEventListener('click', (e)=>{
+      e.preventDefault();
+      setTab(t.getAttribute('data-tab'));
+    }));
+    // Initialize
+    setTab('overview');
+  })('dp-jetpack');
+})();
+</script>
+<script>
+(function(){
+  const wrap = document.getElementById('datapacks');
+  if (!wrap) return;
+  const btns = Array.from(wrap.querySelectorAll('#dp-subcats .subcat'));
+  const explain = wrap.querySelector('#dp-explain');
+  const grid = wrap.querySelector('.itemgrid');
+  const cards = grid ? Array.from(grid.querySelectorAll('.card')) : [];
+
+  const EXPLAIN = {
+    all: {title:'All datapacks', text:''},
+    utility: {title:'Utility', text:'Helpful tools that add features without changing progression (e.g., backpacks, waypoints, crafting helpers).'},
+    movement: {title:'Movement', text:'Packs that add or tweak ways to move—jetpacks, grappling, dashes—fitting survival play.'},
+    qol: {title:'Quality of Life', text:'Small improvements to the vanilla loop like tweaks to UI, drops, or crafting conveniences.'},
+    combat: {title:'Combat', text:'Adds weapons, abilities, or combat tweaks while keeping vanilla balance in mind.'},
+    worldgen: {title:'Worldgen', text:'Changes terrain/biome generation or structures. Usually world creation required.'}
+  };
+
+  function setExplain(cat){
+    const e = EXPLAIN[cat] || EXPLAIN.all;
+    if (explain){
+      explain.querySelector('.title').textContent = e.title;
+      explain.querySelector('.text').textContent = e.text;
+    }
+  }
+
+  function filter(cat){
+    const c = (cat || 'all').toLowerCase();
+    setExplain(c);
+    if (!cards.length) return;
+    let shown = 0;
+    cards.forEach(card => {
+      const attr = (card.getAttribute('data-subcats') || '').toLowerCase();
+      const match = c === 'all' || attr.split(/[,\s]+/).includes(c);
+      card.style.display = match ? '' : 'none';
+      if (match) shown++;
+    });
+    // update count
+    const count = wrap.querySelector('.count');
+    if (count) count.textContent = shown + (shown === 1 ? ' item' : ' items');
+  }
+
+  function activate(btn){
+    btns.forEach(b=>{
+      const on = b===btn;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-pressed', on? 'true':'false');
+    });
+    const cat = btn.getAttribute('data-cat') || 'all';
+    filter(cat);
+    // hash for deep-linking
+    const url = new URL(window.location);
+    url.hash = '#datapacks:' + cat;
+    history.replaceState(null, '', url);
+  }
+
+  btns.forEach(b => b.addEventListener('click', ()=> activate(b)));
+
+  // Deep link: #datapacks:movement
+  let initial = 'all';
+  if (location.hash && location.hash.startsWith('#datapacks:')){
+    initial = location.hash.split(':')[1] || 'all';
+  }
+  const initBtn = btns.find(b=> (b.getAttribute('data-cat')||'all')===initial) || btns[0];
+  if (initBtn) activate(initBtn);
+})();
+</script>
+<script>
+(function(){
+  // Open/close helpers
+  function openModal(id){
+    const m = document.getElementById(id);
+    if (!m) return;
+    m.setAttribute('open','');
+    m.setAttribute('aria-hidden','false');
+    document.documentElement.style.overflow = 'hidden';
+  }
+  function closeModal(id){
+    const m = document.getElementById(id);
+    if (!m) return;
+    m.removeAttribute('open');
+    m.setAttribute('aria-hidden','true');
+    document.documentElement.style.overflow = '';
+  }
+
+  // Delegated events for close buttons/backdrop
+  document.addEventListener('click', (e)=>{
+    const closeId = e.target && e.target.getAttribute && e.target.getAttribute('data-close');
+    if (closeId) { closeModal(closeId); }
+  });
+
+  // Open when clicking a datapack card
+  document.querySelectorAll('.dp-card[data-modal-target]').forEach(el=>{
+    const target = el.getAttribute('data-modal-target');
+    el.addEventListener('click', ()=> openModal(target));
+    el.addEventListener('keydown', (ev)=>{
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); openModal(target); }
+    });
+  });
+
+  // Tabs controller (update to new names)
+  document.querySelectorAll('.modal').forEach(modal => {
+    const tabs = Array.from(modal.querySelectorAll('.tabs [role="tab"]'));
+    const panels = Array.from(modal.querySelectorAll('.tabpanels [role="tabpanel"]'));
+    function setTab(name){
+      tabs.forEach(t => {
+        const on = t.getAttribute('data-tab') === name;
+        t.classList.toggle('active', on);
+        t.setAttribute('aria-selected', on ? 'true':'false');
+      });
+      panels.forEach(p => {
+        const on = p.id.endsWith(name);
+        p.classList.toggle('active', on);
+      });
+    }
+    tabs.forEach(t => t.addEventListener('click', () => setTab(t.getAttribute('data-tab'))));
+    // default to description
+    setTab('description');
+  });
+})();
+</script>
+</div> <script src="assets/js/site.js"></script>
+</body>
+</html>

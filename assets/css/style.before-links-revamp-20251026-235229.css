@@ -1,0 +1,1525 @@
+
+:root { --hero-title-shift-vh: 20vh; --hero-title-shift: 30%;
+  --bg: #0b0f17;
+  --surface: #0f1420;
+  --panel: #111a2e;
+  --text: #e8eef8;
+  --muted: #9aa4b2;
+  --link: #93c5fd;
+  --border: #1b2436;
+  --accent: #2563eb; /* tuned from logo blue */
+  --accent-strong: #1d4ed8;
+  --accent-dark: #1e40af;
+  --accent-glow: 0 0 0 4px rgba(37, 99, 235, .14);
+}
+
+@font-face {
+  font-family: "MIRL-Minecraft";
+  src: url("../fonts/mc.ttf") format("truetype");
+  font-display: swap;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: "MIRL-Minecraft", monospace;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.36;
+  letter-spacing: .02em;
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+}
+
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+a:focus { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 10px; box-shadow: var(--accent-glow); }
+
+.container { width: min(1320px, 92%); margin: 0 auto; }
+
+/* Minimal nav (Home) */
+header.nav-min {
+  position: sticky; top: 0; z-index: 20;
+  background: rgba(0,0,0,.6);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--border);
+}
+.navbar { display:flex; justify-content:center; gap: 1rem; padding: 1rem 0; }
+
+.navbar a:hover { transform: translateY(-1px); background-color: var(--panel); }
+
+
+/* Full header (Links & Projects) */
+header.nav {
+  position: sticky; top: 0; z-index: 12;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-inner { padding: 1rem 0 .9rem; display: grid; gap:.6rem; }
+.brand { display:grid; place-items:center; gap:.6rem; }
+.brand .logoimg { width: 80px; height: 80px; border-radius: 20px; overflow: hidden; box-shadow: 0 14px 30px rgba(0,0,0,.4); }
+.brand .logoimg img { width:100%; height:100%; display:block; }
+.brand .title { font-size: clamp(1.8rem, 5vw, 2.7rem); margin: .2rem 0 0; }
+.brand .tagline { color:#f2c8c5; font-size: 1rem; opacity: .95; }
+
+.topnav { display:flex; justify-content:center; gap:1rem; list-style:none; margin:.3rem 0 .8rem; padding:0; }
+.topnav a { display:inline-block; padding:.75rem 1.15rem; border-radius:1rem; background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+.topnav a[aria-current="page"] { color: var(--accent); }
+
+
+/* === Themed tab buttons for navbar === */
+.navbar a.btn-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: .70rem 1.1rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(0,0,0,.12));
+  box-shadow: 0 2px 0 rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.05);
+  font-family: "MIRL-Minecraft", monospace;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  font-size: clamp(.94rem, 1.2vw, 1rem);
+  color: var(--text);
+  transition: transform .12s ease, background-color .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.navbar a.btn-tab:hover {
+  transform: translateY(-1px);
+  background-color: var(--panel);
+  border-color: var(--accent-dark);
+  box-shadow: 0 3px 0 rgba(0,0,0,.28), 0 0 0 3px rgba(0,0,0,.08), var(--accent-glow);
+}
+.navbar a.btn-tab[aria-current="page"] {
+  color: var(--text);
+  border-color: var(--accent);
+  box-shadow: 0 2px 0 rgba(0,0,0,.25), 0 0 0 3px rgba(26,77,255,.16);
+}
+.navbar a.btn-tab:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255,255,255,.16), 0 0 0 6px rgba(26,77,255,.28);
+}
+
+/* Optional: keep .topnav styling consistent if used elsewhere */
+.topnav a { font-family: "MIRL-Minecraft", monospace; text-transform: uppercase; letter-spacing: .03em; }
+
+/* === Hero title adjustments for Home === */
+.hero-title .abbr {
+  display:block;
+  font-family: "MIRL-Minecraft", monospace;
+  letter-spacing: -0.01em;
+  line-height: 1.0;
+  font-size: clamp( 3.2rem, 9.2vw, 5.6rem); /* slightly larger than the line below */
+  margin-bottom: .25rem;
+
+  font-weight: 900;}
+.hero-title .long {  font-family: "MIRL-Minecraft", monospace;
+
+  display:block;
+  font-size: clamp(1.68rem, 5.44vw, 3.2rem); /* a tad smaller than before */
+  line-height: 1.02;
+  letter-spacing: .01em;
+}
+
+/* HOME hero */
+.hero-stack { display:grid; place-items:center; text-align:center; gap: 1.6rem; padding: 7rem 0; }
+.hero-title { line-height:1.0; letter-spacing: .01em; 
+  position: relative;
+  z-index: 2;}
+.hero-title .line1 { font-size: clamp(3.2rem, 9vw, 5.4rem); display:block; }
+.hero-title .line2 { font-size: clamp(3.6rem, 10.5vw, 6.2rem); display:block; margin-top:.2rem; letter-spacing: .03em; } /* longer than line1 */
+.logo-wrap { width: min( 479px, 58.14vw); border-radius: 21px; overflow:hidden; box-shadow: 0 17px 34px rgba(0,0,0,.45); 
+  position: relative;
+  z-index: 1;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;}
+.logo-wrap img { width:100%; display:block; image-rendering: -webkit-optimize-contrast; 
+  display: block;
+  margin: 0 auto;
+  height: auto;}
+
+/* Sections */
+main section { padding: 4.4rem 0; }
+.section-head { display:flex; align-items:center; gap:.8rem; margin: 0 0 1.2rem; }
+.section-head .bar { width: 10px; height: 24px; background: var(--accent); border-radius: 5px; }
+.section-head h1, .section-head h2 { margin:0; font-size: 1.8rem; }
+
+/* Panels & cards */
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.6rem; }
+.grid { display:grid; gap: 1.8rem; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.45rem; transition: box-shadow .15s ease, transform .12s ease; }
+.card:hover { box-shadow: 0 16px 28px rgba(0,0,0,.28); transform: translateY(-1px); }
+.card .title { font-size: 1.35rem; margin: 0 0 .55rem; }
+.card .muted { color: var(--muted); font-size: 1.02rem; }
+.actions { margin-top: 1rem; display:flex; gap:.9rem; flex-wrap:wrap; }
+.btn { display:inline-block; padding:.8rem 1.25rem; border:1px solid var(--border); border-radius:1rem; background:#101820; color: var(--text); }
+.btn.primary { background: linear-gradient(180deg, var(--accent), var(--accent-dark)); border-color: var(--accent-dark); }
+.btn.ghost { background: transparent; }
+.btn:focus { outline: 3px solid var(--accent); box-shadow: var(--accent-glow); }
+
+/* Chips */
+.chips { display:flex; gap:.5rem; flex-wrap: wrap; margin-top: .6rem; }
+.chip { display:inline-block; padding:.35rem .6rem; border-radius:.6rem; font-size:.95rem; color:#cfe0ff; background: rgba(0,0,246,.18); border:1px solid rgba(0,0,166,.4); }
+
+/* Segmented tabs (Projects) */
+.segment { background: var(--surface); border:1px solid var(--border); border-radius: 14px; padding: .5rem; display:inline-flex; gap:.4rem; position: relative; }
+.segment a { position: relative; z-index: 1; padding:.7rem 1.1rem; border-radius: 10px; color: var(--text); }
+.segment a.active { color: #fff; }
+.segment .pill { position:absolute; top:6px; bottom:6px; width: 0; left: 6px; border-radius: 10px; background: rgba(0,0,246,.20); border:1px solid rgba(0,0,166,.45); transition: left .18s ease, width .18s ease; }
+
+.section-block { margin-top: 1.6rem; padding: 1.4rem; border-radius: 16px; background: var(--panel); border:1px solid var(--border); }
+.section-block .head { display:flex; align-items:center; justify-content:space-between; gap:.6rem; margin-bottom: 1.1rem; }
+.section-block .left { display:flex; align-items:center; gap:.6rem; }
+.badge-dot { width:12px; height:12px; border-radius: 50%; background: var(--accent-strong); box-shadow: var(--accent-glow); }
+.count { color: var(--muted); }
+
+/* Links page improvements */
+.linkgrid { display:grid; gap: 1.6rem; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); }
+.linkcard { border-radius: 16px; border:1px solid var(--border); background: var(--surface); padding: 1.4rem; display:grid; grid-template-columns: 100px 1fr; gap: 1rem; align-items:center; transition: transform .12s ease, box-shadow .15s ease; }
+.linkcard:hover { transform: translateY(-1px); box-shadow: 0 18px 32px rgba(0,0,0,.28); }
+.brandbadge { width:84px; height:84px; border-radius: 20px; display:grid; place-items:center; box-shadow: 0 10px 20px rgba(0,0,0,.35); }
+.brandbadge svg { width:44px; height:44px; }
+.yt { background: #ff0000; } .tw { background:#9146ff; } .dc { background:#ffffff; }
+.linkmeta { color: var(--muted); margin-top:.2rem; }
+.utils { display:flex; gap:.6rem; margin-top:.8rem; }
+
+.notice { margin: 1rem 0; padding: 1.1rem; border-radius: 16px; border: 1px dashed var(--border); background:#0b0b0f; color: var(--muted); text-align:center; }
+footer { margin-top: 2rem; border-top: 1px solid var(--border); }
+.footer-inner { padding: 1.4rem 0 2rem; display:grid; gap:1rem; grid-template-columns: 1fr; }
+.footer-links { text-align: center; }
+.footer-links a { color: var(--muted); }
+
+.hr { height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent); margin: 1.4rem 0; }
+
+/* Interactivity cursors */
+.navbar a, .topnav a, .btn, .segment a, .linkcard, .card a { cursor: pointer; }
+
+.linkcard:hover .title { text-decoration: underline; }
+.footer-links a:hover { text-decoration: underline; }
+
+
+/* --- Fixed header/footer & scrollable viewport --- */
+:root { --hero-title-shift-vh: 20vh; --hero-title-shift: 30%; --header-h: 68px; --footer-h: 120px; }
+header.nav-min, header.nav { position: fixed; top: 0; left: 0; right: 0; }
+footer { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,.7); backdrop-filter: blur(4px); }
+.viewport { position: fixed; top: var(--header-h); bottom: var(--footer-h); left: 0; right: 0; overflow: auto; }
+.viewport .container { width: min(1320px, 92%); margin: 0 auto; }
+/* remove extra page flow spacing since we use fixed layers */
+main section { padding: 3.2rem 0; }
+.hero-stack { padding: 4rem 0; min-height: calc(100dvh - var(--header-h) - var(--footer-h)); display:grid; place-items:center; }
+.notice { margin: .8rem auto; max-width: 900px; }
+
+/* --- Minimal link tiles --- */
+.linktiles { display:grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+.linktile a { display:flex; align-items:center; gap: .9rem; padding: 1rem 1.2rem; border-radius: 16px;
+  background: var(--surface); border:1px solid var(--border); transition: transform .12s ease, box-shadow .15s ease, background .12s ease; }
+.linktile a:hover { transform: translateY(-1px); background: var(--panel); box-shadow: 0 14px 28px rgba(0,0,0,.28); }
+.linktile .badge { width:56px; height:56px; border-radius: 14px; display:grid; place-items:center; box-shadow: 0 10px 20px rgba(0,0,0,.35); }
+.linktile .badge svg { width:32px; height:32px; }
+.linktile .meta { color: var(--muted); font-size: 1rem; }
+.yt { background:#ff0000; } .tw { background:#9146ff; } .dc { background:#ffffff; }
+
+.itemgrid { display:grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.item { display:grid; grid-template-columns: 84px 1fr; gap: 1rem; align-items:center; padding: .9rem; border-radius: 14px; border:1px solid var(--border); background: var(--surface); }
+.item .thumb { width:84px; height:84px; border-radius: 12px; overflow:hidden; display:grid; place-items:center; background:#0b0b0f; border:1px solid var(--border); }
+.item .thumb img { width:100%; height:100%; object-fit:cover; }
+.item .title { font-size: 1.2rem; margin:0 0 .2rem; }
+.item .muted { color: var(--muted); }
+.item .actions { margin-top:.4rem; }
+.scrollhint { color: var(--muted); font-size:.95rem; margin:.4rem 0 0; }
+
+
+/* --- Home title/logo tighter spacing --- */
+.hero-stack { gap: .3rem !important; }
+.hero-title { margin: 0 0 .1rem !important; }
+.logo-wrap { margin: .1rem auto 0 !important; }
+
+/* --- Sticky segmented control on Projects --- */
+.segment { position: sticky; top: 10px; z-index: 5; box-shadow: 0 10px 22px rgba(0,0,0,.35); }
+
+/* --- Viewport edge fades to hint scroll --- */
+.viewport::before, .viewport::after {
+  content: ""; position: fixed; left: 0; right: 0; height: 22px; pointer-events: none; z-index: 2;
+}
+.viewport::before { top: calc(var(--header-h)); background: linear-gradient(#000, transparent); }
+.viewport::after { bottom: calc(var(--footer-h)); background: linear-gradient(transparent, #000); }
+
+/* --- Custom scrollbar (WebKit) for viewport --- */
+.viewport::-webkit-scrollbar { width: 12px; }
+.viewport::-webkit-scrollbar-track { background: var(--surface); }
+.viewport::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--accent), var(--accent-dark));
+  border-radius: 8px; border: 3px solid var(--surface);
+}
+
+/* --- Item hover polish --- */
+.item { transition: transform .12s ease, box-shadow .15s ease; }
+.item:hover { transform: translateY(-1px); box-shadow: 0 16px 28px rgba(0,0,0,.28); }
+.item .thumb { background: radial-gradient(200px 120px at 30% 20%, rgba(26,77,255,.18), transparent 60%), #0b0b0f; border: 1px solid var(--border); }
+
+
+/* --- Scroll progress bar within viewport --- */
+.scrollbar { position: sticky; top: 0; height: 4px; background: transparent; z-index: 6; }
+.scrollbar-bar { height: 4px; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-dark)); border-radius: 0 2px 2px 0; }
+
+/* explicit center for logo */
+.hero-stack { justify-items: center; align-items: center; text-align: center; }
+.hero-title { margin: 0 0 0 !important; }
+.logo-wrap { margin-left:auto !important; margin-right:auto !important; }
+
+/* Larger minimal link tiles to fill page */
+@media (min-width: 900px) {
+  .linktiles { grid-template-columns: repeat(auto-fit, minmax(520px, 1fr)); gap: 1.2rem; }
+  .linktile.feature { grid-column: span 2; }
+}
+.linktile a { padding: 1.4rem 1.6rem; min-height: 120px; }
+.linktile .badge { width: 96px; height: 96px; border-radius: 18px; }
+.linktile .badge svg { width: 52px; height: 52px; }
+.linktile .title { font-size: 1.6rem; }
+.linktile .meta { font-size: 1.08rem; opacity: .95; }
+.linktile a { border:1px solid rgba(0,0,166,.35); background: linear-gradient(180deg, rgba(0,0,246,.08), transparent 40%), var(--surface); }
+.linktile a:hover { background: linear-gradient(180deg, rgba(0,0,246,.14), transparent 45%), var(--panel); box-shadow: 0 20px 36px rgba(0,0,0,.36); }
+
+/* Transparent header variant (see-through) */
+header.nav-min.see-through { background: transparent !important; backdrop-filter: none !important; }
+header.nav-min.see-through 
+
+/* Home logo/title micro-adjust */
+.hero-stack { gap: .25rem !important; }
+.hero-title .line1 { margin-top: .1rem; }
+.logo-wrap { margin-top: .15rem !important; }
+
+/* Link tiles more minimal & larger fill */
+.linktiles { grid-template-columns: repeat(auto-fit, minmax(560px, 1fr)); gap: 1.4rem; }
+.linktile a { padding: 1.6rem 1.8rem; min-height: 132px; border:1px solid var(--border); background: var(--surface); }
+.linktile a:hover { background: var(--panel); box-shadow: 0 20px 36px rgba(0,0,0,.36); }
+.linktile .badge { width: 104px; height: 104px; border-radius: 20px; }
+.linktile .badge svg { width: 58px; height: 58px; }
+.linktile .title { font-size: 1.7rem; }
+.linktile .meta { font-size: 1.08rem; opacity: .96; }
+
+/* Cleaner hover underlines */
+a:hover .title { text-decoration: underline; }
+
+/* v13 hero tweaks */
+.hero-stack { transform: translateY(-10%); gap: .2rem !important; }
+.hero-title { margin-bottom: 0 !important; }
+
+/* v13 projects segmented */
+.segment { background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(0,0,0,.0));
+  border:1px solid var(--border); border-radius: 16px; padding: .6rem; display:inline-flex; gap:.5rem; position: sticky; top: 10px; z-index: 6;
+  box-shadow: 0 10px 22px rgba(0,0,0,.35); }
+.segment a { position: relative; z-index: 1; padding:.75rem 1.1rem; border-radius: 12px; color: var(--text); display:flex; align-items:center; gap:.55rem; letter-spacing:.02em; }
+.segment a .segicon { width:18px; height:18px; display:inline-block; }
+.segment a.active { color:#fff; }
+.segment .pill { position:absolute; top:8px; bottom:8px; width: 0; left: 8px; border-radius: 12px;
+  background: rgba(26,77,255,.28); border:1px solid rgba(26,77,255,.55); box-shadow: 0 0 0 4px rgba(26,77,255,.12);
+  transition: left .18s ease, width .18s ease; }
+
+/* Section blocks more premium */
+.section-block { margin-top: 1.4rem; padding: 1.2rem; border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255,255,255,.01), rgba(0,0,0,.05)), var(--panel);
+  border:1px solid var(--border); }
+.section-block .head { display:flex; align-items:center; justify-content:space-between; gap:.6rem; margin-bottom: .9rem; }
+.section-block .left { display:flex; align-items:center; gap:.6rem; }
+.badge-dot { width:12px; height:12px; border-radius: 50%; background: var(--accent-strong); box-shadow: 0 0 0 4px rgba(26,77,255,.12); }
+.count { color: var(--muted); }
+
+/* Cards with better thumbnails */
+.itemgrid { display:grid; gap: 1.1rem; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+.item { display:grid; grid-template-columns: 90px 1fr; gap: 1rem; align-items:center; padding: 1rem; border-radius: 16px;
+  border:1px solid var(--border); background: var(--surface); transition: transform .12s ease, box-shadow .15s ease; }
+.item:hover { transform: translateY(-1px); box-shadow: 0 16px 28px rgba(0,0,0,.28); }
+.item .thumb { width:90px; height:90px; border-radius: 12px; overflow:hidden; display:grid; place-items:center;
+  background: radial-gradient(200px 120px at 30% 20%, rgba(26,77,255,.22), transparent 60%), #0b0b0f; border:1px solid var(--border); }
+.item .thumb img { width:100%; height:100%; object-fit:cover; }
+.item .title { font-size: 1.22rem; margin:0 0 .2rem; }
+.item .muted { color: var(--muted); }
+.item .actions { margin-top:.35rem; }
+.chips { display:flex; gap:.45rem; flex-wrap: wrap; margin-top: .5rem; }
+.chip { display:inline-block; padding:.35rem .55rem; border-radius:.55rem; font-size:.92rem; color:#cfe0ff; background: rgba(26,77,255,.16); border:1px solid rgba(26,77,255,.38); }
+
+/* v13 links polish */
+.linktiles { gap: 1.5rem; }
+.linktile a { border:1px solid rgba(0,0,166,.32); }
+
+/* v14 nav styling */
+.navbar { display:flex; justify-content:center; gap: 1.2rem; padding: 1rem 0; }
+.navbar a {
+  background: transparent; border: none; padding: .2rem .1rem;
+  color: var(--text); font-size: 1.25rem; font-weight: 800; letter-spacing: .01em;
+  transition: color .12s ease, transform .12s ease;
+}
+.navbar a:hover { color: var(--link); transform: translateY(-1px); }
+.navbar a[aria-current="page"] { color: var(--accent) !important; }
+
+/* v14 home hero adjustment */
+body.home .hero-title { transform: translateY(15vh) !important; margin-bottom: 0; }
+body.home .hero-stack { gap: 0.9rem; 
+  transform: none !important;}
+
+/* v14 links 3-up centered tiles */
+.linkrow { display:grid; gap: 1.4rem; grid-template-columns: 1fr; }
+@media (min-width: 900px) { .linkrow { grid-template-columns: 1fr 1fr 1fr; } }
+.linktile2 a {
+  display:grid; place-items:center; text-align:center;
+  padding: 2rem 1.2rem; border-radius: 20px; border:1px solid var(--border); background: var(--surface);
+  transition: transform .12s ease, box-shadow .15s ease, background .12s ease, border-color .12s ease;
+  min-height: 240px;
+}
+.linktile2 a:hover { transform: translateY(-2px); background: var(--panel); box-shadow: 0 24px 40px rgba(0,0,0,.36); border-color: rgba(0,0,166,.35); }
+.linktile2 .badge { width: 128px; height: 128px; border-radius: 24px; display:grid; place-items:center; box-shadow: 0 14px 28px rgba(0,0,0,.38); margin-bottom: 1rem; }
+.linktile2 .badge svg { width: 70px; height: 70px; }
+.linktile2 .title { font-size: 1.5rem; }
+.linktile2 .meta { color: var(--muted); margin-top: .2rem; font-size: 1.02rem; }
+
+/* Compact sections (used on Links & Projects without on-page title) */
+main section.compact { padding-top: 2rem; }
+
+
+/* === Links page: bigger icons, cleaner UI, centered row === */
+.links-page .viewport .container { width: min(1420px, 94%); }
+.links-page main section.compact {
+  min-height: calc(100dvh - var(--header-h) - var(--footer-h));
+  display: grid;
+  place-items: center;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+.links-page .linkrow { 
+  display: grid; 
+  gap: 2rem; 
+  grid-template-columns: 1fr; 
+  align-items: center; 
+  justify-items: center;
+}
+@media (min-width: 900px) { 
+  .links-page .linkrow { grid-template-columns: repeat(3, minmax(300px, 1fr)); } 
+}
+.links-page .linktile2 a {
+  background: var(--panel);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 28px;
+  padding: 2.4rem 1.6rem;
+  min-height: 440px;
+  box-shadow: 0 10px 26px rgba(0,0,0,.35);
+}
+.links-page .linktile2 a:hover { 
+  transform: translateY(-3px); 
+  box-shadow: 0 20px 46px rgba(0,0,0,.45);
+}
+.links-page .linktile2 .badge { 
+  width: clamp(160px, 16vw, 240px); 
+  height: clamp(160px, 16vw, 240px); 
+  margin-bottom: 1.2rem; 
+}
+.links-page .linktile2 .badge svg { 
+  width: clamp(96px, 9vw, 150px); 
+  height: clamp(96px, 9vw, 150px); 
+}
+.links-page .linktile2 .title { 
+  font-size: clamp(1.7rem, 2vw, 2.1rem); 
+  line-height: 1.1; 
+}
+.links-page .linktile2 .meta { 
+  margin-top: .4rem; 
+  font-size: clamp(1.02rem, 1.2vw, 1.14rem); 
+  color: var(--muted); 
+}
+
+
+/* === Added to support raster logos in badges === */
+.badge img { 
+  width: clamp(96px, 9vw, 150px); 
+  height: clamp(96px, 9vw, 150px);
+}
+.brandbadge img {
+  width: 44px;
+  height: 44px;
+}
+
+
+/* === Added: raster logo support in link badges === */
+.badge img { 
+  width: 70%;
+  height: 70%;
+  display: block;
+  object-fit: contain;
+}
+.brandbadge img {
+  width: 44px;
+  height: 44px;
+  display: block;
+  object-fit: contain;
+}
+/* === end added === */
+
+
+/* --- Overrides · 2025-10-26 --- */
+
+/* Layout: remove fixed footer + fixed viewport. Let page scroll normally. */
+header.nav-min, header.nav { position: sticky !important; top: 0; left: auto; right: auto; z-index: 10; }
+footer { position: static !important; background: transparent !important; backdrop-filter: none !important; }
+.viewport { position: static !important; top: auto !important; bottom: auto !important; left: auto !important; right: auto !important; overflow: visible !important; }
+.viewport::before, .viewport::after { display: none !important; content: none !important; }
+
+/* Bottom Notice: shows only when footer is in view; stays at bottom of the screen */
+#bottomNotice {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  transform: translateY(110%);
+  transition: transform .22s ease;
+  z-index: 50;
+  max-height: 5vh;
+  padding: .5rem 1rem;
+  display: flex; align-items: center; justify-content: center; gap: .75rem;
+  background: rgba(0,0,0,.85);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(6px);
+  font-size: clamp(.75rem, 1.2vw, .95rem);
+  line-height: 1.25;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+#bottomNotice.show { transform: translateY(0); }
+#bottomNotice .badge { font-weight: 700; }
+#bottomNotice a { text-decoration: underline; }
+
+/* Make segment/tab buttons more visually distinct */
+.segment { background: rgba(255,255,255,.03) !important; border: 1px solid var(--border) !important; padding: .5rem !important; border-radius: 14px !important; }
+.segment a { color: var(--text) !important; opacity: .95; border-radius: 10px !important; padding: .6rem 1rem !important; }
+.segment a:hover { background: rgba(255,255,255,.06) !important; }
+.segment a.active { background: rgba(255,255,255,.10) !important; color: #fff !important; box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); }
+.segment .pill { background: linear-gradient(180deg, rgba(100,130,255,.25), rgba(60,90,255,.18)) !important; box-shadow: inset 0 0 0 1px rgba(100,130,255,.35) !important; }
+
+/* Ensure any sticky progress bar doesn't block clicks */
+.scrollbar { pointer-events: none; }
+.scrollbar * { pointer-events: none; }
+.segment, .segment * { pointer-events: auto; }
+
+/* Improve generic buttons visibility */
+.btn { border-color: rgba(255,255,255,.18) !important; box-shadow: 0 1px 0 rgba(255,255,255,.06) inset, 0 6px 18px rgba(0,0,0,.25) !important; }
+.btn:hover { filter: brightness(1.06); transform: translateY(-1px); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Top nav tabs */
+.navbar .btn-tab { border: 1px solid var(--border); background: rgba(255,255,255,.02); border-radius: 10px; padding: .5rem .9rem; }
+.navbar .btn-tab[aria-current="page"] { background: rgba(255,255,255,.10); color: #fff; }
+
+
+/* --- Bottom Notice · themed --- */
+#bottomNotice {
+  position: fixed; left: 0; right: 0; bottom: 0;
+  transform: translateY(110%);
+  transition: transform .24s ease, opacity .24s ease;
+  z-index: 60;
+  opacity: .98;
+  pointer-events: none;
+}
+#bottomNotice.show { transform: translateY(0); pointer-events: auto; }
+#bottomNotice.hide { transform: translateY(110%); }
+
+#bottomNotice .bn-inner {
+  max-height: 5vh;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: .8rem;
+  padding: .5rem .9rem;
+  margin: 0 auto .6rem;
+  width: min(1320px, 92%);
+  background: linear-gradient(180deg, rgba(18,20,28,.9), rgba(12,14,22,.9));
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06);
+  backdrop-filter: blur(6px);
+  overflow: hidden;
+}
+#bottomNotice .bn-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--accent-strong);
+  box-shadow: var(--accent-glow);
+}
+#bottomNotice .bn-text {
+  font-size: clamp(.75rem, 1.15vw, .95rem);
+  line-height: 1.25;
+  color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#bottomNotice a { color: var(--text); text-decoration: underline; }
+#bottomNotice .bn-close {
+  background: transparent; border: 1px solid var(--border);
+  border-radius: 10px; padding: .25rem .5rem;
+  color: var(--text); cursor: pointer;
+  transition: transform .12s ease, background .12s ease;
+}
+#bottomNotice .bn-close:hover { background: rgba(255,255,255,.06); transform: translateY(-1px); }
+
+/* Remove legacy footer notice styling entirely */
+footer .notice, footer .footer-links { display: none !important; }
+
+
+/* --- Bottom Notice · refined (no black bar, minimal chip) --- */
+#bottomNotice {
+  position: fixed; left: 0; right: 0; bottom: 0;
+  transform: translateY(110%);
+  transition: transform .24s ease, opacity .24s ease;
+  z-index: 60;
+  opacity: 1;
+}
+#bottomNotice.show { transform: translateY(0); }
+
+#bottomNotice .bn-inner {
+  max-height: 5vh;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: .7rem;
+  padding: .4rem .75rem;
+  margin: 0 auto .6rem;
+  width: min(980px, 92%);
+  background: transparent;                 /* no dark bar */
+  border: 1px solid var(--border);         /* subtle outline */
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.05);
+  backdrop-filter: none;                    /* remove blur to avoid 'bar' feeling */
+  overflow: hidden;
+}
+#bottomNotice .bn-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--accent-strong);
+  box-shadow: var(--accent-glow);
+}
+#bottomNotice .bn-text {
+  font-size: clamp(.74rem, 1vw, .92rem);
+  line-height: 1.25;
+  color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#bottomNotice a { color: var(--text); text-decoration: underline; }
+
+/* Ensure nothing else paints a dark footer bar */
+footer { background: transparent !important; }
+
+
+/* Tabs layering */
+.segment { position: relative; z-index: 7; }
+.segment a { position: relative; z-index: 2; }
+.segment .pill { position: absolute; z-index: 1; }
+
+
+/* --- 2025-10-26 · Clean footer edge & themed bottom chip --- */
+
+/* Remove any divider line before the disclaimer on Home/Links */
+footer { margin-top: 0 !important; border-top: 0 !important; }
+main > hr:last-child, .container > hr:last-child, hr.footer-sep { display: none !important; }
+
+/* Bottom Notice: themed to site panel/card */
+#bottomNotice { position: fixed; left: 0; right: 0; bottom: 0; transform: translateY(110%); transition: transform .24s ease; z-index: 70; }
+#bottomNotice.show { transform: translateY(0); }
+#bottomNotice .bn-inner {
+  max-height: 5vh;
+  display: grid; grid-template-columns: auto 1fr; align-items: center; gap: .7rem;
+  width: min(1024px, 92%); margin: 0 auto .7rem; padding: .5rem .9rem;
+  background: var(--panel); /* match site panel */
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.05);
+  overflow: hidden;
+}
+#bottomNotice .bn-dot { width: 10px; height: 10px; border-radius: 3px; background: var(--accent-strong); box-shadow: var(--accent-glow); }
+#bottomNotice .bn-text { font-size: clamp(.74rem, 1vw, .92rem); line-height: 1.25; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#bottomNotice a { color: var(--text); text-decoration: underline; }
+#bottomNotice, #bottomNotice * { pointer-events: auto; } /* ensure links are clickable */
+
+/* Auto-hide top bar when scrolling down */
+header.nav-min, header.nav { position: sticky; top: 0; transition: transform .22s ease; will-change: transform; z-index: 50; }
+header.nav-min.nav-hide, header.nav.nav-hide { transform: translateY(-110%); }
+
+
+/* --- Bottom Notice · 3-col layout where text truncates but links remain visible --- */
+#bottomNotice { position: fixed; left: 0; right: 0; bottom: 0; transform: translateY(110%); transition: transform .24s ease; z-index: 70; }
+#bottomNotice.show { transform: translateY(0); }
+#bottomNotice .bn-inner {
+  max-height: 5vh;
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; column-gap: .8rem;
+  width: min(1100px, 92%); margin: 0 auto .7rem; padding: .5rem .9rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.05);
+  overflow: hidden;
+}
+#bottomNotice .bn-dot { width: 10px; height: 10px; border-radius: 3px; background: var(--accent-strong); box-shadow: var(--accent-glow); }
+#bottomNotice .bn-text {
+  min-width: 0; /* allow shrink */
+  font-size: clamp(.74rem, 1vw, .92rem); line-height: 1.25; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  /* soft fade at the end so links remain legible */
+  -webkit-mask-image: linear-gradient(to right, black 75%, transparent 100%);
+          mask-image: linear-gradient(to right, black 75%, transparent 100%);
+}
+#bottomNotice .bn-links { display: inline-flex; gap: .5rem; align-items: center; white-space: nowrap; flex-shrink: 0; }
+#bottomNotice .bn-link { color: var(--text); text-decoration: underline; }
+@media (max-width: 480px) {
+  #bottomNotice .bn-text strong { display: none; } /* save space on tiny screens */
+  #bottomNotice .bn-links { gap: .4rem; }
+}
+/* Make sure anything below can't add a black bar */
+footer { background: transparent !important; border-top: 0 !important; }
+
+
+/* --- Bottom Notice · transparent container, separated text & links --- */
+#bottomNotice { position: fixed; left: 0; right: 0; bottom: 0; transform: translateY(110%); transition: transform .24s ease; z-index: 80; }
+#bottomNotice.show { transform: translateY(0); }
+#bottomNotice .bn-inner {
+  max-height: 5vh;
+  display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: .7rem;
+  width: min(1100px, 92%); margin: 0 auto .7rem; padding: 0;          /* transparent, no padding "bar" */
+  background: transparent; border: 0; border-radius: 0; box-shadow: none;
+}
+#bottomNotice .bn-dot { width: 9px; height: 9px; border-radius: 2px; background: var(--accent-strong); box-shadow: var(--accent-glow); }
+#bottomNotice .bn-row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: .6rem; min-width: 0; }
+#bottomNotice .bn-text {
+  min-width: 0;
+  font-size: clamp(.72rem, .95vw, .9rem);
+  color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  -webkit-mask-image: linear-gradient(to right, black 75%, transparent 100%);
+          mask-image: linear-gradient(to right, black 75%, transparent 100%);
+}
+#bottomNotice .bn-links { display: inline-flex; gap: .5rem; align-items: center; white-space: nowrap; flex-shrink: 0; }
+#bottomNotice .bn-link {
+  display: inline-block;
+  padding: .25rem .55rem;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: rgba(255,255,255,.03);  /* subtle chip */
+  color: var(--text);
+  text-decoration: none;
+}
+#bottomNotice .bn-link:hover { text-decoration: underline; }
+
+
+/* --- Bottom Notice · split content + marquee, themed, compact --- */
+#bottomNotice {
+  position: fixed; left: 0; right: 0; bottom: 0;
+  transform: translateY(110%);
+  transition: transform .24s ease;
+  z-index: 70;
+  background: transparent !important; /* no black bar */
+}
+#bottomNotice.show { transform: translateY(0); }
+#bottomNotice .bn-inner {
+  max-height: 5vh;
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; column-gap: .8rem;
+  width: min(1100px, 92%); margin: 0 auto .7rem; padding: .45rem .9rem;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.05);
+  overflow: hidden;
+}
+#bottomNotice .bn-dot { width: 10px; height: 10px; border-radius: 3px; background: var(--accent-strong); box-shadow: var(--accent-glow); }
+
+/* Ticker track keeps height tiny but ensures full readability over time */
+#bottomNotice .bn-track {
+  position: relative; min-width: 0; height: 1.25em; overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 10%, #000 90%, transparent 100%);
+          mask-image: linear-gradient(90deg, transparent 0, #000 10%, #000 90%, transparent 100%);
+}
+#bottomNotice .bn-marquee {
+  display: inline-block; white-space: nowrap;
+  animation: bn-scroll 16s linear infinite;
+  font-size: clamp(.74rem, 1vw, .92rem);
+  color: var(--text);
+  padding-right: 2rem;
+}
+@keyframes bn-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-100%); }
+}
+/* Respect reduced motion: stop auto-scroll but allow hover to nudge */
+@media (prefers-reduced-motion: reduce) {
+  #bottomNotice .bn-marquee { animation: none; }
+  #bottomNotice .bn-track:hover .bn-marquee { animation: bn-scroll 24s linear infinite; }
+}
+
+#bottomNotice .bn-links { display: inline-flex; gap: .5rem; align-items: center; white-space: nowrap; flex-shrink: 0; }
+#bottomNotice .bn-link { color: var(--text); text-decoration: underline; }
+
+/* Clean bottom area, no divider lines */
+footer { background: transparent !important; border-top: 0 !important; }
+main > hr:last-child, .container > hr:last-child, hr.footer-sep { display: none !important; }
+
+
+/* --- Bottom Notice · circular ticker + clear disclaimer badge --- */
+#bottomNotice {
+  position: fixed; left: 0; right: 0; bottom: 0;
+  transform: translateY(110%);
+  transition: transform .24s ease;
+  z-index: 70;
+  background: transparent !important; /* no full-width bar */
+}
+#bottomNotice.show { transform: translateY(0); }
+#bottomNotice .bn-inner {
+  max-height: 5vh;
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; column-gap: .8rem;
+  width: min(1100px, 92%); margin: 0 auto .7rem; padding: .45rem .9rem;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.05);
+  overflow: hidden;
+}
+/* Disclaimer badge: visually indicates importance without being a heavy bar */
+.bn-badge {
+  display: inline-flex; align-items: center; gap: .45rem;
+  padding: .25rem .6rem;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(255,160,0,.18), rgba(255,140,0,.12));
+  border: 1px solid rgba(255,200,120,.35);
+  box-shadow: 0 0 0 1px rgba(0,0,0,.14) inset;
+  font-weight: 700; letter-spacing: .02em;
+  color: var(--text);
+}
+.bn-ico { font-size: .95em; }
+.bn-label { font-size: .85rem; text-transform: uppercase; opacity: .92; }
+
+/* Circular ticker */
+.bn-track { position: relative; min-width: 0; height: 1.25em; overflow: hidden; }
+.bn-loop { display: inline-flex; width: max-content; animation: bn-loop var(--bn-speed, 22s) linear infinite; }
+.bn-seg  { flex: 0 0 auto; white-space: nowrap; font-size: clamp(.74rem, 1vw, .92rem); color: var(--text); padding-right: 2rem; }
+
+@keyframes bn-loop {
+  from { transform: translateX(0); }
+  to   { transform: translateX(calc(-1 * var(--bn-shift, 50%))); }
+}
+
+/* Reduced motion: stop auto-scroll, but allow gentle hover-animate if desired */
+@media (prefers-reduced-motion: reduce) {
+  .bn-loop { animation: none; }
+  .bn-track:hover .bn-loop { animation: bn-loop 30s linear infinite; }
+}
+
+.bn-links { display: inline-flex; gap: .5rem; align-items: center; white-space: nowrap; flex-shrink: 0; }
+.bn-link { color: var(--text); text-decoration: underline; }
+
+/* Clean bottom area */
+footer { background: transparent !important; border-top: 0 !important; }
+main > hr:last-child, .container > hr:last-child, hr.footer-sep { display: none !important; }
+
+
+
+/* =========================================================
+   v15 — Home visual polish (minimalistic, no new elements)
+   ---------------------------------------------------------
+   - Subtle layered background on Home
+   - Gradient text for hero title (with safe fallback)
+   - Softer, more modern navbar hover & focus rings
+   - Gentle float for the logo (reduced with prefers-reduced-motion)
+   - Refined spacing and shadows
+   ========================================================= */
+
+:root { --hero-title-shift-vh: 20vh; --hero-title-shift: 30%;
+  /* keep existing palette; just add subtle utility alphas */
+  --alpha-02: rgba(255,255,255,.02);
+  --alpha-04: rgba(255,255,255,.04);
+  --alpha-06: rgba(255,255,255,.06);
+  --alpha-08: rgba(255,255,255,.08);
+}
+
+/* Home background: layered gradients for depth, stays minimal */
+body.home .viewport {
+  background:
+    radial-gradient(1200px 600px at 15% -10%, rgba(37,99,235,.10), transparent 60%),
+    radial-gradient(900px 520px at 110% 10%, rgba(30,64,175,.12), transparent 55%),
+    linear-gradient(180deg, var(--surface), var(--bg) 38%  );
+}
+
+/* Keep the transparent header but give it a whisper of separation */
+header.nav-min.see-through {
+  background: linear-gradient(180deg, rgba(0,0,0,.45), rgba(0,0,0,0)) !important;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--border);
+}
+
+/* Tab buttons: calmer hover + crisp focus ring */
+.navbar .btn-tab {
+  border-radius: 12px;
+  padding: .56rem .9rem;
+  border: 1px solid transparent;
+  transition: transform .18s ease, background-color .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.navbar .btn-tab:hover {
+  background-color: var(--panel);
+  border-color: var(--border);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(0,0,0,.28);
+}
+.navbar .btn-tab:focus-visible {
+  outline: none;
+  box-shadow: var(--accent-glow);
+  border-color: var(--accent);
+}
+
+/* Hero title: subtle gradient text (no extra elements) */
+.hero-title {
+  margin-bottom: .4rem !important;
+}
+.hero-title .abbr,
+.hero-title .long {
+  color: var(--text); /* fallback for older browsers */
+text-shadow: 0 1px 0 rgba(0,0,0,.25), 0 4px 12px rgba(0,0,0,.18);
+}
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .hero-title .abbr,
+  .hero-title .long {
+
+  color: var(--text); /* fallback for older browsers */
+  background-image: linear-gradient(180deg, rgba(232,238,248,1) 0%, rgba(147,197,253,1) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 1px 0 rgba(0,0,0,.25), 0 4px 12px rgba(0,0,0,.18);
+
+  }
+}
+
+
+/* Slight scale on the first line to create hierarchy */
+.hero-title .abbr { transform: translateY(.5px); }
+.hero-title .long { opacity: .96; }
+
+/* Logo card: softer radius, interactive yet calm */
+.logo-wrap {
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  box-shadow: 0 18px 44px rgba(0,0,0,.46), 0 0 0 1px rgba(255,255,255,.015) inset;
+  transform: translateZ(0);
+  transition: transform .3s ease, box-shadow .3s ease, filter .3s ease;
+  will-change: transform;
+}
+.logo-wrap:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 24px 56px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.02) inset;
+  filter: saturate(1.04);
+}
+
+/* Gentle float motion; respects reduced motion */
+@keyframes floaty {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(-6px); }
+  100% { transform: translateY(0); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  body.home .logo-wrap { animation: floaty 14s ease-in-out infinite; }
+}
+
+/* Spacing tune so hero breathes a bit more on large screens */
+@media (min-width: 900px) {
+  .hero-stack { gap: 1.2rem !important; padding: 9rem 0 7.6rem 0; }
+}
+
+/* Typography crispness */
+body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+/* Slightly brighter active tab to help orientation */
+.navbar a[aria-current="page"] {
+  color: var(--text) !important;
+  background-color: rgba(147,197,253,.08);
+  border-color: var(--border);
+}
+
+/* Stronger focus styles for accessibility across the page */
+a:focus-visible, button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(147,197,253,.45);
+  border-color: var(--accent);
+}
+
+/* Ensure footer area still anchors to bottom visually if empty */
+footer#pageend { min-height: var(--footer-h); }
+
+
+/* v15.1 — Remove logo border and inset outline */
+body.home .logo-wrap {
+  border: none !important;
+  box-shadow: 0 18px 44px rgba(0,0,0,.46) !important; /* drop-only */
+}
+body.home .logo-wrap:hover {
+  box-shadow: 0 24px 56px rgba(0,0,0,.5) !important; /* drop-only */
+}
+
+
+/* v15.1 — remove logo border/background as requested */
+.logo-wrap {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: 0 18px 44px rgba(0,0,0,.46); /* keep soft depth only */
+}
+.logo-wrap:hover {
+  box-shadow: 0 24px 56px rgba(0,0,0,.50); /* no inset/border */
+}
+
+
+
+/* =========================================================
+   v16 — User-requested fixes
+   - Remove any border/background/shadow from home logo
+   - Only the logo remains in the home hero (hide title)
+   - Header fixed across all pages; hide when scrolled far
+   ========================================================= */
+
+/* 1) Home hero: show ONLY the logo */
+body.home .hero-title { transform: translateY(var(--hero-title-shift-vh, 20vh)); margin-bottom: 0; }
+body.home .hero-stack { gap: 0.9rem; }
+body.home .logo-wrap {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+  filter: none !important;
+  animation: none !important; /* cancel float from v15 */
+  transform: none !important;
+}
+body.home .logo-wrap img {
+  display: block;
+  width: min(520px, 68vw);
+  height: auto;
+}
+
+/* 2) Header fixed at top on all pages */
+header.nav-min {
+  position: fixed !important;
+  top: 0; left: 0; right: 0;
+  transform: translateY(0);
+  transition: transform .36s ease, opacity .36s ease;
+  will-change: transform;
+}
+
+/* Hide header after scrolling far enough */
+header.nav-min.nav-hidden {
+  transform: translateY(-120%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Ensure content accounts for fixed header height */
+:root { --hero-title-shift-vh: 20vh; --hero-title-shift: 30%; --header-h: 68px; }
+.viewport { padding-top: var(--header-h); }
+
+
+
+/* =========================================================
+   v16 — Home logo simplification + sticky autohide header
+   ---------------------------------------------------------
+   - Remove all borders/shadows/hover/animation from .logo-wrap
+   - Keep only the transparent logo image and the title
+   - Add header autohide behavior styles
+   ========================================================= */
+
+/* Logo must be "just the image" — no chrome around it */
+body.home .logo-wrap {
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  transition: none !important;
+  animation: none !important;
+  transform: none !important;
+}
+body.home .logo-wrap:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+/* Prevent any hover interaction on the logo entirely */
+body.home .logo-wrap,
+body.home .logo-wrap img {
+  pointer-events: none !important;
+}
+
+/* Sticky header present on all pages; allow smooth hide/show */
+header.nav-min {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  transition: transform .28s ease, opacity .28s ease, background-color .3s ease;
+}
+/* Hidden state toggled by JS when scrolling down */
+header.nav-min.is-hidden {
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.hero-stack { position: relative; }
+.hero-stack::before {
+  content: "";
+  position: absolute;
+  inset: -10vmax;
+  background: radial-gradient(ellipse at center, rgba(100, 160, 255, .08), rgba(0,0,0,0) 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+.hero-stack > * { position: relative; z-index: 1; }
+
+
+/* Stronger white glow for hero title */
+.hero-title .abbr,
+.hero-title .long {
+  text-shadow:
+    0 0 10px rgba(255,255,255,.60),
+    0 0 22px rgba(255,255,255,.38),
+    0 2px 0 rgba(0,0,0,.22);
+}
+
+
+/* Prevent scroll on home and links pages */
+.home, .links-page { overflow: hidden; }
+.home .viewport, .links-page .viewport { overflow: hidden; }
+
+/* Ensure hero section fits without extra padding on home */
+.home .hero-stack { padding-top: 0 !important; padding-bottom: 0 !important; min-height: calc(100dvh - var(--header-h) - var(--footer-h)); }
+/* Links page layout: center without scroll */
+.links-page main section.compact { min-height: calc(100dvh - var(--header-h) - var(--footer-h)); padding-top: 0 !important; padding-bottom: 0 !important; }
+
+
+/* Heavier/“fat” styling for MC_IRL */
+.hero-title .abbr { font-weight: 900; }
+
+@supports (-webkit-text-stroke: 1px white) {
+  .hero-title .abbr {
+    -webkit-text-stroke: 1.2px rgba(255,255,255,.55);
+    text-shadow:
+      0 0 8px rgba(255,255,255,.45),
+      0 0 18px rgba(255,255,255,.30);
+  }
+}
+@supports not (-webkit-text-stroke: 1px white) {
+  .hero-title .abbr {
+    /* Stroke fallback using multi-offset shadows to “thicken” the text */
+    text-shadow:
+      -1px  0   rgba(255,255,255,.75),
+       1px  0   rgba(255,255,255,.75),
+       0   -1px rgba(255,255,255,.75),
+       0    1px rgba(255,255,255,.75),
+      -1px -1px rgba(255,255,255,.60),
+       1px -1px rgba(255,255,255,.60),
+      -1px  1px rgba(255,255,255,.60),
+       1px  1px rgba(255,255,255,.60),
+       0    0   10px rgba(255,255,255,.45);
+  }
+}
+
+
+/* --- BEGIN MIRL hero/logo/title fix --- */
+/* =========================================================
+   Hero / Logo / Title fit fix — 2025‑10‑26
+   - Keeps the logo crisp (never upscales above its native 160px)
+   - Displays it at ~80% of native size (≈128px) per your note
+   - Tightens vertical rhythm & right-sizes the title
+   ========================================================= */
+.hero-stack { 
+  gap: 0.75rem !important; 
+  padding: clamp(5rem, 12vh, 8rem) 0 !important; 
+  justify-items: center !important; 
+  align-items: center !important; 
+  text-align: center !important;
+}
+
+.hero-title { 
+  margin: 0 !important; 
+  line-height: 1.02; 
+}
+.hero-title .abbr { 
+  font-size: clamp(2.6rem, 8vw, 4.2rem) !important; 
+  letter-spacing: -0.01em; 
+  font-weight: 900; 
+}
+.hero-title .long { 
+  font-size: clamp(1.3rem, 4.2vw, 2.2rem) !important; 
+  letter-spacing: 0.01em; 
+  font-weight: 700;
+}
+
+/* Logo wrapper: never exceed 128px (≈80% of 160px native). 
+   Clamp keeps it responsive but crisp, and avoids blurry upscaling. */
+.logo-wrap { 
+  width: clamp(96px, 20vw, 128px) !important; 
+  aspect-ratio: 1 / 1; 
+  border-radius: 18px; 
+  overflow: hidden; 
+  box-shadow: 0 12px 24px rgba(0,0,0,.24);
+  margin: .35rem auto 0 !important; 
+}
+.logo-wrap img { 
+  width: 100% !important; 
+  height: auto !important; 
+  image-rendering: auto !important;           /* let the browser choose best quality */
+  display: block; 
+  margin: 0; 
+}
+
+/* Optional: soften any previous hover/animation that made the logo feel “floaty” */
+.logo-wrap:hover { 
+  transform: none !important; 
+  box-shadow: 0 12px 24px rgba(0,0,0,.24) !important; 
+  filter: none !important; 
+}
+
+/* Small phones: keep things tidy */
+@media (max-width: 380px) {
+  .hero-stack { gap: .6rem !important; }
+  .logo-wrap { width: 96px !important; }
+  .hero-title .abbr { font-size: clamp(2.2rem, 9vw, 3.6rem) !important; }
+  .hero-title .long { font-size: clamp(1.1rem, 4vw, 1.9rem) !important; }
+}
+/* --- END MIRL hero/logo/title fix --- */
+
+
+/* --- BEGIN MIRL order/center fix --- */
+/* =========================================================
+   Hero order + centering tweak — 2025‑10‑26
+   Requirement: Title above the logo, centered. 
+   Note: Logo stays smaller (~80% of native) via .logo-wrap sizing from previous patch.
+   ========================================================= */
+.hero-stack {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.75rem !important;           /* keep vertical rhythm tight */
+  text-align: center !important;
+}
+
+/* Make sure the title is above and the logo comes next */
+.hero-title { order: 1 !important; }
+.logo-wrap  { order: 2 !important; }
+
+/* Keep logo crisp and smaller than the raw asset (max 128px as before) */
+.logo-wrap { 
+  width: clamp(96px, 20vw, 128px) !important;
+  margin-top: .35rem !important;
+}
+.logo-wrap img { 
+  width: 100% !important; 
+  height: auto !important; 
+  display: block;
+}
+
+@media (max-width: 380px) {
+  .hero-stack { gap: .6rem !important; }
+  .logo-wrap { width: 96px !important; }
+}
+/* --- END MIRL order/center fix --- */
+
+
+/* --- BEGIN MIRL home hero centering/title-above fix --- */
+/* =========================================================
+   HOME HERO — clean centering + title above logo (final)
+   - Neutralize old vertical shifts (translateY)
+   - Stack title above a centered, smaller logo
+   - Ensure crisp rendering and balanced rhythm
+   ========================================================= */
+body.home .hero-title { 
+  transform: none !important;      /* kill previous translateY hacks */
+  margin: 0 !important;
+}
+
+body.home .hero-stack {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  gap: 0.7rem !important;
+  min-height: calc(100dvh - var(--header-h, 64px) - var(--footer-h, 56px)) !important;
+  padding: clamp(56px, 12vh, 88px) 0 !important;
+}
+
+/* Keep the source logo smaller on home (≈80% native cap) and perfectly centered */
+body.home .logo-wrap { 
+  width: clamp(96px, 20vw, 128px) !important;
+  margin: .25rem auto 0 !important;
+  padding: 0 !important;
+}
+body.home .logo-wrap img {
+  width: 100% !important;
+  height: auto !important;
+  image-rendering: pixelated;       /* crisp pixel logo */
+}
+
+/* Tidy up sizes so the title doesn't overpower the logo */
+body.home .hero-title .abbr { font-size: clamp(2.6rem, 8.6vw, 4.4rem) !important; letter-spacing: -0.01em; font-weight: 900; }
+body.home .hero-title .long { font-size: clamp(1.25rem, 4.4vw, 2.2rem) !important; letter-spacing: 0.01em; font-weight: 700; }
+
+/* Very small screens */
+@media (max-width: 380px) {
+  body.home .hero-stack { gap: .55rem !important; }
+  body.home .logo-wrap { width: 96px !important; }
+}
+/* --- END MIRL home hero centering/title-above fix --- */
+
+
+/* --- BEGIN MIRL bigger logo tweak --- */
+/* =========================================================
+   HOME HERO — Bigger Logo (requested)
+   - Make the logo much larger on desktop while staying responsive.
+   - Keeps title above and everything centered.
+   ========================================================= */
+body.home .logo-wrap {
+  /* From 128px cap -> up to 288px cap, with larger vw scaling */
+  width: clamp(144px, 24vw, 288px) !important;
+}
+/* Keep it readable on very small phones too */
+@media (max-width: 380px) {
+  body.home .logo-wrap { width: 120px !important; }
+}
+/* --- END MIRL bigger logo tweak --- */
+
+
+/* --- BEGIN MIRL 4x logo size override --- */
+/* =========================================================
+   HOME HERO — 4× larger logo (user request)
+   Previous cap: 128px -> New cap: 512px (4×)
+   Keep it responsive with clamp and center it.
+   ========================================================= */
+body.home .logo-wrap { 
+  width: clamp(256px, 40vw, 512px) !important;  /* 4× cap */
+  margin: .35rem auto 0 !important;
+}
+body.home .logo-wrap img {
+  width: 100% !important; height: auto !important;
+  image-rendering: pixelated;    /* crisp pixels at larger size */
+}
+/* --- END MIRL 4x logo size override --- */
+
+/* --- BEGIN large logo and text adjustment --- */
+/* === User requested: 4x logo size, double text, move text down 5% === */
+body.home .logo-wrap {
+  width: clamp(200px, 40vw, 512px) !important;
+}
+
+body.home .hero-title .abbr {
+  font-size: clamp(5.2rem, 17vw, 8.8rem) !important;
+}
+body.home .hero-title .long {
+  font-size: clamp(2.5rem, 8.8vw, 4.4rem) !important;
+}
+
+body.home .hero-title {
+  transform: translateY(5vh) !important;
+}
+/* --- END large logo and text adjustment --- */
+
+
+/* --- BEGIN MIRL hero BIG variant --- */
+/* =========================================================
+   HOME HERO — 4x logo, 2x title, title shifted down by 5vh
+   ========================================================= */
+body.home .hero-title {
+  transform: translateY(5vh) !important;   /* move the title down by ~5% of screen height */
+  margin: 0 !important;
+}
+/* 2x title sizes */
+body.home .hero-title .abbr { 
+  font-size: clamp(5.2rem, 17vw, 8.8rem) !important; 
+  letter-spacing: -0.012em; font-weight: 900;
+}
+body.home .hero-title .long { 
+  font-size: clamp(2.5rem, 8.8vw, 4.4rem) !important; 
+  letter-spacing: 0.012em; font-weight: 700;
+}
+
+/* 4x logo size (was ~128px cap → now up to 512px). 
+   Uses pixelated scaling so it stays crisp/blocky instead of blurry. */
+body.home .logo-wrap { 
+  width: clamp(240px, 30vw, 512px) !important; 
+  margin: .35rem auto 0 !important;
+}
+body.home .logo-wrap img { 
+  image-rendering: pixelated !important;
+  width: 100% !important; height: auto !important; display: block;
+}
+
+/* Add a bit more breathing room between title and logo at these sizes */
+body.home .hero-stack { gap: 1.1rem !important; }
+/* --- END MIRL hero BIG variant --- */
+
+
+/* --- BEGIN MIRL 4x logo / 1.5x title / dots / shift --- */
+/* =========================================================
+   User tweak — 4× logo, 1.5× title, +10vh title shift,
+   and decorative blue dots around the long title.
+   Date: 2025‑10‑26
+   ========================================================= */
+
+/* 1) Title down by ~10% of viewport height */
+body.home .hero-title {
+  transform: translateY(10vh) !important;
+}
+
+/* 2) Make the MC_IRL title 1.5× larger */
+body.home .hero-title .abbr {
+  font-size: clamp(3.9rem, 13vw, 6.6rem) !important;  /* was ~2.6–4.4rem */
+  letter-spacing: -0.012em;
+  font-weight: 900;
+}
+body.home .hero-title .long {
+  font-size: clamp(1.875rem, 6.6vw, 3.3rem) !important; /* was ~1.25–2.2rem */
+  letter-spacing: 0.012em;
+  font-weight: 700;
+  position: relative;
+  display: inline-block; /* so the dots hug the text neatly */
+  padding: 0 .55rem;     /* breathing room for dots */
+}
+
+/* 3) Add dark‑blue dots before/after "Minecraft In Real Life" */
+body.home .hero-title .long::before,
+body.home .hero-title .long::after {
+  content: '•';
+  color: var(--accent-dark, #1e40af);
+  opacity: .95;
+  font-weight: 900;
+  margin: 0 .35rem;
+  transform: translateY(-0.05em);
+}
+
+/* 4) 4× the current logo size (from 128px cap -> 512px cap), but keep responsive */
+body.home .logo-wrap {
+  width: clamp(256px, 40vw, 512px) !important; /* ≈4× previous 128px cap */
+  margin: .35rem auto 0 !important;
+}
+body.home .logo-wrap img {
+  width: 100% !important;
+  height: auto !important;
+  image-rendering: pixelated; /* keep that crisp retro look */
+}
+/* --- END MIRL 4x logo / 1.5x title / dots / shift --- */
+
+
+/* --- BEGIN MIRL move up 10vh/5vh --- */
+/* =========================================================
+   Positional tweak — move title up 10vh, logo up 5vh
+   ========================================================= */
+body.home .hero-title { 
+  transform: translateY(-10vh) !important;
+}
+body.home .logo-wrap {
+  transform: translateY(-5vh) !important;
+}
+/* --- END MIRL move up 10vh/5vh --- */
+
+/* Move homepage title down by ~4% of viewport height as requested */
+.hero-title { margin-top: 4vh !important; }
+
+/* === Custom override: Move homepage title down by ~4% of viewport height === */
+body.home .hero-title {
+  transform: none !important;
+  margin-top: 4vh !important;
+}
+
+/* === Custom override: Reduce hero title white glow by ~60% === */
+body.home .hero-title .abbr,
+body.home .hero-title .long {
+  /* Reduced white glow alphas from .60 -> .24 and .38 -> .15 */
+  text-shadow:
+    0 0 10px rgba(255,255,255,.24),
+    0 0 22px rgba(255,255,255,.15),
+    0 2px 0 rgba(0,0,0,.22) !important;
+}
+
+/* === Custom overrides (2025-10-26) === */
+
+/* Make home background similar to links page (darker, no bright radial accents) */
+body.home .viewport {
+  background: var(--bg) !important;
+}
+
+/* Nudge MC_IRL (.abbr) glow up by ~10% from previous reduction */
+body.home .hero-title .abbr {
+  /* Previously: 0 0 10px rgba(255,255,255,.24), 0 0 22px rgba(255,255,255,.15) */
+  text-shadow:
+    0 0 10px rgba(255,255,255,.264),
+    0 0 22px rgba(255,255,255,.165),
+    0 2px 0 rgba(0,0,0,.22) !important;
+}
+
+/* === Reduce center hero glow on Home (~60% dimmer) === */
+body.home .hero-stack::before {
+  background: radial-gradient(ellipse at center, rgba(100, 160, 255, .032), rgba(0,0,0,0) 60%) !important;
+}
+
+
+/* === MIRL: Home hero title tweaks (2025-10-26) === */
+/* Remove decorative dots around the long title text */
+body.home .hero-title .long::before,
+body.home .hero-title .long::after {
+  content: none !important;
+  margin: 0 !important;
+}
+
+/* Make the long title a bit darker and slightly blurry */
+body.home .hero-title .long {
+  color: #cbd5e1 !important; /* darker than original #e8eef8 */
+  -webkit-filter: blur(0.4px);
+  filter: blur(0.4px);
+}
+
+
+/* === MIRL update 2025‑10‑26: Implement user-specified Home tweaks === */
+
+/* 1) Top bar: remove blue glow highlight on hover (keep rest of hover + current page styling) */
+header .navbar .btn-tab:hover {
+  /* keep subtle lift & panel background but no accent glow */
+  box-shadow: 0 3px 0 rgba(0,0,0,.28) !important;
+  border-color: var(--border) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Do not change focus-visible so keyboard users keep a visible focus ring */
+header .navbar .btn-tab:focus-visible {
+  outline: none;
+  /* keep the focus ring for accessibility */
+}
+
+/* 2) Home hero: use plain Minecraft font, remove shiny effects */
+body.home .hero-title,
+body.home .hero-title .abbr,
+body.home .hero-title .long {
+  font-family: "MIRL-Minecraft", monospace !important;
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+  -webkit-text-fill-color: currentColor !important;
+  text-shadow: none !important;
+  -webkit-text-stroke: 0 !important;
+  filter: none !important;
+}
+
+/* Colors: MC_IRL stays white; “Minecraft In Real Life” becomes gray */
+body.home .hero-title .abbr { color: #ffffff !important; }
+body.home .hero-title .long { color: #9ca3af !important; } /* tailwind gray-400-ish */
+
+/* 3) Reduce Home title size to ~85% for better balance with centered logo */
+body.home .hero-title .abbr { font-size: clamp(2.72rem, 7.82vw, 4.76rem) !important; }
+body.home .hero-title .long { font-size: clamp(1.428rem, 4.624vw, 2.72rem) !important; }
+
+/* 4) Center the hero area and slightly shrink the logo as well */
+body.home .hero-stack { text-align: center; }
+body.home .logo-wrap {
+  width: min(420px, 52vw) !important; /* ~87% of previous max */
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* Neutralize earlier vertical shifts to keep everything visually centered */
+body.home .hero-title { transform: none !important; margin: 2vh 0 1.5vh !important; }
+
+/* End of MIRL update */
