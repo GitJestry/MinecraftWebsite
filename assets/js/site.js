@@ -107,7 +107,17 @@
         else if (href.includes('projects')) key='projects';
         else if (href.includes('impressum')) key='imprint';
         else if (href.includes('datenschutz')) key='privacy';
-        if (key && map[key]) a.textContent = map[key][lang];
+        if (key && map[key]) {
+          const labels = map[key];
+          const enNodes = a.querySelectorAll('.lang-en');
+          const deNodes = a.querySelectorAll('.lang-de');
+          if (enNodes.length || deNodes.length) {
+            enNodes.forEach(node => { node.textContent = labels.en; });
+            deNodes.forEach(node => { node.textContent = labels.de; });
+          } else {
+            a.textContent = labels[lang] || labels.en;
+          }
+        }
       });
     }
   }
@@ -127,8 +137,18 @@
   }
 
   function updateLegalLinkLabels(lang){
-    document.querySelectorAll('a[href$="impressum.html"]').forEach(a=> a.textContent = lang==='en' ? 'Imprint' : 'Impressum');
-    document.querySelectorAll('a[href$="datenschutz.html"]').forEach(a=> a.textContent = lang==='en' ? 'Privacy' : 'Datenschutz');
+    const setLabel = (anchor, en, de) => {
+      const enEl = anchor.querySelector('.lang-en');
+      const deEl = anchor.querySelector('.lang-de');
+      if (enEl || deEl) {
+        if (enEl) enEl.textContent = en;
+        if (deEl) deEl.textContent = de;
+      } else {
+        anchor.textContent = lang === 'en' ? en : de;
+      }
+    };
+    document.querySelectorAll('a[href$="impressum.html"]').forEach(a=> setLabel(a, 'Imprint', 'Impressum'));
+    document.querySelectorAll('a[href$="datenschutz.html"]').forEach(a=> setLabel(a, 'Privacy', 'Datenschutz'));
   }
 
   function updateBannerTexts(lang){
