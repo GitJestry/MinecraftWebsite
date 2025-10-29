@@ -2537,6 +2537,12 @@ body.legal-page > .viewport > main {
 
 /* === Legal pages === */
 body.legal-page > .viewport {
+  position: static;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  overflow: visible;
   min-height: calc(100vh - 80px);
   padding: clamp(2rem, 6vh, 3.5rem) 0 clamp(3rem, 8vh, 4.6rem);
 }
@@ -2611,10 +2617,14 @@ body.legal-page main section { padding: 0; }
   margin: 0;
   font-size: 1.02rem;
   color: var(--text);
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
 .legal-section p {
   margin: 0 0 .85rem;
   line-height: 1.52;
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
 .legal-section p:last-child,
 .legal-definition div:last-child dd:last-child {
@@ -2638,6 +2648,12 @@ body.legal-page main section { padding: 0; }
   display: grid;
   gap: .5rem;
   line-height: 1.5;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+.legal-points li {
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
 .legal-columns .legal-points {
   padding-left: 1.2rem;
@@ -2657,6 +2673,31 @@ body.legal-page .footer-grid .f-left,
 body.legal-page .footer-grid .f-right,
 body.legal-page .footer-grid .f-center {
   text-align: center;
+}
+body.legal-page header.nav-min,
+body.legal-page header.nav {
+  position: sticky !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, .7);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--border);
+  z-index: 18;
+}
+body.legal-page header.nav-min.see-through {
+  background: rgba(0, 0, 0, .65) !important;
+  backdrop-filter: blur(6px) !important;
+}
+body.legal-page .viewport::before,
+body.legal-page .viewport::after {
+  display: none;
+}
+body.legal-page footer#pageend {
+  position: static;
+  margin-top: clamp(2rem, 5vh, 3rem);
+  background: rgba(0, 0, 0, .62);
+  backdrop-filter: blur(6px);
 }
 @media (min-width: 640px) {
   .legal-columns {
