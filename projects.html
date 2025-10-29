@@ -739,10 +739,10 @@ window.addEventListener('load', function() {
 <span class="badge">Single &amp; Multiplayer</span>
 <span class="badge">Survival</span>
 </div>
-<div class="hero-actions"><a class="btn primary dl" download="" href="downloads/jetpack-datapack-1.21.8.zip"><svg aria-hidden="true" focusable="false" height="18" viewbox="0 0 24 24" width="18"><path d="M12 3v10m0 0l4-4m-4 4l-4-4M5 21h14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg><span><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></span></a></div><div class="stats">
+<div class="hero-actions"><a class="btn primary dl" data-download-file="jetpack-datapack-1.21.8.zip" data-track-download="jetpack-datapack" download="" href="downloads/jetpack-datapack-1.21.8.zip"><svg aria-hidden="true" focusable="false" height="18" viewbox="0 0 24 24" width="18"><path d="M12 3v10m0 0l4-4m-4 4l-4-4M5 21h14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg><span><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></span></a></div><div class="stats">
 <div class="stat"><div class="label">Version</div><div class="value">v1.0.3</div></div>
 <div class="stat"><div class="label">Last updated</div><div class="value">Sep 2025</div></div>
-<div class="stat"><div class="label"><span class="lang-en">Downloads</span><span class="lang-de">Downloads</span></div><div class="value">—</div></div>
+<div class="stat"><div class="label"><span class="lang-en">Downloads</span><span class="lang-de">Downloads</span></div><div class="value" data-download-count="jetpack-datapack">—</div></div>
 <div class="stat"><div class="label">Size</div><div class="value">~20 KB</div></div>
 </div>
 </header>
@@ -791,8 +791,8 @@ window.addEventListener('load', function() {
 <table class="versions-table">
 <thead><tr><th>Release</th><th>Minecraft</th><th>Date</th><th>File</th></tr></thead>
 <tbody>
-<tr><td>v1.0.3</td><td>1.21.8</td><td>2025‑09‑10</td><td><a download="" href="downloads/jetpack-datapack-1.21.8.zip"><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></a></td></tr>
-<tr><td>v1.0.2</td><td>1.21.4</td><td>2025‑07‑22</td><td><a download="" href="downloads/jetpack-datapack-1.21.8.zip"><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></a></td></tr>
+<tr><td>v1.0.3</td><td>1.21.8</td><td>2025‑09‑10</td><td><a data-download-file="jetpack-datapack-1.21.8.zip" data-track-download="jetpack-datapack" download="" href="downloads/jetpack-datapack-1.21.8.zip"><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></a></td></tr>
+<tr><td>v1.0.2</td><td>1.21.4</td><td>2025‑07‑22</td><td><a data-download-file="jetpack-datapack-1.21.8.zip" data-track-download="jetpack-datapack" download="" href="downloads/jetpack-datapack-1.21.8.zip"><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></a></td></tr>
 </tbody>
 </table>
 </div>
@@ -1005,6 +1005,94 @@ window.addEventListener('load', function() {
     // default to description
     setTab('description');
   });
+})();
+</script>
+<script>
+(function(){
+  const ENDPOINT = '/analytics/downloads';
+  const downloadLinks = Array.from(document.querySelectorAll('[data-track-download]'));
+  if (!downloadLinks.length) {
+    return;
+  }
+
+  const projectIds = new Set();
+
+  function toPayload(link, projectId) {
+    const fileId = (link.getAttribute('data-download-file') || '').trim();
+    const href = (link.getAttribute('href') || '').trim();
+    const payload = { projectId };
+    if (fileId) {
+      payload.fileId = fileId;
+    }
+    if (href) {
+      payload.path = href;
+    }
+    return JSON.stringify(payload);
+  }
+
+  function recordDownload(link, projectId) {
+    const body = toPayload(link, projectId);
+    if (navigator.sendBeacon) {
+      const blob = new Blob([body], { type: 'application/json' });
+      navigator.sendBeacon(ENDPOINT, blob);
+      return;
+    }
+    fetch(ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+      keepalive: true,
+    }).catch(() => {});
+  }
+
+  downloadLinks.forEach((link) => {
+    const projectId = (link.getAttribute('data-track-download') || '').trim();
+    if (!projectId) {
+      return;
+    }
+    projectIds.add(projectId);
+    const handler = () => recordDownload(link, projectId);
+    link.addEventListener('click', (event) => {
+      if (event.button === 0) {
+        handler();
+      }
+    });
+    link.addEventListener('auxclick', (event) => {
+      if (event.button === 1) {
+        handler();
+      }
+    });
+  });
+
+  if (!projectIds.size) {
+    return;
+  }
+
+  const query = encodeURIComponent(Array.from(projectIds).join(','));
+  fetch(`${ENDPOINT}?ids=${query}`)
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error('Failed to load download stats');
+      }
+      return response.json();
+    })
+    .then((payload) => {
+      const counts = payload?.counts || {};
+      document.querySelectorAll('[data-download-count]').forEach((el) => {
+        const projectId = (el.getAttribute('data-download-count') || '').trim();
+        const value = counts[projectId];
+        if (typeof value === 'number' && value >= 0) {
+          el.textContent = value.toLocaleString();
+        } else {
+          el.textContent = '—';
+        }
+      });
+    })
+    .catch(() => {
+      document.querySelectorAll('[data-download-count]').forEach((el) => {
+        el.textContent = '—';
+      });
+    });
 })();
 </script>
 </div> <script src="assets/js/site.js"></script>
