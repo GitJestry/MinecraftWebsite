@@ -2518,6 +2518,22 @@ footer#pageend .f-right { justify-self: end; display: flex; align-items: center;
 /* Hide any legacy bottom notice UI if present */
 #bottomNotice { display: none !important; }
 
+/* --- Legal pages: allow footer to follow full document height --- */
+body.legal-page {
+  height: auto !important;
+  min-height: 100vh;
+}
+
+body.legal-page > .viewport {
+  flex: 1 0 auto;
+  display: block;
+  min-height: auto;
+}
+
+body.legal-page > .viewport > main {
+  flex: none;
+}
+
 
 /* === Legal pages === */
 body.legal-page .viewport .container { width: min(1080px, 92%); }
