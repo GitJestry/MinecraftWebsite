@@ -612,6 +612,26 @@ window.addEventListener('load', function() {
   const pill = document.getElementById('pill');
   if (!seg || !pill) return;
   const links = Array.from(seg.querySelectorAll('a[role="tab"]'));
+  let raf = null;
+
+  function updatePill() {
+    const active = links.find(a => a.classList.contains('active'));
+    if (!active) return;
+    pill.style.left = active.offsetLeft + 'px';
+    pill.style.width = active.offsetWidth + 'px';
+  }
+
+  function schedulePillUpdate() {
+    if (typeof requestAnimationFrame === 'function') {
+      if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        raf = null;
+        updatePill();
+      });
+    } else {
+      updatePill();
+    }
+  }
 
   function setTab(idx) {
     const i = Math.max(0, Math.min(idx, ids.length-1));
@@ -622,10 +642,8 @@ window.addEventListener('load', function() {
       const panel = document.getElementById(ids[j]);
       if (panel) panel.hidden = !active;
     });
-    const t = links[i];
-    pill.style.left = t.offsetLeft + 'px';
-    pill.style.width = t.offsetWidth + 'px';
-    if (history.replaceState) history.replaceState(null, '', '#'+ids[i]);
+    schedulePillUpdate();
+    if (history.replaceState && ids[i]) history.replaceState(null, '', '#'+ids[i]);
   }
 
   seg.addEventListener('click', (e) => {
@@ -645,7 +663,8 @@ window.addEventListener('load', function() {
 
   const hash = (location.hash||'#datapacks').replace('#','');
   setTab(Math.max(0, ids.indexOf(hash)));
-  window.addEventListener('resize', ()=> setTab(links.findIndex(a => a.classList.contains('active')) || 0));
+  window.addEventListener('resize', schedulePillUpdate);
+  document.addEventListener('langchange', schedulePillUpdate);
 });
 </script>
 <script>
