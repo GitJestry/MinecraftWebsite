@@ -319,22 +319,25 @@
   window.__MIRL = { setLang, getLang };
 
   document.addEventListener('DOMContentLoaded', function(){
-    document.documentElement.setAttribute('lang', getLang());
+    const lang = getLang();
+    document.documentElement.setAttribute('lang', lang);
 // Footer might already be present in HTML; ensure language button in footer is wired
     if (!document.querySelector('#pageend .footer-grid')) { addFooter(); }
     const btn = document.querySelector('#pageend #footer-lang-btn');
     if (btn) {
-      btn.textContent = getLang().toUpperCase();
+      btn.textContent = lang.toUpperCase();
       btn.addEventListener('click', ()=>{
         const next = getLang()==='en' ? 'de' : 'en';
         setLang(next);
         btn.textContent = next.toUpperCase();
       });
     }
-    applyLang(getLang());
+    applyLang(lang);
     localizeCommonUI();
-    updateNavLabels(getLang());
-    updateLegalLinkLabels(getLang());
+    updateNavLabels(lang);
+    updateLegalLinkLabels(lang);
+    updateDocTitles(lang);
+    updateBannerTexts(lang);
     patchLinkCards();
   });
 
