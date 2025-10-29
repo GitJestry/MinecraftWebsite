@@ -278,8 +278,12 @@ dialog[open] .content {
   z-index: 120;
 }
 
+.projects-page {
+  --projects-nav-offset: var(--header-h, 0px);
+}
+
 .projects-page .segment {
-  top: calc(var(--header-h) + 12px) !important;
+  top: calc(var(--projects-nav-offset, 0px) + 12px) !important;
   transition: top .25s ease;
 }
 
@@ -683,6 +687,42 @@ window.addEventListener('load', function() {
   window.addEventListener('resize', schedulePillUpdate);
   document.addEventListener('langchange', schedulePillUpdate);
 });
+</script>
+<script>
+(function() {
+  var body = document.body;
+  if (!body || !body.classList.contains('projects-page')) return;
+
+  var header = body.querySelector('header.nav-min');
+  if (!header) return;
+
+  var raf = null;
+
+  function setOffset() {
+    raf = null;
+    var rect = header.getBoundingClientRect();
+    var height = rect && rect.height ? rect.height : header.offsetHeight || 0;
+    body.style.setProperty('--projects-nav-offset', height + 'px');
+  }
+
+  function requestSetOffset() {
+    if (raf !== null) return;
+    if (typeof requestAnimationFrame === 'function') {
+      raf = requestAnimationFrame(setOffset);
+    } else {
+      setOffset();
+    }
+  }
+
+  if (typeof ResizeObserver === 'function') {
+    var observer = new ResizeObserver(requestSetOffset);
+    observer.observe(header);
+  }
+
+  window.addEventListener('load', requestSetOffset);
+  window.addEventListener('resize', requestSetOffset);
+  requestSetOffset();
+})();
 </script>
 <script>
 (function() {
