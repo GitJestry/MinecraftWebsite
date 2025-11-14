@@ -8,6 +8,244 @@
 <meta content="Datapacks and 3D Printing projects." name="description"/>
 <link href="assets/css/style.css" rel="stylesheet"/>
 <style>
+/* --- Editor mode: card tools & add cards --- */
+html.editor-mode-on .editor-card-tools {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.editor-card-tools {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity .15s ease, transform .15s ease;
+  z-index: 3;
+}
+
+.editor-card-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 3px 7px;
+  font-size: 0.8rem;
+  line-height: 1;
+  cursor: pointer;
+  background: rgba(15,23,42,0.72);
+  color: #e5e7eb;
+  box-shadow: 0 4px 10px rgba(15,23,42,0.55);
+}
+
+.editor-card-btn:hover {
+  background: rgba(37,99,235,0.9);
+}
+
+.editor-card-btn--delete:hover {
+  background: rgba(220,38,38,0.9);
+}
+
+.card.dp-card,
+.card.pr-card {
+  position: relative;
+}
+
+.editor-add-card {
+  border: 1px dashed var(--border);
+  background: linear-gradient(135deg, rgba(59,130,246,0.06), rgba(15,23,42,0.02));
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 0.85rem;
+  align-items: center;
+  padding: 0.9rem 1rem;
+  border-radius: 18px;
+}
+
+.editor-add-card .thumb {
+  width: 72px;
+  height: 72px;
+  border-radius: 14px;
+  border: 1px dashed rgba(59,130,246,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  opacity: .9;
+}
+
+.editor-add-card .meta .title {
+  font-weight: 600;
+}
+
+.editor-add-card .meta .quick {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+html:not(.editor-mode-on) .editor-add-card {
+  display: none;
+}
+
+/* --- Project editor modal --- */
+#project-editor-modal[hidden] {
+  display: none;
+}
+
+#project-editor-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+}
+
+.project-editor-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(2px);
+}
+
+.project-editor-dialog {
+  position: relative;
+  max-width: 760px;
+  margin: 6vh auto;
+  background: var(--surface);
+  border-radius: 22px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.35);
+  padding: 1.5rem 1.75rem 1.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .project-editor-dialog {
+    background: rgba(15,23,42,0.98);
+  }
+}
+
+.project-editor-title {
+  font-size: 1.4rem;
+  margin: 0 0 .25rem;
+}
+
+.project-editor-sub {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.project-editor-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem 1.2rem;
+}
+
+.project-editor-form .field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.project-editor-form .field--full {
+  grid-column: 1 / -1;
+}
+
+.project-editor-form label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.project-editor-form input,
+.project-editor-form select,
+.project-editor-form textarea {
+  border-radius: 10px;
+  border: 1px solid rgba(148,163,184,0.7);
+  padding: 0.45rem 0.6rem;
+  font-size: 0.95rem;
+  background: rgba(15,23,42,0.02);
+  color: inherit;
+}
+
+.project-editor-form textarea {
+  min-height: 70px;
+  resize: vertical;
+}
+
+.project-editor-form input:focus,
+.project-editor-form select:focus,
+.project-editor-form textarea:focus {
+  outline: 2px solid rgba(59,130,246,0.85);
+  outline-offset: 1px;
+  border-color: rgba(59,130,246,0.9);
+}
+
+.project-editor-footer {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.project-editor-footer .btn {
+  cursor: pointer;
+}
+
+.project-editor-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  border: none;
+  border-radius: 999px;
+  width: 30px;
+  height: 30px;
+  font-size: 18px;
+  line-height: 30px;
+  cursor: pointer;
+  background: rgba(15,23,42,0.82);
+  color: #e5e7eb;
+}
+
+.project-editor-close:hover {
+  background: rgba(148,163,184,0.95);
+}
+
+/* --- Simple admin editor banner --- */
+.editor-banner {
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(59,130,246,0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+.editor-banner button {
+  border-radius: 999px;
+  padding: 6px 14px;
+  border: 1px solid rgba(37,99,235,0.6);
+  background: rgba(37,99,235,0.06);
+  cursor: pointer;
+}
+.editor-banner button:hover {
+  background: rgba(37,99,235,0.14);
+}
+.editor-status {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.editor-status.hidden {
+  display: none;
+}
+
 /* PRIVACY_IMPRINT_MAIN_TEXT_NORMAL */
 main p, main li, .content p, .content li, .main-content p, .main-content li, article p, article li {
   font-weight: 400 !important;
@@ -273,27 +511,39 @@ dialog[open] .content {
 <style>
 /* Projects page specific nav adjustments */
 .projects-page header.nav-min {
-  position: sticky;
-  top: 0;
+  position: static !important;
+  top: auto !important;
   z-index: 120;
 }
 
-.projects-page .segment {
-  top: calc(var(--header-h) + 12px) !important;
-  transition: top .25s ease;
+/* Projects layout: tighter, symmetric spacing around category pill */
+.projects-page .viewport {
+  padding-top: 0;
 }
 
-.projects-page.projects-nav-hidden .segment {
-  top: 12px !important;
+.projects-page main section.compact {
+  padding-top: 1rem;
+}
+
+/* Category pill: sit close to the item list */
+.projects-page .segment {
+  position: relative !important;
+  top: auto !important;
+  margin: .75rem 0 0;
+}
+
+/* Equal spacing between pill and first item section */
+.projects-page .section-block {
+  margin-top: .75rem;
 }
 </style>
 <style>
-/* Projects: keep category pill in normal flow on small screens */
+/* Projects: center category pill on small screens */
 @media (max-width: 720px) {
   .projects-page .segment {
     position: relative !important;
     top: auto !important;
-    margin: 0 auto 1.25rem;
+    margin: .75rem auto 0;
     display: flex !important;
     justify-content: center;
     z-index: auto !important;
@@ -310,6 +560,20 @@ dialog[open] .content {
 </nav>
 </header>
 <div class="viewport"><main class="container">
+<div class="editor-banner" id="editor-banner">
+  <div>
+    <strong>Editor:</strong>
+    <span id="editor-label">Nicht angemeldet</span>
+  </div>
+  <div class="editor-status" id="editor-status">
+    <span id="editor-user-label"></span>
+    <button type="button" id="editor-toggle">Editor-Modus: Aus</button>
+    <button type="button" id="editor-add">+ Neues Projekt</button>
+    <button type="button" id="editor-logout">Logout</button>
+  </div>
+  <button type="button" id="editor-login-button">Admin-Login</button>
+</div>
+
 <div class="zoom90" id="projects-zoom90">
 <section class="compact">
 <div class="scrollbar"><div class="scrollbar-bar" id="pgbar"></div></div>
@@ -1108,6 +1372,7 @@ window.addEventListener('load', function() {
     });
 })();
 </script>
-</div> <script src="assets/js/site.js"></script>
+</div> <script src="assets/js/projects-editor.js"></script>
+<script src="assets/js/site.js"></script>
 </body>
 </html>
