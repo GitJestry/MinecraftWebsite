@@ -2336,6 +2336,10 @@
       alert('Titel darf nicht leer sein.');
       return;
     }
+    if (!data.shortDescription) {
+      alert('Kurzbeschreibung ist erforderlich, um das Projekt zu speichern.');
+      return;
+    }
     try {
       let result;
       if (currentMode === 'edit' && data.id) {
