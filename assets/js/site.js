@@ -60,7 +60,15 @@
       method: 'GET',
       credentials: sameOrigin ? 'include' : 'omit',
     })
-      .then((response) => response.ok)
+      .then((response) => {
+        if (response.ok) {
+          return true;
+        }
+        if (response.status === 401 || response.status === 403) {
+          return true;
+        }
+        return false;
+      })
       .catch(() => false)
       .then((ok) => {
         editorApiReachable = ok;

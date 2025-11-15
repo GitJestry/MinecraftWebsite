@@ -462,7 +462,9 @@
         let err;
         try { err = await res.json(); } catch(e){}
         const msg = err && err.error ? err.error : ('HTTP ' + res.status);
-        throw new Error(msg);
+        const error = new Error(msg);
+        error.status = res.status;
+        throw error;
       }
       const text = await res.text();
       try {
@@ -1875,8 +1877,13 @@
       try {
         data = await api('/editor/projects', { method: 'GET' });
       } catch (e) {
-        console.warn('Konnte Projektliste nicht vom Editor-Server laden:', e);
-        disableEditorFeatures('Editorfunktionen stehen auf dieser Online-Version nicht zur Verfügung.');
+        const status = e && typeof e === 'object' && typeof e.status === 'number' ? e.status : null;
+        if (status === 401 || status === 403) {
+          console.warn('Editor-Anmeldung erforderlich, verwende statische Projektliste.');
+        } else {
+          console.warn('Konnte Projektliste nicht vom Editor-Server laden:', e);
+          disableEditorFeatures('Editorfunktionen stehen auf dieser Online-Version nicht zur Verfügung.');
+        }
       }
     }
     if (!Array.isArray(data)) {
