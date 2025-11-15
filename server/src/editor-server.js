@@ -11,9 +11,6 @@ const {
   ADMIN_PASSWORD_HASH = '',
 } = process.env;
 
-const DEFAULT_PASSWORD_HASH =
-  'pbkdf2$sha512$120000$ab0c642e67412f8305856a9f71565022$3e162bb3376776e6074564aee19cb67a8c59217b220c9a057843964494da415b07d745e9e7c684d4fdb1729228c1e3cb2bc699ffdc48e54ad7acf3d26df0b746';
-
 function safeEquals(a, b) {
   if (!(a instanceof Buffer)) {
     a = Buffer.from(a);
@@ -28,7 +25,14 @@ function safeEquals(a, b) {
 }
 
 function verifyPassword(password) {
-  const hashSpec = (ADMIN_PASSWORD_HASH || '').trim() || DEFAULT_PASSWORD_HASH;
+  const hashSpec = (ADMIN_PASSWORD_HASH || '').trim();
+  const plain = (ADMIN_PASSWORD || '').trim();
+
+  if (!hashSpec && !plain) {
+    console.warn('No admin password configured; refusing login attempts.');
+    return false;
+  }
+
   if (hashSpec) {
     const parts = hashSpec.split('$');
     if (parts.length === 5 && parts[0] === 'pbkdf2') {
@@ -51,7 +55,6 @@ function verifyPassword(password) {
     }
   }
 
-  const plain = (ADMIN_PASSWORD || '').trim();
   if (!plain) {
     return false;
   }
