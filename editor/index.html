@@ -198,6 +198,31 @@ html:not(.editor-mode-on) .editor-add-card {
   resize: vertical;
 }
 
+.project-editor-error {
+  margin: 0;
+  padding: 0.35rem 0.75rem;
+  border-radius: 10px;
+  background: rgba(220,38,38,0.08);
+  color: #dc2626;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.project-editor-error[hidden] {
+  display: none;
+}
+
+.project-editor-form .field.field-error label {
+  color: #dc2626;
+}
+
+.project-editor-form .field.field-error input,
+.project-editor-form .field.field-error select,
+.project-editor-form .field.field-error textarea {
+  border-color: rgba(220,38,38,0.8);
+  box-shadow: 0 0 0 1px rgba(220,38,38,0.16);
+}
+
 #pe-modal-hero {
   min-height: 90px;
 }
@@ -724,6 +749,7 @@ dialog[open] .content {
     <button aria-label="Editor schließen" class="project-editor-close" data-editor-close="true" type="button">×</button>
     <h2 class="project-editor-title" id="project-editor-title">Neues Projekt</h2>
     <p class="project-editor-sub" id="project-editor-sub">Lege ein neues Projekt an und fülle die Details aus.</p>
+    <p class="project-editor-error" hidden id="project-editor-error" role="alert"></p>
     <form class="project-editor-form" id="project-editor-form">
       <input id="pe-id" name="id" type="hidden"/>
       <div class="field">
