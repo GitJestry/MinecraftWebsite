@@ -5,6 +5,80 @@
   const LS_LANG = 'mirl.lang';
   const LS_ALLOW = 'mirl.consent.allowlist';
 
+  function sanitiseEditorApiBase(value) {
+    if (value == null) return '';
+    const trimmed = String(value).trim();
+    if (!trimmed || trimmed.toLowerCase() === 'same-origin') {
+      return '';
+    }
+    return trimmed.replace(/\/+$/, '');
+  }
+
+  function computeEditorApiBase() {
+    if (typeof window !== 'undefined' && window.MIRL_EDITOR_API) {
+      return sanitiseEditorApiBase(window.MIRL_EDITOR_API);
+    }
+    if (typeof document !== 'undefined') {
+      const html = document.documentElement;
+      if (html) {
+        const attr = html.getAttribute('data-editor-api');
+        if (attr) {
+          return sanitiseEditorApiBase(attr);
+        }
+      }
+      const meta = document.querySelector('meta[name="editor-api"]');
+      if (meta) {
+        return sanitiseEditorApiBase(meta.getAttribute('content'));
+      }
+    }
+    if (typeof window !== 'undefined') {
+      const origin = window.location && window.location.origin;
+      if (origin && origin !== 'null' && !origin.startsWith('file:')) {
+        return '';
+      }
+    }
+    return sanitiseEditorApiBase('http://localhost:3001');
+  }
+
+  let editorApiReachable = null;
+  let editorApiCheckPromise = null;
+
+  function checkEditorApiReachable() {
+    if (editorApiReachable !== null) {
+      return Promise.resolve(editorApiReachable);
+    }
+    if (editorApiCheckPromise) {
+      return editorApiCheckPromise;
+    }
+    const base = computeEditorApiBase();
+    const sameOrigin = base === '';
+    let url = '/editor/me';
+    if (base) {
+      url = base + '/editor/me';
+    }
+    editorApiCheckPromise = fetch(url, {
+      method: 'GET',
+      credentials: sameOrigin ? 'include' : 'omit',
+    })
+      .then((response) => response.ok)
+      .catch(() => false)
+      .then((ok) => {
+        editorApiReachable = ok;
+        editorApiCheckPromise = null;
+        return ok;
+      });
+    return editorApiCheckPromise;
+  }
+
+  function shouldIgnoreEditorShortcutTarget(target) {
+    if (!target || typeof target !== 'object') return false;
+    const el = target;
+    const tag = el.tagName ? el.tagName.toLowerCase() : '';
+    if (tag === 'input' || tag === 'textarea' || tag === 'select') return true;
+    if (el.isContentEditable) return true;
+    return false;
+  }
+
   function getLang() {
     try { return localStorage.getItem(LS_LANG) || 'en'; } catch(e){ return 'en'; }
   }
@@ -510,6 +584,21 @@
     downloadRegistry.forEach((entry, projectId) => {
       if (Number.isFinite(entry.value)) {
         updateDownloadDisplay(projectId, entry.value);
+      }
+    });
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (!event || typeof event.key !== 'string') return;
+    if (!event.ctrlKey || !event.altKey) return;
+    if (event.metaKey || event.shiftKey) return;
+    const key = event.key.toLowerCase();
+    if (key !== 'e') return;
+    if (shouldIgnoreEditorShortcutTarget(event.target)) return;
+    event.preventDefault();
+    checkEditorApiReachable().then((reachable) => {
+      if (reachable) {
+        window.location.href = '/editor/';
       }
     });
   });
