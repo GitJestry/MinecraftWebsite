@@ -2193,6 +2193,7 @@ footer { background: rgba(8,10,16,.65); backdrop-filter: blur(3px); border-top: 
   --proj-card-pad: 1rem;
   --proj-card-body-gap: 0.45rem;
   --proj-desc-lines: 2;
+  --proj-card-height: 240px;
 }
 
 .itemgrid > .card.dp-card,
@@ -2206,9 +2207,10 @@ footer { background: rgba(8,10,16,.65); backdrop-filter: blur(3px); border-top: 
   border-radius: var(--proj-card-radius);
   border: 1px solid var(--border);
   background: var(--surface);
-  min-height: var(--proj-card-thumb);
+  height: var(--proj-card-height);
   box-sizing: border-box;
   transition: transform .12s ease, box-shadow .15s ease;
+  overflow: hidden;
 }
 
 .itemgrid > .card.dp-card:hover,
@@ -2296,10 +2298,24 @@ footer { background: rgba(8,10,16,.65); backdrop-filter: blur(3px); border-top: 
 .projects-page .itemgrid {
   display: grid;
   gap: var(--proj-grid-gap);
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   width: 100%;
   margin-left: 0;
   margin-right: 0;
+  justify-content: start;
+  align-content: start;
+}
+
+@media (max-width: 960px) {
+  .projects-page .itemgrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .projects-page .itemgrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .projects-page .itemgrid > .item {
@@ -2311,7 +2327,7 @@ footer { background: rgba(8,10,16,.65); backdrop-filter: blur(3px); border-top: 
   border: 1px solid var(--border);
   background: var(--surface);
   align-items: start;
-  min-height: calc(var(--proj-card-thumb) + var(--proj-card-gap));
+  height: var(--proj-card-height);
   transition: transform .12s ease, box-shadow .15s ease;
 }
 
