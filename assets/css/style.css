@@ -2529,6 +2529,58 @@ footer#pageend {
 /* Hide any legacy bottom notice UI if present */
 #bottomNotice { display: none !important; }
 
+/* --- Links & Projects: keep fixed viewport like Home --- */
+body.links-page,
+body.projects-page {
+  overflow: hidden;
+}
+
+body.links-page header.nav-min,
+body.links-page header.nav,
+body.projects-page header.nav-min,
+body.projects-page header.nav {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+body.links-page .viewport,
+body.projects-page .viewport {
+  position: fixed !important;
+  top: var(--header-h);
+  bottom: var(--footer-h);
+  left: 0;
+  right: 0;
+  overflow: auto;
+}
+
+body.links-page .viewport > main,
+body.projects-page .viewport > main {
+  min-height: calc(100dvh - var(--header-h) - var(--footer-h));
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+body.links-page footer#pageend,
+body.projects-page footer#pageend {
+  position: fixed !important;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(8,10,16,.65);
+  backdrop-filter: blur(3px);
+  border-top: 1px solid var(--border);
+  z-index: 120;
+}
+
+body.links-page footer#pageend .footer-grid,
+body.projects-page footer#pageend .footer-grid {
+  width: min(1320px, 92%);
+  margin: 0 auto;
+}
+
 /* --- Legal pages: allow footer to follow full document height --- */
 body.legal-page {
   min-height: 100vh;
