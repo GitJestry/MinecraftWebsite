@@ -64,6 +64,9 @@
   const shortInput = document.getElementById('pe-short');
   const modalHeroInput = document.getElementById('pe-modal-hero');
   const modalBodyInput = document.getElementById('pe-modal-body');
+  const modalBadgesInput = document.getElementById('pe-modal-badges');
+  const modalActionsInput = document.getElementById('pe-modal-actions');
+  const modalStatsInput = document.getElementById('pe-modal-stats');
   const downloadInput = document.getElementById('pe-download');
   const imageInput = document.getElementById('pe-image');
   const deleteBtn = document.getElementById('project-editor-delete');
@@ -247,9 +250,15 @@
     if (!modalId || !modal || modalDefaults.has(modalId)) return;
     const hero = modal.querySelector('.modal-hero .muted');
     const body = modal.querySelector('.modal-body');
+    const badges = modal.querySelector('.modal-hero .badges');
+    const heroActions = modal.querySelector('.modal-hero .hero-actions');
+    const stats = modal.querySelector('.modal-hero .stats');
     modalDefaults.set(modalId, {
       hero: hero ? hero.textContent.trim() : '',
       body: body ? body.innerHTML.trim() : '',
+      badges: badges ? badges.innerHTML.trim() : '',
+      heroActions: heroActions ? heroActions.innerHTML.trim() : '',
+      stats: stats ? stats.innerHTML.trim() : '',
     });
   }
 
@@ -278,6 +287,25 @@
     if (!modal) return '';
     const body = modal.querySelector('.modal-body');
     return body ? body.innerHTML.trim() : '';
+  }
+
+  function extractModalSectionHtml(project, selector) {
+    const { modal } = getModalRef(project);
+    if (!modal) return '';
+    const section = modal.querySelector(selector);
+    return section ? section.innerHTML.trim() : '';
+  }
+
+  function extractModalBadges(project) {
+    return extractModalSectionHtml(project, '.modal-hero .badges');
+  }
+
+  function extractModalHeroActions(project) {
+    return extractModalSectionHtml(project, '.modal-hero .hero-actions');
+  }
+
+  function extractModalStats(project) {
+    return extractModalSectionHtml(project, '.modal-hero .stats');
   }
 
   function updateSubtitle(type, mode) {
@@ -476,7 +504,7 @@
   function applyProjectModalContent(project) {
     const { modalId, modal } = getModalRef(project);
     if (!modalId || !modal) return;
-    const defaults = modalDefaults.get(modalId) || { hero: '', body: '' };
+    const defaults = modalDefaults.get(modalId) || { hero: '', body: '', badges: '', heroActions: '', stats: '' };
 
     const heroEl = modal.querySelector('.modal-hero .muted');
     if (heroEl) {
@@ -486,6 +514,41 @@
         || defaults.hero
         || '';
       heroEl.textContent = fallbackHero;
+    }
+
+    const badgesEl = modal.querySelector('.modal-hero .badges');
+    if (badgesEl) {
+      const customBadges = typeof project.modalBadges === 'string' ? project.modalBadges.trim() : '';
+      const badgesHtml = customBadges || defaults.badges || '';
+      badgesEl.innerHTML = badgesHtml;
+      badgesEl.hidden = !badgesHtml.trim();
+    }
+
+    const actionsEl = modal.querySelector('.modal-hero .hero-actions');
+    if (actionsEl) {
+      const customActions = typeof project.modalHeroActions === 'string' ? project.modalHeroActions.trim() : '';
+      const actionsHtml = customActions || defaults.heroActions || '';
+      actionsEl.innerHTML = actionsHtml;
+      actionsEl.hidden = !actionsHtml.trim();
+
+      if (!customActions) {
+        const downloadPath = (project.downloadFile || '').trim();
+        if (downloadPath) {
+          const fileId = downloadPath.split('/').pop() || downloadPath;
+          actionsEl.querySelectorAll('[data-download-file]').forEach((link) => {
+            link.setAttribute('href', downloadPath);
+            link.setAttribute('data-download-file', fileId);
+          });
+        }
+      }
+    }
+
+    const statsEl = modal.querySelector('.modal-hero .stats');
+    if (statsEl) {
+      const customStats = typeof project.modalStats === 'string' ? project.modalStats.trim() : '';
+      const statsHtml = customStats || defaults.stats || '';
+      statsEl.innerHTML = statsHtml;
+      statsEl.hidden = !statsHtml.trim();
     }
 
     const bodyEl = modal.querySelector('.modal-body');
@@ -602,6 +665,27 @@
         modalBodyInput.value = extractModalBody(project);
       }
     }
+    if (modalBadgesInput) {
+      if (typeof project.modalBadges === 'string' && project.modalBadges.trim()) {
+        modalBadgesInput.value = project.modalBadges;
+      } else {
+        modalBadgesInput.value = extractModalBadges(project);
+      }
+    }
+    if (modalActionsInput) {
+      if (typeof project.modalHeroActions === 'string' && project.modalHeroActions.trim()) {
+        modalActionsInput.value = project.modalHeroActions;
+      } else {
+        modalActionsInput.value = extractModalHeroActions(project);
+      }
+    }
+    if (modalStatsInput) {
+      if (typeof project.modalStats === 'string' && project.modalStats.trim()) {
+        modalStatsInput.value = project.modalStats;
+      } else {
+        modalStatsInput.value = extractModalStats(project);
+      }
+    }
     downloadInput.value = project.downloadFile || '';
     imageInput.value = project.image || '';
   }
@@ -618,9 +702,12 @@
     const shortDescription = (shortInput.value || '').trim();
     const modalHero = modalHeroInput ? (modalHeroInput.value || '').trim() : '';
     const modalBody = modalBodyInput ? (modalBodyInput.value || '').trim() : '';
+    const modalBadges = modalBadgesInput ? (modalBadgesInput.value || '').trim() : '';
+    const modalHeroActions = modalActionsInput ? (modalActionsInput.value || '').trim() : '';
+    const modalStats = modalStatsInput ? (modalStatsInput.value || '').trim() : '';
     const downloadFile = (downloadInput.value || '').trim();
     const image = (imageInput.value || '').trim();
-    return { id, type, title, mcVersion, status, category, tags, shortDescription, modalHero, modalBody, downloadFile, image };
+    return { id, type, title, mcVersion, status, category, tags, shortDescription, modalHero, modalBody, modalBadges, modalHeroActions, modalStats, downloadFile, image };
   }
 
   function openEditorForCreate(type){
@@ -638,6 +725,9 @@
     shortInput.value = '';
     if (modalHeroInput) modalHeroInput.value = '';
     if (modalBodyInput) modalBodyInput.value = '';
+    if (modalBadgesInput) modalBadgesInput.value = '';
+    if (modalActionsInput) modalActionsInput.value = '';
+    if (modalStatsInput) modalStatsInput.value = '';
     downloadInput.value = '';
     imageInput.value = 'assets/img/logo.jpg';
     applyTypeUi(safeType);

@@ -162,6 +162,9 @@ app.post('/editor/projects', requireAuth, async (req, res, next) => {
       shortDescription: body.shortDescription || '',
       modalHero: typeof body.modalHero === 'string' ? body.modalHero : '',
       modalBody: typeof body.modalBody === 'string' ? body.modalBody : '',
+      modalBadges: typeof body.modalBadges === 'string' ? body.modalBadges : '',
+      modalHeroActions: typeof body.modalHeroActions === 'string' ? body.modalHeroActions : '',
+      modalStats: typeof body.modalStats === 'string' ? body.modalStats : '',
       mcVersion: body.mcVersion || '',
       status: body.status || 'planned',
       category: body.category || '',
@@ -204,6 +207,9 @@ app.put('/editor/projects/:id', requireAuth, async (req, res, next) => {
         : existing.tags,
       modalHero: typeof body.modalHero === 'string' ? body.modalHero : (existing.modalHero || ''),
       modalBody: typeof body.modalBody === 'string' ? body.modalBody : (existing.modalBody || ''),
+      modalBadges: typeof body.modalBadges === 'string' ? body.modalBadges : (existing.modalBadges || ''),
+      modalHeroActions: typeof body.modalHeroActions === 'string' ? body.modalHeroActions : (existing.modalHeroActions || ''),
+      modalStats: typeof body.modalStats === 'string' ? body.modalStats : (existing.modalStats || ''),
       updatedAt: new Date().toISOString(),
     };
     projects[idx] = updated;

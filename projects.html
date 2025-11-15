@@ -109,15 +109,17 @@ html:not(.editor-mode-on) .editor-add-card {
 
 .project-editor-dialog {
   position: relative;
-  max-width: 760px;
-  margin: 6vh auto;
+  max-width: 880px;
+  width: min(92vw, 880px);
+  max-height: 90vh;
+  margin: 4vh auto;
   background: var(--surface);
   border-radius: 22px;
   box-shadow: 0 24px 60px rgba(0,0,0,0.35);
-  padding: 1.5rem 1.75rem 1.3rem;
+  padding: 1.9rem 2rem 1.4rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.85rem;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -141,6 +143,10 @@ html:not(.editor-mode-on) .editor-add-card {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.9rem 1.2rem;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 0.35rem;
 }
 
 .project-editor-form .field {
@@ -194,6 +200,15 @@ html:not(.editor-mode-on) .editor-add-card {
 
 #pe-modal-body {
   min-height: 220px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+#pe-modal-badges,
+#pe-modal-actions,
+#pe-modal-stats {
+  min-height: 120px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   line-height: 1.5;
   white-space: pre-wrap;
@@ -642,6 +657,21 @@ dialog[open] .content {
         <label for="pe-modal-body">Modal-Inhalt (HTML)</label>
         <textarea id="pe-modal-body" name="modalBody" placeholder="HTML-Inhalt, der im Popup angezeigt wird"></textarea>
         <p class="hint">Unterstützt HTML. Der Inhalt ersetzt den Abschnitt innerhalb des Popups.</p>
+      </div>
+      <div class="field field--full">
+        <label for="pe-modal-badges">Modal-Badges (HTML)</label>
+        <textarea id="pe-modal-badges" name="modalBadges" placeholder="&lt;span class=&quot;badge&quot;&gt;Stable&lt;/span&gt;"></textarea>
+        <p class="hint">Optional: HTML für die Badge-Liste unter dem Titel. Leer lassen, um die vorhandenen Badges zu übernehmen.</p>
+      </div>
+      <div class="field field--full">
+        <label for="pe-modal-actions">Modal-Aktionen (HTML)</label>
+        <textarea id="pe-modal-actions" name="modalHeroActions" placeholder="&lt;a class=&quot;btn primary&quot; href=&quot;...&quot;&gt;Download&lt;/a&gt;"></textarea>
+        <p class="hint">Buttons oder Links neben den Badges (z. B. Download). HTML wird direkt im Header eingesetzt.</p>
+      </div>
+      <div class="field field--full">
+        <label for="pe-modal-stats">Modal-Statistiken (HTML)</label>
+        <textarea id="pe-modal-stats" name="modalStats" placeholder="&lt;div class=&quot;stat&quot;&gt;...&lt;/div&gt;"></textarea>
+        <p class="hint">HTML-Inhalt für das Statistik-Raster. Leer lassen, um den Standard aus dem Modal zu verwenden.</p>
       </div>
       <div class="field field--full" data-label-datapack="Download-Datei (ZIP)" data-label-printing="Download (STL oder ZIP)">
         <label for="pe-download">Download-Datei (ZIP)</label>
