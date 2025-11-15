@@ -4,15 +4,16 @@ import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import DownloadStore from './download-store.js';
 
-const {
-  PORT = 3001,
-  ADMIN_USERNAME = 'admin',
-  ADMIN_PASSWORD = 'change-me',
-  ADMIN_PASSWORD_HASH = '',
-} = process.env;
+const { PORT = 3001 } = process.env;
 
-const DEFAULT_PASSWORD_HASH =
-  'pbkdf2$sha512$120000$ab0c642e67412f8305856a9f71565022$3e162bb3376776e6074564aee19cb67a8c59217b220c9a057843964494da415b07d745e9e7c684d4fdb1729228c1e3cb2bc699ffdc48e54ad7acf3d26df0b746';
+const ADMIN_USERNAME = 'admin';
+const PASSWORD_DIGEST = 'sha512';
+const PASSWORD_ITERATIONS = 120000;
+const PASSWORD_SALT = Buffer.from('c0ffee1234', 'hex');
+const PASSWORD_HASH = Buffer.from(
+  '50e5f3e807679f082cbb2a7c35ea3b18ef92c91f8150c0b2f7ae72c7b4ddfde4dcba3a25527c362aee21cd773cbd3142c3b29d49a5a592fda5c2102613b36714',
+  'hex',
+);
 
 function safeEquals(a, b) {
   if (!(a instanceof Buffer)) {
@@ -28,38 +29,18 @@ function safeEquals(a, b) {
 }
 
 function verifyPassword(password) {
-  const hashSpec = (ADMIN_PASSWORD_HASH || '').trim() || DEFAULT_PASSWORD_HASH;
-  if (hashSpec) {
-    const parts = hashSpec.split('$');
-    if (parts.length === 5 && parts[0] === 'pbkdf2') {
-      const [, digest, iterationsStr, saltHex, storedHex] = parts;
-      const iterations = Number.parseInt(iterationsStr, 10);
-      if (Number.isSafeInteger(iterations) && iterations > 0 && saltHex && storedHex) {
-        try {
-          const salt = Buffer.from(saltHex, 'hex');
-          const stored = Buffer.from(storedHex, 'hex');
-          const derived = crypto.pbkdf2Sync(password, salt, iterations, stored.length, digest);
-          if (safeEquals(derived, stored)) {
-            return true;
-          }
-        } catch (err) {
-          console.warn('Failed to verify hashed admin password:', err);
-        }
-      }
-    } else if (hashSpec) {
-      console.warn('Unsupported ADMIN_PASSWORD_HASH format. Expected pbkdf2$...');
-    }
-  }
-
-  const plain = (ADMIN_PASSWORD || '').trim();
-  if (!plain) {
-    return false;
-  }
-
   try {
-    return safeEquals(Buffer.from(password), Buffer.from(plain));
+    const candidate = String(password ?? '');
+    const derived = crypto.pbkdf2Sync(
+      candidate,
+      PASSWORD_SALT,
+      PASSWORD_ITERATIONS,
+      PASSWORD_HASH.length,
+      PASSWORD_DIGEST,
+    );
+    return safeEquals(derived, PASSWORD_HASH);
   } catch (err) {
-    console.warn('Failed to verify plain admin password:', err);
+    console.warn('Failed to verify hashed admin password:', err);
     return false;
   }
 }
@@ -337,9 +318,9 @@ app.use((err, req, res, next) => {
   return res.status(500).json({ error: 'internal_error' });
 });
 
-console.log('Editor admin user from .env:', {
+console.log('Editor admin user from configuration:', {
   ADMIN_USERNAME,
-  ADMIN_PASSWORD_SET: !!ADMIN_PASSWORD,
+  ADMIN_PASSWORD_HASH_SET: true,
 });
 
 app.listen(PORT, () => {
