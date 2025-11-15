@@ -1,7 +1,47 @@
 (function(){
   'use strict';
 
-  const STATIC_PROJECTS_URL = 'assets/data/projects.json';
+  function normaliseAssetBase(value) {
+    if (value == null) return '';
+    let result = String(value).trim();
+    if (!result) return '';
+    result = result.replace(/\\+/g, '/');
+    if (!result.endsWith('/')) {
+      result += '/';
+    }
+    return result;
+  }
+
+  const DEFAULT_ASSET_BASE = 'assets/';
+
+  const ASSET_BASE = (() => {
+    if (typeof window !== 'undefined' && window.MIRL_ASSET_BASE != null) {
+      const candidate = normaliseAssetBase(window.MIRL_ASSET_BASE);
+      if (candidate) {
+        return candidate;
+      }
+    }
+    return normaliseAssetBase(DEFAULT_ASSET_BASE);
+  })();
+
+  const ASSET_ROOT_PREFIX = ASSET_BASE.endsWith('assets/')
+    ? ASSET_BASE.slice(0, -'assets/'.length)
+    : ASSET_BASE;
+
+  function resolveSitePath(path) {
+    const input = (path || '').trim();
+    if (!input) return '';
+    if (/^(?:[a-z][a-z0-9+.-]*:|\/|#)/i.test(input)) {
+      return input;
+    }
+    if (input.startsWith('./') || input.startsWith('../')) {
+      return input;
+    }
+    return ASSET_ROOT_PREFIX + input.replace(/^\.\/?/, '');
+  }
+
+  const STATIC_PROJECTS_URL = resolveSitePath('assets/data/projects.json');
+  const DEFAULT_IMAGE_SRC = resolveSitePath('assets/img/logo.jpg');
   const DEFAULT_EDITOR_DISABLED_REASON = 'Editorfunktionen sind in dieser statischen Veröffentlichung deaktiviert.';
   let editingSupported = true;
   let editorDisabledReason = DEFAULT_EDITOR_DISABLED_REASON;
@@ -47,6 +87,47 @@
   const toggleBtn = document.getElementById('editor-toggle');
   const addBtn = document.getElementById('editor-add');
   const logoutBtn = document.getElementById('editor-logout');
+
+  function parseEditorFlag(value) {
+    if (value == null) return null;
+    const str = String(value).trim();
+    if (!str) return true;
+    const lower = str.toLowerCase();
+    if (['1', 'true', 'yes', 'on', 'enable', 'enabled'].includes(lower)) {
+      return true;
+    }
+    if (['0', 'false', 'no', 'off', 'disable', 'disabled'].includes(lower)) {
+      return false;
+    }
+    return null;
+  }
+
+  const autoLoginRequested = (() => {
+    let result = null;
+    if (typeof window !== 'undefined') {
+      try {
+        const params = new URLSearchParams(window.location.search || '');
+        if (params.has('editor')) {
+          result = parseEditorFlag(params.get('editor'));
+          if (result != null) {
+            return result;
+          }
+          return true;
+        }
+      } catch(e){}
+    }
+    if (typeof document !== 'undefined') {
+      const meta = document.querySelector('meta[name="editor-entry"]');
+      if (meta) {
+        const flag = parseEditorFlag(meta.getAttribute('content'));
+        if (flag != null) {
+          return flag;
+        }
+        return true;
+      }
+    }
+    return false;
+  })();
 
   const dpGrid = document.querySelector('#datapacks .itemgrid');
   const prGrid = document.querySelector('#printing .itemgrid');
@@ -175,6 +256,15 @@
     } catch(e){}
   }
 
+  function ensureLoginButtonVisible() {
+    if (!loginBtn || !editingSupported) {
+      return;
+    }
+    loginBtn.style.display = 'inline-block';
+    loginBtn.disabled = false;
+    loginBtn.removeAttribute('aria-disabled');
+  }
+
   function setLoggedOut() {
     if (!label) return;
     if (!editingSupported) {
@@ -186,7 +276,7 @@
     label.textContent = 'Nicht angemeldet';
     if (userLabel) userLabel.textContent = '';
     if (statusBox) statusBox.classList.add('hidden');
-    if (loginBtn) loginBtn.style.display = 'inline-block';
+    ensureLoginButtonVisible();
     editorOn = false;
     if (toggleBtn) toggleBtn.textContent = 'Editor-Modus: Aus';
     document.documentElement.classList.remove('editor-mode-on');
@@ -255,8 +345,10 @@
     }
   }
 
-  async function handleLogin(){
-    if (!assertEditorAvailable(true)) {
+  async function handleLogin(options){
+    const opts = options || {};
+    const showAlert = opts.showAlert !== false;
+    if (!assertEditorAvailable(showAlert)) {
       return;
     }
     const username = prompt('Admin-Benutzername', 'admin');
@@ -278,6 +370,23 @@
     } catch(e){
       alert('Login fehlgeschlagen: ' + e.message);
     }
+  }
+
+  function beginLogin(autoOrEvent) {
+    if (autoOrEvent && typeof autoOrEvent.preventDefault === 'function') {
+      autoOrEvent.preventDefault();
+      if (typeof autoOrEvent.stopPropagation === 'function') {
+        autoOrEvent.stopPropagation();
+      }
+      ensureLoginButtonVisible();
+      return handleLogin({ showAlert: true });
+    }
+    const auto = !!autoOrEvent;
+    ensureLoginButtonVisible();
+    if (!editingSupported && auto) {
+      return;
+    }
+    return handleLogin({ showAlert: !auto });
   }
 
   async function handleLogout(){
@@ -1468,7 +1577,7 @@
       card.setAttribute('tabindex', '0');
     }
 
-    const imgSrc = project.image || 'assets/img/logo.jpg';
+    const imgSrc = resolveSitePath(project.image) || DEFAULT_IMAGE_SRC;
     const chipA = project.mcVersion || (isDatapack ? '1.21.x' : '');
     const chipB = (tags && tags.length) ? tags[0] : (project.status || '');
 
@@ -1548,9 +1657,10 @@
       actionsEl.hidden = !actionsHtml.trim();
 
       if (!customActions) {
-        const downloadPath = (project.downloadFile || '').trim();
+        const downloadValue = (project.downloadFile || '').trim();
+        const downloadPath = resolveSitePath(downloadValue);
         if (downloadPath) {
-          const fileId = downloadPath.split('/').pop() || downloadPath;
+          const fileId = downloadValue.split('/').pop() || downloadValue;
           actionsEl.querySelectorAll('[data-download-file]').forEach((link) => {
             link.setAttribute('href', downloadPath);
             link.setAttribute('data-download-file', fileId);
@@ -1832,7 +1942,7 @@
 
   // ---------- Wire up events ----------
 
-  loginBtn.addEventListener('click', handleLogin);
+  loginBtn.addEventListener('click', beginLogin);
   logoutBtn.addEventListener('click', handleLogout);
   toggleBtn.addEventListener('click', toggleEditorMode);
   addBtn.addEventListener('click', function(){
@@ -1897,9 +2007,18 @@
   }
 
   loadToken();
-  checkSession();
+  const sessionPromise = checkSession();
   loadProjects();
   applyTypeUi(typeInput ? typeInput.value : 'datapack');
   updateSubtitle(typeInput ? typeInput.value : 'datapack', 'create');
+
+  if (autoLoginRequested) {
+    ensureLoginButtonVisible();
+    Promise.resolve(sessionPromise).finally(() => {
+      if (!token) {
+        beginLogin(true);
+      }
+    });
+  }
 
 })();

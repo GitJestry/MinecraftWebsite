@@ -514,6 +514,122 @@
     });
   });
 
+  function sanitiseEditorApiBase(value) {
+    if (value == null) return '';
+    const trimmed = String(value).trim();
+    if (!trimmed || trimmed.toLowerCase() === 'same-origin') {
+      return '';
+    }
+    return trimmed.replace(/\/+$/, '');
+  }
+
+  function computeEditorApiBase() {
+    if (typeof window !== 'undefined' && window.MIRL_EDITOR_API) {
+      return sanitiseEditorApiBase(window.MIRL_EDITOR_API);
+    }
+    if (typeof document !== 'undefined' && document.documentElement) {
+      const attr = document.documentElement.getAttribute('data-editor-api');
+      if (attr) {
+        return sanitiseEditorApiBase(attr);
+      }
+    }
+    if (typeof window !== 'undefined') {
+      const origin = window.location && window.location.origin;
+      if (origin && origin !== 'null' && !origin.startsWith('file:')) {
+        return '';
+      }
+    }
+    return sanitiseEditorApiBase('http://localhost:3001');
+  }
+
+  const EDITOR_API_BASE = computeEditorApiBase();
+  const EDITOR_API_SAME_ORIGIN = EDITOR_API_BASE === '';
+
+  function buildEditorApiUrl(path) {
+    const normalised = path.startsWith('/') ? path : '/' + path;
+    return EDITOR_API_BASE ? EDITOR_API_BASE + normalised : normalised;
+  }
+
+  let editorApiReachable = false;
+  let editorApiCheckPromise = null;
+
+  function ensureEditorApiReachable() {
+    if (editorApiReachable) {
+      return Promise.resolve(true);
+    }
+    if (editorApiCheckPromise) {
+      return editorApiCheckPromise;
+    }
+    const url = buildEditorApiUrl('/editor/projects');
+    editorApiCheckPromise = fetch(url, {
+      method: 'GET',
+      credentials: EDITOR_API_SAME_ORIGIN ? 'include' : 'omit',
+      headers: { 'Accept': 'application/json' },
+      cache: 'no-cache',
+    }).then((response) => {
+      if (!response.ok) {
+        throw new Error('Editor API unreachable');
+      }
+      editorApiReachable = true;
+      return true;
+    }).catch(() => false).finally(() => {
+      editorApiCheckPromise = null;
+    });
+    return editorApiCheckPromise;
+  }
+
+  const EDITOR_ENTRY_URL = (() => {
+    if (typeof document === 'undefined') {
+      return 'editor/';
+    }
+    const script = document.currentScript || document.querySelector('script[src*="assets/js/site.js"]');
+    if (script && script.src && typeof window !== 'undefined') {
+      try {
+        const scriptUrl = new URL(script.src, window.location.href);
+        const basePath = scriptUrl.pathname.replace(/assets\/js\/site\.js$/i, '');
+        if (!basePath) {
+          return 'editor/';
+        }
+        return (basePath.endsWith('/') ? basePath : basePath + '/') + 'editor/';
+      } catch (err) {
+        return 'editor/';
+      }
+    }
+    return 'editor/';
+  })();
+
+  function isEditableTarget(target) {
+    if (!target) return false;
+    if (target.isContentEditable) return true;
+    const tag = target.tagName;
+    if (!tag) return false;
+    return ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag);
+  }
+
+  function handleEditorShortcut(event) {
+    if (!event || event.defaultPrevented) return;
+    if (event.metaKey || event.shiftKey || !event.ctrlKey || !event.altKey) return;
+    const key = event.key || '';
+    if (key.toLowerCase() !== 'e') return;
+    if (isEditableTarget(event.target)) return;
+    event.preventDefault();
+    ensureEditorApiReachable().then((reachable) => {
+      if (!reachable) {
+        return;
+      }
+      if (typeof window !== 'undefined') {
+        const path = (window.location && window.location.pathname) || '';
+        const normalised = path.replace(/index\.html$/i, '');
+        if (normalised.endsWith('/editor/')) {
+          return;
+        }
+        window.location.href = EDITOR_ENTRY_URL;
+      }
+    });
+  }
+
+  document.addEventListener('keydown', handleEditorShortcut);
+
   document.addEventListener('DOMContentLoaded', function(){
     const lang = getLang();
     document.documentElement.setAttribute('lang', lang);
