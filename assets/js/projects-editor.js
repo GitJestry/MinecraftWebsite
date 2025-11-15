@@ -535,6 +535,7 @@
   const editorForm = document.getElementById('project-editor-form');
   const editorTitleEl = document.getElementById('project-editor-title');
   const editorSubEl = document.getElementById('project-editor-sub');
+  const editorErrorEl = document.getElementById('project-editor-error');
 
   const idInput = document.getElementById('pe-id');
   const typeInput = document.getElementById('pe-type');
@@ -565,6 +566,24 @@
   const imageInput = document.getElementById('pe-image');
   const deleteBtn = document.getElementById('project-editor-delete');
 
+  function getCurrentTypeValue() {
+    return normaliseType(typeInput ? typeInput.value : 'datapack');
+  }
+
+  const requiredFieldDefs = [
+    { input: titleInput, label: 'Titel' },
+    { input: shortInput, label: 'Kurzbeschreibung' },
+    { input: statusInput, label: 'Status' },
+    { input: categoryInput, label: 'Kategorie' },
+    { input: downloadInput, label: 'Download-Datei' },
+    { input: imageInput, label: 'Vorschaubild' },
+    {
+      input: mcVersionInput,
+      label: 'Minecraft-Version',
+      when: () => getCurrentTypeValue() === 'datapack',
+    },
+  ];
+
   const typeOnlyFields = editorForm ? Array.from(editorForm.querySelectorAll('[data-type-only]')) : [];
   const typeAwareLabelNodes = editorForm ? Array.from(editorForm.querySelectorAll('[data-label-datapack]')) : [];
   const typeAwarePlaceholderNodes = editorForm ? Array.from(editorForm.querySelectorAll('[data-placeholder-datapack]')) : [];
@@ -573,6 +592,113 @@
   const entryAccessEnabled = detectEditorEntryFlag();
   let sessionActive = false;
   let autoLoginTriggered = false;
+
+  function updateValidationSummary(missingLabels) {
+    if (!editorErrorEl) {
+      return;
+    }
+    if (!missingLabels || !missingLabels.length) {
+      editorErrorEl.textContent = '';
+      editorErrorEl.hidden = true;
+      return;
+    }
+    const prefix = missingLabels.length > 1
+      ? 'Bitte fülle folgende Pflichtfelder aus: '
+      : 'Bitte fülle folgendes Pflichtfeld aus: ';
+    editorErrorEl.textContent = prefix + missingLabels.join(', ') + '.';
+    editorErrorEl.hidden = false;
+  }
+
+  function setFieldErrorState(input, hasError) {
+    if (!input) return;
+    if (hasError) {
+      input.setAttribute('aria-invalid', 'true');
+    } else {
+      input.removeAttribute('aria-invalid');
+    }
+    const field = input.closest('.field');
+    if (field) {
+      field.classList.toggle('field-error', !!hasError);
+    }
+  }
+
+  function clearOptionalFieldErrors() {
+    requiredFieldDefs.forEach((def) => {
+      if (!def || !def.input) return;
+      const required = typeof def.when === 'function' ? !!def.when() : true;
+      if (!required) {
+        setFieldErrorState(def.input, false);
+      }
+    });
+  }
+
+  function resetValidationState() {
+    requiredFieldDefs.forEach((def) => {
+      if (!def || !def.input) return;
+      setFieldErrorState(def.input, false);
+    });
+    updateValidationSummary([]);
+  }
+
+  function validateRequiredFields() {
+    const missing = [];
+    let firstInvalid = null;
+    requiredFieldDefs.forEach((def) => {
+      if (!def || !def.input) return;
+      const required = typeof def.when === 'function' ? !!def.when() : true;
+      if (!required) {
+        setFieldErrorState(def.input, false);
+        return;
+      }
+      const value = (def.input.value || '').trim();
+      const hasError = !value;
+      setFieldErrorState(def.input, hasError);
+      if (hasError) {
+        missing.push(def.label);
+        if (!firstInvalid) {
+          firstInvalid = def.input;
+        }
+      }
+    });
+    return { missing, firstInvalid };
+  }
+
+  function focusFirstInvalidField(input) {
+    if (!input) return;
+    try {
+      if (typeof input.focus === 'function') {
+        input.focus({ preventScroll: false });
+      }
+    } catch (err) {
+      try { input.focus(); } catch (err2) {}
+    }
+    if (typeof input.scrollIntoView === 'function') {
+      try {
+        input.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+      } catch (err) {
+        input.scrollIntoView(true);
+      }
+    }
+  }
+
+  function handleRequiredFieldInput(event) {
+    const input = event && event.currentTarget ? event.currentTarget : null;
+    if (!input) return;
+    const summaryVisible = editorErrorEl && !editorErrorEl.hidden;
+    const hadError = input.getAttribute && input.getAttribute('aria-invalid') === 'true';
+    if (!summaryVisible && !hadError) {
+      return;
+    }
+    const value = (input.value || '').trim();
+    if (!summaryVisible && hadError) {
+      if (value) {
+        setFieldErrorState(input, false);
+      }
+      return;
+    }
+    const result = validateRequiredFields();
+    updateValidationSummary(result.missing);
+  }
 
   function beginLogin(options) {
     if (!loginBtn) return;
@@ -1066,6 +1192,12 @@
         node.hidden = true;
       }
     });
+
+    clearOptionalFieldErrors();
+    if (editorErrorEl && !editorErrorEl.hidden) {
+      const validation = validateRequiredFields();
+      updateValidationSummary(validation.missing);
+    }
   }
 
   function escapeHtml(str){
@@ -2289,6 +2421,7 @@
     editorModal.hidden = true;
     editorModal.setAttribute('aria-hidden','true');
     editingProject = null;
+    resetValidationState();
   }
 
   function fillFormFromProject(project){
@@ -2338,6 +2471,7 @@
     if (!assertEditorAvailable(true)) {
       return;
     }
+    resetValidationState();
     editingProject = null;
     if (deleteBtn) deleteBtn.hidden = true;
     const safeType = normaliseType(type || 'datapack');
@@ -2364,6 +2498,7 @@
     if (!assertEditorAvailable(true)) {
       return;
     }
+    resetValidationState();
     editingProject = project || null;
     if (deleteBtn) deleteBtn.hidden = !editingProject;
     editorTitleEl.textContent = 'Projekt bearbeiten';
@@ -2407,11 +2542,14 @@
       alert('Bitte zuerst einloggen und Editor-Modus aktivieren.');
       return;
     }
-    const data = collectFormData();
-    if (!data.title) {
-      alert('Titel darf nicht leer sein.');
+    const validation = validateRequiredFields();
+    if (validation.missing.length) {
+      updateValidationSummary(validation.missing);
+      focusFirstInvalidField(validation.firstInvalid);
       return;
     }
+    updateValidationSummary([]);
+    const data = collectFormData();
     try {
       let result;
       if (currentMode === 'edit' && data.id) {
@@ -2485,6 +2623,14 @@
       }
     });
   }
+
+  requiredFieldDefs.forEach((def) => {
+    if (!def || !def.input) return;
+    ['input', 'change'].forEach((eventName) => {
+      def.input.addEventListener(eventName, handleRequiredFieldInput);
+    });
+  });
+
   if (editorForm) {
     editorForm.addEventListener('submit', handleFormSubmit);
   }
