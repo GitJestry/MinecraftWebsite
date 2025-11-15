@@ -1407,11 +1407,23 @@ window.addEventListener('load', function() {
         return;
       }
 
-      const hrefs = Array.from(new Set(Array.from(modal.querySelectorAll('[data-track-download]'))
-        .map((link) => (link.getAttribute('href') || '').trim())
-        .filter(Boolean)));
+      const fileLinks = Array.from(modal.querySelectorAll('[data-track-download], a[download]'));
+      const seen = new Set();
+      const files = fileLinks.reduce((acc, link) => {
+        const href = (link.getAttribute('href') || '').trim();
+        if (!href || seen.has(href)) {
+          return acc;
+        }
+        seen.add(href);
+        const label = (link.getAttribute('data-download-file')
+          || link.getAttribute('download')
+          || href.split('/').filter(Boolean).pop()
+          || '').trim();
+        acc.push({ href, label });
+        return acc;
+      }, []);
 
-      if (!hrefs.length) {
+      if (!files.length) {
         valueEl.textContent = '—';
         valueEl.removeAttribute('title');
         return;
@@ -1420,41 +1432,55 @@ window.addEventListener('load', function() {
       valueEl.textContent = '…';
       valueEl.removeAttribute('title');
 
-      const urlObjects = hrefs.map((href) => {
+      const filesWithUrls = files.map((file) => {
         try {
-          return new URL(href, location.href);
+          return { ...file, url: new URL(file.href, location.href) };
         } catch (error) {
           return null;
         }
       }).filter(Boolean);
 
-      if (!urlObjects.length) {
+      if (!filesWithUrls.length) {
         valueEl.textContent = '—';
+        valueEl.removeAttribute('title');
         return;
       }
 
-      Promise.all(urlObjects.map((url) => fetchSize(url)))
-        .then((sizes) => sizes.filter((size) => Number.isFinite(size) && size > 0))
-        .then((sizes) => {
-          if (!sizes.length) {
+      Promise.all(filesWithUrls.map((file) => fetchSize(file.url)))
+        .then((sizes) => sizes.map((size, index) => ({ file: filesWithUrls[index], size })))
+        .then((entries) => entries.filter(({ size }) => Number.isFinite(size) && size > 0))
+        .then((entries) => {
+          if (!entries.length) {
             valueEl.textContent = '—';
+            valueEl.removeAttribute('title');
             return;
           }
 
-          const total = sizes.reduce((sum, size) => sum + size, 0);
+          const total = entries.reduce((sum, entry) => sum + entry.size, 0);
           const formattedTotal = formatBytes(total);
           valueEl.textContent = formattedTotal || '—';
 
-          if (sizes.length > 1) {
-            const details = sizes
-              .map((size, index) => `File ${index + 1}: ${formatBytes(size) || '—'}`)
-              .join('
-');
-            valueEl.setAttribute('title', details);
+          if (entries.length === 1) {
+            const [entry] = entries;
+            if (entry.file.label) {
+              valueEl.setAttribute('title', `${entry.file.label}: ${formatBytes(entry.size) || '—'}`);
+            } else {
+              valueEl.removeAttribute('title');
+            }
+            return;
           }
+
+          const details = entries
+            .map(({ file, size }) => {
+              const label = file.label || file.href;
+              return `${label}: ${formatBytes(size) || '—'}`;
+            })
+            .join('\n');
+          valueEl.setAttribute('title', details);
         })
         .catch(() => {
           valueEl.textContent = '—';
+          valueEl.removeAttribute('title');
         });
     });
 
@@ -1471,13 +1497,12 @@ window.addEventListener('load', function() {
         const promptLines = [];
         if (filename) {
           promptLines.push(`Download ${filename}?`);
+          promptLines.push(`Datei ${filename} herunterladen?`);
         } else {
           promptLines.push('Start download?');
+          promptLines.push('Download starten?');
         }
-        promptLines.push('Download starten?');
-        const confirmed = window.confirm(promptLines.join('
-
-'));
+        const confirmed = window.confirm(promptLines.join('\n'));
         if (!confirmed) {
           event.preventDefault();
           event.stopImmediatePropagation();
