@@ -188,6 +188,17 @@ html:not(.editor-mode-on) .editor-add-card {
   resize: vertical;
 }
 
+#pe-modal-hero {
+  min-height: 90px;
+}
+
+#pe-modal-body {
+  min-height: 220px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
 .project-editor-form input:focus,
 .project-editor-form select:focus,
 .project-editor-form textarea:focus {
@@ -621,6 +632,16 @@ dialog[open] .content {
       <div class="field field--full">
         <label data-label-datapack="Kurzbeschreibung" data-label-printing="Kurzbeschreibung" for="pe-short">Kurzbeschreibung</label>
         <textarea data-placeholder-datapack="Kurzer Pitch für das Datapack" data-placeholder-printing="Kurzer Pitch für das 3D-Druck-Projekt" id="pe-short" maxlength="240" name="shortDescription" placeholder="Kurzer Pitch für das Projekt"></textarea>
+      </div>
+      <div class="field field--full">
+        <label for="pe-modal-hero">Modal-Einleitung</label>
+        <textarea id="pe-modal-hero" maxlength="320" name="modalHero" placeholder="Kurzer Untertitel im Modal"></textarea>
+        <p class="hint">Text unter dem Titel im Popup. Leer lassen, um die Kurzbeschreibung zu verwenden.</p>
+      </div>
+      <div class="field field--full">
+        <label for="pe-modal-body">Modal-Inhalt (HTML)</label>
+        <textarea id="pe-modal-body" name="modalBody" placeholder="HTML-Inhalt, der im Popup angezeigt wird"></textarea>
+        <p class="hint">Unterstützt HTML. Der Inhalt ersetzt den Abschnitt innerhalb des Popups.</p>
       </div>
       <div class="field field--full" data-label-datapack="Download-Datei (ZIP)" data-label-printing="Download (STL oder ZIP)">
         <label for="pe-download">Download-Datei (ZIP)</label>

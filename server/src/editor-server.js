@@ -160,6 +160,8 @@ app.post('/editor/projects', requireAuth, async (req, res, next) => {
       title: body.title || 'Untitled project',
       type: body.type || 'datapack',
       shortDescription: body.shortDescription || '',
+      modalHero: typeof body.modalHero === 'string' ? body.modalHero : '',
+      modalBody: typeof body.modalBody === 'string' ? body.modalBody : '',
       mcVersion: body.mcVersion || '',
       status: body.status || 'planned',
       category: body.category || '',
@@ -200,6 +202,8 @@ app.put('/editor/projects/:id', requireAuth, async (req, res, next) => {
         : typeof body.tags === 'string'
         ? body.tags.split(',').map((t) => t.trim()).filter(Boolean)
         : existing.tags,
+      modalHero: typeof body.modalHero === 'string' ? body.modalHero : (existing.modalHero || ''),
+      modalBody: typeof body.modalBody === 'string' ? body.modalBody : (existing.modalBody || ''),
       updatedAt: new Date().toISOString(),
     };
     projects[idx] = updated;
