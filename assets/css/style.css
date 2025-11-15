@@ -385,7 +385,8 @@ main section.compact { padding-top: 2rem; }
 
 
 /* === Links page: bigger icons, cleaner UI, centered row === */
-.links-page .viewport .container { width: min(1420px, 94%); }
+/* Limit the wider layout to the main content so the footer keeps the global width */
+.links-page .viewport > main.container { width: min(1420px, 94%); }
 .links-page main section.compact {
   min-height: calc(100dvh - var(--header-h) - var(--footer-h));
   display: grid;
