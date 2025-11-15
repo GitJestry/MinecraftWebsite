@@ -1326,6 +1326,183 @@ window.addEventListener('load', function() {
 
     const sizeCache = new Map();
 
+    const downloadConfirm = (() => {
+      let modal = null;
+      let pendingCancel = null;
+      let focusRestoreTarget = null;
+
+      function getActiveLanguage() {
+        const value = (document.documentElement.getAttribute('lang') || 'en').toLowerCase();
+        return value === 'de' ? 'de' : 'en';
+      }
+
+      function applyLang() {
+        if (!modal) {
+          return;
+        }
+        const lang = getActiveLanguage();
+        modal.querySelectorAll('.lang-en, .lang-de').forEach((node) => {
+          const isEN = node.classList.contains('lang-en');
+          const visible = lang === 'de' ? !isEN : isEN;
+          node.style.display = visible ? '' : 'none';
+          node.setAttribute('aria-hidden', visible ? 'false' : 'true');
+        });
+      }
+
+      function ensureModal() {
+        if (modal) {
+          return modal;
+        }
+        modal = document.createElement('div');
+        modal.id = 'download-consent-modal';
+        modal.className = 'consent-modal';
+        modal.setAttribute('aria-hidden', 'true');
+        modal.innerHTML = `
+          <div class="consent-backdrop" data-close="true"></div>
+          <div class="consent-dialog" role="dialog" aria-modal="true" aria-labelledby="download-consent-title">
+            <div class="consent-head">
+              <div class="consent-title" id="download-consent-title">
+                <span class="lang-en">Download files?</span>
+                <span class="lang-de">Download bestätigen?</span>
+              </div>
+              <button class="consent-x" type="button" aria-label="Close">×</button>
+            </div>
+            <div class="consent-body">
+              <p class="lang-en" id="download-consent-message-en">Download this file? The download will start immediately.</p>
+              <p class="lang-de" id="download-consent-message-de">Diese Datei herunterladen? Der Download startet sofort.</p>
+            </div>
+            <div class="consent-actions">
+              <button type="button" class="btn btn-primary" id="download-consent-confirm">
+                <span class="lang-en">Download</span>
+                <span class="lang-de">Herunterladen</span>
+              </button>
+              <button type="button" class="btn" id="download-consent-cancel">
+                <span class="lang-en">Cancel</span>
+                <span class="lang-de">Abbrechen</span>
+              </button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        applyLang();
+        return modal;
+      }
+
+      function closeModal() {
+        if (!modal) {
+          return;
+        }
+        modal.classList.remove('show');
+        modal.setAttribute('aria-hidden', 'true');
+        const target = focusRestoreTarget;
+        focusRestoreTarget = null;
+        if (target && typeof target.focus === 'function') {
+          try {
+            target.focus();
+          } catch (error) {
+            // ignore focus errors
+          }
+        }
+      }
+
+      function triggerCancel() {
+        if (!modal || !modal.classList.contains('show')) {
+          pendingCancel = null;
+          focusRestoreTarget = null;
+          return;
+        }
+        const cancelCallback = pendingCancel;
+        pendingCancel = null;
+        closeModal();
+        if (typeof cancelCallback === 'function') {
+          cancelCallback();
+        }
+      }
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && modal && modal.classList.contains('show')) {
+          event.preventDefault();
+          triggerCancel();
+        }
+      });
+
+      return {
+        open(options = {}) {
+          const current = ensureModal();
+          const confirmBtn = current.querySelector('#download-consent-confirm');
+          const cancelBtn = current.querySelector('#download-consent-cancel');
+          const closeBtn = current.querySelector('.consent-x');
+          const backdrop = current.querySelector('.consent-backdrop');
+          const titleEn = current.querySelector('#download-consent-title .lang-en');
+          const titleDe = current.querySelector('#download-consent-title .lang-de');
+          const messageEn = current.querySelector('#download-consent-message-en');
+          const messageDe = current.querySelector('#download-consent-message-de');
+
+          const filename = (options.filename || '').trim();
+          const projectTitle = (options.projectTitle || '').trim();
+
+          let messageEnText;
+          let messageDeText;
+          if (projectTitle) {
+            messageEnText = `Download files for “${projectTitle}”? The download will start immediately.`;
+            messageDeText = `Dateien für „${projectTitle}“ herunterladen? Der Download startet sofort.`;
+          } else if (filename) {
+            messageEnText = `Download ${filename}? The download will start immediately.`;
+            messageDeText = `Datei ${filename} herunterladen? Der Download startet sofort.`;
+          } else {
+            messageEnText = 'Start download? The download will start immediately.';
+            messageDeText = 'Download starten? Der Download startet sofort.';
+          }
+
+          titleEn.textContent = 'Download files?';
+          titleDe.textContent = 'Download bestätigen?';
+          messageEn.textContent = messageEnText;
+          messageDe.textContent = messageDeText;
+
+          const confirmCallback = typeof options.onConfirm === 'function' ? options.onConfirm : null;
+          pendingCancel = typeof options.onCancel === 'function' ? options.onCancel : null;
+
+          const handleCancel = () => {
+            triggerCancel();
+          };
+
+          confirmBtn.onclick = () => {
+            const callback = confirmCallback;
+            pendingCancel = null;
+            closeModal();
+            if (typeof callback === 'function') {
+              callback();
+            }
+          };
+
+          cancelBtn.onclick = handleCancel;
+          closeBtn.onclick = handleCancel;
+          backdrop.onclick = (event) => {
+            if (event.target === backdrop || event.target.dataset.close === 'true') {
+              handleCancel();
+            }
+          };
+
+          const activeElement = document.activeElement;
+          focusRestoreTarget = activeElement && typeof activeElement.focus === 'function' ? activeElement : null;
+
+          applyLang();
+          current.classList.add('show');
+          current.setAttribute('aria-hidden', 'false');
+          setTimeout(() => {
+            try {
+              confirmBtn.focus();
+            } catch (error) {
+              // ignore focus errors
+            }
+          }, 0);
+        },
+        apply: applyLang,
+      };
+    })();
+
+    document.addEventListener('langchange', downloadConfirm.apply);
+
     function formatBytes(bytes) {
       if (!Number.isFinite(bytes) || bytes <= 0) {
         return null;
@@ -1490,24 +1667,41 @@ window.addEventListener('load', function() {
           return;
         }
 
-        const datasetName = link.getAttribute('data-download-file');
-        const explicit = link.getAttribute('download');
-        const href = link.getAttribute('href') || '';
-        const filename = (datasetName || explicit || href).split('/').filter(Boolean).pop() || datasetName || explicit || href;
-        const promptLines = [];
-        if (filename) {
-          promptLines.push(`Download ${filename}?`);
-          promptLines.push(`Datei ${filename} herunterladen?`);
-        } else {
-          promptLines.push('Start download?');
-          promptLines.push('Download starten?');
+        if (link.getAttribute('data-download-confirm-bypass') === '1') {
+          link.removeAttribute('data-download-confirm-bypass');
+          return;
         }
-        const confirmed = window.confirm(promptLines.join('\n'));
-        if (!confirmed) {
-          event.preventDefault();
-          event.stopImmediatePropagation();
-          event.stopPropagation();
+
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        event.stopPropagation();
+
+        const datasetName = (link.getAttribute('data-download-file') || '').trim();
+        const explicit = (link.getAttribute('download') || '').trim();
+        const href = (link.getAttribute('href') || '').trim();
+        const fallback = href.split('/').filter(Boolean).pop() || '';
+        const filename = datasetName || explicit || fallback;
+
+        let projectTitle = '';
+        const modalRoot = link.closest('.modal[data-project-id]');
+        if (modalRoot) {
+          const titleEl = modalRoot.querySelector('.modal-hero .title');
+          if (titleEl) {
+            projectTitle = titleEl.textContent.trim();
+          }
         }
+
+        downloadConfirm.open({
+          filename,
+          projectTitle,
+          onConfirm: () => {
+            link.setAttribute('data-download-confirm-bypass', '1');
+            link.click();
+          },
+          onCancel: () => {
+            link.removeAttribute('data-download-confirm-bypass');
+          },
+        });
       }, { capture: true });
     });
   });
