@@ -23,6 +23,7 @@
   const editorModal = document.getElementById('project-editor-modal');
   const editorForm = document.getElementById('project-editor-form');
   const editorTitleEl = document.getElementById('project-editor-title');
+  const editorSubEl = document.getElementById('project-editor-sub');
 
   const idInput = document.getElementById('pe-id');
   const typeInput = document.getElementById('pe-type');
@@ -34,12 +35,30 @@
   const shortInput = document.getElementById('pe-short');
   const downloadInput = document.getElementById('pe-download');
   const imageInput = document.getElementById('pe-image');
+  const deleteBtn = document.getElementById('project-editor-delete');
+
+  const typeOnlyFields = editorForm ? Array.from(editorForm.querySelectorAll('[data-type-only]')) : [];
+  const typeAwareLabelNodes = editorForm ? Array.from(editorForm.querySelectorAll('[data-label-datapack]')) : [];
+  const typeAwarePlaceholderNodes = editorForm ? Array.from(editorForm.querySelectorAll('[data-placeholder-datapack]')) : [];
+  const typeAwareHintNodes = editorForm ? Array.from(editorForm.querySelectorAll('[data-hint-datapack]')) : [];
 
   const LS_KEY = 'mirl.editor.token';
   let token = null;
   let editorOn = false;
   let projectsById = Object.create(null);
   let currentMode = 'create'; // 'create' | 'edit'
+  let editingProject = null;
+
+  const SUB_COPY = {
+    create: {
+      datapack: 'Lege ein neues Datapack mit Version, Tags und Download an.',
+      printing: 'Füge ein neues 3D-Druck-Projekt mit Druck-Setup und Download hinzu.'
+    },
+    edit: {
+      datapack: 'Bearbeite die Angaben deines Datapacks.',
+      printing: 'Bearbeite die Angaben deines 3D-Druck-Projekts.'
+    }
+  };
 
   function loadToken() {
     try {
@@ -166,6 +185,72 @@
     return 'datapack';
   }
 
+  function updateSubtitle(type, mode) {
+    if (!editorSubEl) return;
+    const safeType = normaliseType(type);
+    const safeMode = mode === 'edit' ? 'edit' : 'create';
+    const fallback = safeMode === 'edit' ? SUB_COPY.edit.datapack : SUB_COPY.create.datapack;
+    editorSubEl.textContent = (SUB_COPY[safeMode] && SUB_COPY[safeMode][safeType]) || fallback;
+  }
+
+  function resolveLabelNode(node) {
+    if (!node) return null;
+    if (node.tagName === 'LABEL') return node;
+    return node.querySelector('label');
+  }
+
+  function applyTypeUi(rawType) {
+    const type = normaliseType(rawType);
+
+    typeOnlyFields.forEach((field) => {
+      const typesAttr = (field.getAttribute('data-type-only') || '').trim();
+      if (!typesAttr) {
+        field.hidden = false;
+        return;
+      }
+      const allowed = typesAttr.split(',').map((t) => normaliseType(t.trim())).filter(Boolean);
+      field.hidden = allowed.length > 0 && !allowed.includes(type);
+    });
+
+    typeAwareLabelNodes.forEach((node) => {
+      const labelEl = resolveLabelNode(node);
+      if (!labelEl) return;
+      if (!labelEl.dataset.labelDefault) {
+        labelEl.dataset.labelDefault = labelEl.textContent.trim();
+      }
+      const source = node;
+      const attrValue = source.getAttribute('data-label-' + type);
+      const value = attrValue || labelEl.dataset.labelDefault || '';
+      if (value) {
+        labelEl.textContent = value;
+      }
+    });
+
+    typeAwarePlaceholderNodes.forEach((node) => {
+      if (!node.dataset.placeholderDefault) {
+        node.dataset.placeholderDefault = node.getAttribute('placeholder') || '';
+      }
+      const attrValue = node.getAttribute('data-placeholder-' + type);
+      const value = attrValue || node.dataset.placeholderDefault;
+      node.setAttribute('placeholder', value);
+    });
+
+    typeAwareHintNodes.forEach((node) => {
+      if (!node.dataset.hintDefault) {
+        node.dataset.hintDefault = node.textContent.trim();
+      }
+      const attrValue = node.getAttribute('data-hint-' + type);
+      const value = attrValue != null ? attrValue : node.dataset.hintDefault || '';
+      if (value) {
+        node.textContent = value;
+        node.hidden = false;
+      } else {
+        node.textContent = '';
+        node.hidden = true;
+      }
+    });
+  }
+
   function escapeHtml(str){
     return String(str == null ? '' : str)
       .replace(/&/g,'&amp;')
@@ -224,8 +309,9 @@
     if (!grid) return;
 
     const card = document.createElement('article');
-    card.className = isDatapack ? 'card dp-card' : 'card';
+    card.className = isDatapack ? 'card dp-card' : 'card pr-card';
     card.setAttribute('data-project-id', project.id);
+    card.setAttribute('data-project-type', type);
     const category = project.category || '';
     const tags = Array.isArray(project.tags) ? project.tags : [];
     const subcats = category || (tags.join(',') || '');
@@ -297,12 +383,18 @@
     if (!editorModal) return;
     editorModal.hidden = false;
     editorModal.setAttribute('aria-hidden','false');
+    setTimeout(() => {
+      if (titleInput && typeof titleInput.focus === 'function') {
+        titleInput.focus();
+      }
+    }, 50);
   }
 
   function closeEditorModal(){
     if (!editorModal) return;
     editorModal.hidden = true;
     editorModal.setAttribute('aria-hidden','true');
+    editingProject = null;
   }
 
   function fillFormFromProject(project){
@@ -335,9 +427,12 @@
   }
 
   function openEditorForCreate(type){
-    editorTitleEl.textContent = type === 'printing' ? 'Neues 3D-Print-Projekt' : 'Neues Datapack';
+    editingProject = null;
+    if (deleteBtn) deleteBtn.hidden = true;
+    const safeType = normaliseType(type || 'datapack');
+    editorTitleEl.textContent = safeType === 'printing' ? 'Neues 3D-Print-Projekt' : 'Neues Datapack';
     idInput.value = '';
-    typeInput.value = type || 'datapack';
+    typeInput.value = safeType;
     titleInput.value = '';
     mcVersionInput.value = '';
     statusInput.value = 'released';
@@ -346,12 +441,19 @@
     shortInput.value = '';
     downloadInput.value = '';
     imageInput.value = 'assets/img/logo.jpg';
+    applyTypeUi(safeType);
+    updateSubtitle(safeType, 'create');
     openEditorModal('create');
   }
 
   function openEditorForEdit(project){
+    editingProject = project || null;
+    if (deleteBtn) deleteBtn.hidden = !editingProject;
     editorTitleEl.textContent = 'Projekt bearbeiten';
     fillFormFromProject(project);
+    const safeType = normaliseType(typeInput.value);
+    applyTypeUi(safeType);
+    updateSubtitle(safeType, 'edit');
     openEditorModal('edit');
   }
 
@@ -368,7 +470,9 @@
         body: '{}'
       });
       delete projectsById[project.id];
+      editingProject = null;
       await loadProjects();
+      closeEditorModal();
     } catch(e){
       alert('Konnte Projekt nicht löschen: ' + e.message);
     }
@@ -416,8 +520,12 @@
   logoutBtn.addEventListener('click', handleLogout);
   toggleBtn.addEventListener('click', toggleEditorMode);
   addBtn.addEventListener('click', function(){
-    // Default: neues Datapack
-    openEditorForCreate('datapack');
+    let type = 'datapack';
+    const activeTab = document.querySelector('.segment a.active');
+    if (activeTab) {
+      type = activeTab.dataset.key === '1' ? 'printing' : 'datapack';
+    }
+    openEditorForCreate(type);
   });
 
   if (editorModal) {
@@ -426,13 +534,34 @@
         closeEditorModal();
       }
     });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !editorModal.hidden) {
+        closeEditorModal();
+      }
+    });
   }
   if (editorForm) {
     editorForm.addEventListener('submit', handleFormSubmit);
+  }
+  if (typeInput) {
+    typeInput.addEventListener('change', () => {
+      const safeType = normaliseType(typeInput.value);
+      applyTypeUi(safeType);
+      updateSubtitle(safeType, currentMode);
+    });
+  }
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', () => {
+      if (editingProject) {
+        handleDeleteProject(editingProject);
+      }
+    });
   }
 
   loadToken();
   checkSession();
   loadProjects();
+  applyTypeUi(typeInput ? typeInput.value : 'datapack');
+  updateSubtitle(typeInput ? typeInput.value : 'datapack', 'create');
 
 })();

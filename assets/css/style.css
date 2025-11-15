@@ -470,6 +470,29 @@ footer { position: static !important; background: transparent !important; backdr
 .viewport { position: static !important; top: auto !important; bottom: auto !important; left: auto !important; right: auto !important; overflow: visible !important; }
 .viewport::before, .viewport::after { display: none !important; content: none !important; }
 
+/* Projects page: make native scrollbar blend with background */
+body.projects-page {
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-dark) rgba(15,23,42,0.7);
+}
+body.projects-page::-webkit-scrollbar {
+  width: 12px;
+}
+body.projects-page::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+body.projects-page::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--accent), var(--accent-dark));
+  border-radius: 8px;
+  border: 3px solid var(--bg);
+}
+body.projects-page::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--accent-strong), var(--accent-dark));
+}
+body.projects-page::-webkit-scrollbar-corner {
+  background: var(--bg);
+}
+
 /* Bottom Notice: shows only when footer is in view; stays at bottom of the screen */
 #bottomNotice {
   position: fixed;
