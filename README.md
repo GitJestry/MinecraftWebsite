@@ -1,29 +1,16 @@
-# MinecraftWebsite
+# Client Portfolio & Download Hub
 
-Static site for the Minecraft In Real Life project. The content in the repository can be deployed directly to any static web host (e.g. GitHub Pages) without running a custom server.
+This repository houses a static website that functions as a showcase and download hub for a Minecraft creator. The experience is designed to introduce visitors to the client, highlight notable datapacks and 3D-printing models, and provide quick access to social channels.
 
-## GitHub Pages setup
+## Experience Overview
+- **Landing page (`index.html`)** — Welcomes visitors with hero imagery, recent highlights, and prominent calls-to-action that steer people toward the download catalogue and social profiles.
+- **Download library (`downloads/`)** — Groups Minecraft datapacks and printable `.stl` files with descriptive blurbs and preview imagery so fans can understand each item before downloading.
+- **Project gallery (`projects.html`)** — Presents finished builds and works-in-progress, pairing images with context about the creative process to demonstrate craftsmanship and style.
+- **Link hub (`links.html`)** — Acts as a consolidated "link in bio," directing visitors to YouTube, TikTok, Instagram, Discord, and other communities where the client is active.
 
-1. Push the repository to GitHub.
-2. Enable GitHub Pages for the repository and choose the branch that contains the website (typically `main`).
-3. Set the Pages source to the repository root. All assets are served relative to the page, so subdirectory deployments such as `https://<user>.github.io/<repo>/` work out of the box.
+## Visual & Content Notes
+- **Branding assets (`assets/`)** provide consistent colours, typography, and iconography across every page, reinforcing the client’s identity.
+- **Static HTML** keeps the site lightweight and reliable, making it simple for fans to load the pages quickly and explore downloads without friction.
+- **Responsive layout** ensures the experience works on desktop browsers and mobile devices, supporting visitors who follow links from social media.
 
-The projects grid and download counters read data from static JSON files in `assets/data/`, so no background services are required online.
-
-## Updating projects & downloads
-
-Project information lives in [`assets/data/projects.json`](assets/data/projects.json). Download counters can be pre-populated in [`assets/data/download-counts.json`](assets/data/download-counts.json). Edit these files and commit the changes to publish new content.
-
-The rich editor UI on `projects.html` remains available for local maintenance workflows, but it is automatically disabled when the site runs in static-hosting mode (such as GitHub Pages).
-
-## Optional editor backend
-
-The `server/` directory still contains the Node.js backend that powered the live editor during development. You only need it when you want to use the interactive editor locally:
-
-```bash
-cd server
-npm install
-npm run dev
-```
-
-Set `document.documentElement.dataset.editorApi` or `window.MIRL_EDITOR_API` to point the front-end to the backend when working locally. For GitHub Pages (or any other static host) this step is not necessary—the site works with the bundled JSON data.
+Overall, the site serves as a central hub where the client can share their creative output, invite collaboration, and grow their audience through curated downloads and an engaging presentation.
