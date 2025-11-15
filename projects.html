@@ -391,6 +391,13 @@ html:not(.editor-mode-on) .editor-add-card {
   font-size: 0.9rem;
   color: var(--muted);
 }
+.editor-banner[hidden] {
+  display: none !important;
+}
+.editor-banner .editor-status[hidden],
+.editor-banner button[hidden] {
+  display: none !important;
+}
 .editor-status {
   display: flex;
   gap: 8px;
@@ -695,18 +702,18 @@ dialog[open] .content {
 </nav>
 </header>
 <div class="viewport"><main class="container">
-<div class="editor-banner" id="editor-banner">
+<div class="editor-banner" hidden id="editor-banner">
   <div>
     <strong>Editor:</strong>
     <span id="editor-label">Nicht angemeldet</span>
   </div>
-  <div class="editor-status" id="editor-status">
+  <div class="editor-status" hidden id="editor-status">
     <span id="editor-user-label"></span>
-    <button type="button" id="editor-toggle">Editor-Modus: Aus</button>
-    <button type="button" id="editor-add">+ Neues Projekt</button>
-    <button type="button" id="editor-logout">Logout</button>
+    <button hidden type="button" id="editor-toggle">Editor-Modus: Aus</button>
+    <button hidden type="button" id="editor-add">+ Neues Projekt</button>
+    <button hidden type="button" id="editor-logout">Logout</button>
   </div>
-  <button type="button" id="editor-login-button">Admin-Login</button>
+  <button hidden type="button" id="editor-login-button">Admin-Login</button>
 </div>
 
 <div aria-hidden="true" class="project-editor" hidden id="project-editor-modal">
