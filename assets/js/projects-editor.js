@@ -38,8 +38,34 @@
 
   const STATIC_PROJECTS_URL = resolveProjectsDataUrl();
   const DEFAULT_EDITOR_DISABLED_REASON = 'Editorfunktionen sind in dieser statischen Veröffentlichung deaktiviert.';
+  const DEFAULT_API_RETRY_ATTEMPTS = 1;
+  const DEFAULT_API_RETRY_DELAY = 400;
   let editingSupported = true;
   let editorDisabledReason = DEFAULT_EDITOR_DISABLED_REASON;
+
+  function delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  function normaliseRetryStatuses(values) {
+    if (!Array.isArray(values) || !values.length) {
+      return null;
+    }
+    const normalised = values
+      .map((value) => {
+        const number = Number(value);
+        return Number.isFinite(number) ? Math.trunc(number) : null;
+      })
+      .filter((value) => value !== null);
+    return normalised.length ? normalised : null;
+  }
+
+  function isRetriableStatus(status, explicit) {
+    if (explicit && explicit.includes(status)) {
+      return true;
+    }
+    return status === 408 || status === 425 || status === 429 || (status >= 500 && status < 600);
+  }
 
   function sanitiseApiBase(value) {
     if (value == null) return '';
@@ -390,6 +416,12 @@
 
   async function api(path, options){
     const opts = options ? { ...options } : {};
+    const retryAttemptsOption = Number.isFinite(opts.retryAttempts) ? Math.max(0, Math.floor(opts.retryAttempts)) : DEFAULT_API_RETRY_ATTEMPTS;
+    const retryDelayOption = Number.isFinite(opts.retryDelay) ? Math.max(0, Math.floor(opts.retryDelay)) : DEFAULT_API_RETRY_DELAY;
+    const retryStatuses = normaliseRetryStatuses(opts.retryOnStatuses);
+    delete opts.retryAttempts;
+    delete opts.retryDelay;
+    delete opts.retryOnStatuses;
     const headers = { ...(opts.headers || {}) };
     if (!(opts.body instanceof FormData) && !('Content-Type' in headers)) {
       headers['Content-Type'] = 'application/json';
@@ -403,19 +435,43 @@
     opts.headers = headers;
     opts.credentials = API_SAME_ORIGIN ? 'include' : 'omit';
     const url = API_BASE ? API_BASE + path : path;
-    const res = await fetch(url, opts);
-    if (!res.ok) {
-      let err;
-      try { err = await res.json(); } catch(e){}
-      const msg = err && err.error ? err.error : ('HTTP ' + res.status);
-      throw new Error(msg);
+    let attempt = 0;
+    while (attempt <= retryAttemptsOption) {
+      let res;
+      try {
+        res = await fetch(url, opts);
+      } catch (err) {
+        const isAbort = err && typeof err === 'object' && err.name === 'AbortError';
+        if (isAbort || attempt === retryAttemptsOption) {
+          throw err;
+        }
+        attempt += 1;
+        if (retryDelayOption > 0) {
+          await delay(retryDelayOption * attempt);
+        }
+        continue;
+      }
+      if (!res.ok) {
+        if (attempt < retryAttemptsOption && isRetriableStatus(res.status, retryStatuses)) {
+          attempt += 1;
+          if (retryDelayOption > 0) {
+            await delay(retryDelayOption * attempt);
+          }
+          continue;
+        }
+        let err;
+        try { err = await res.json(); } catch(e){}
+        const msg = err && err.error ? err.error : ('HTTP ' + res.status);
+        throw new Error(msg);
+      }
+      const text = await res.text();
+      try {
+        return text ? JSON.parse(text) : null;
+      } catch(e){
+        return null;
+      }
     }
-    const text = await res.text();
-    try {
-      return text ? JSON.parse(text) : null;
-    } catch(e){
-      return null;
-    }
+    return null;
   }
 
   async function checkSession() {
@@ -452,7 +508,9 @@
     try {
       const res = await api('/editor/login', {
         method: 'POST',
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ username, password }),
+        retryAttempts: 2,
+        retryDelay: 500
       });
       if (res && res.token) {
         saveToken(res.token);
@@ -462,7 +520,11 @@
         alert('Login fehlgeschlagen.');
       }
     } catch(e){
-      alert('Login fehlgeschlagen: ' + e.message);
+      let message = e && typeof e.message === 'string' ? e.message : '';
+      if (!message || message === 'Failed to fetch') {
+        message = 'Netzwerkfehler. Bitte prüfe die Editor-API und versuche es erneut.';
+      }
+      alert('Login fehlgeschlagen: ' + message);
     }
   }
 
