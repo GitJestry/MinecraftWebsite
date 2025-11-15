@@ -361,35 +361,102 @@ html:not(.editor-mode-on) .editor-add-card {
   background: rgba(148,163,184,0.95);
 }
 
-/* --- Simple admin editor banner --- */
+/* --- Editor command bar --- */
 .editor-banner {
-  margin-bottom: 16px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: rgba(59,130,246,0.08);
+  margin-bottom: 22px;
+  padding: 1.1rem 1.4rem;
+  border-radius: 20px;
+  border: 1px solid rgba(59,130,246,0.4);
+  background: linear-gradient(120deg, rgba(15,23,42,0.95), rgba(37,99,235,0.9));
+  box-shadow: 0 20px 40px rgba(15,23,42,0.35);
+  color: #f1f5f9;
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
+  gap: 1.25rem;
 }
-.editor-banner button {
+.editor-banner .editor-info {
+  flex: 1 1 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 220px;
+}
+.editor-banner .editor-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.72rem;
+  color: rgba(241,245,249,0.7);
+  margin: 0;
+}
+.editor-banner .editor-headline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: baseline;
+}
+.editor-banner #editor-label {
+  font-size: 1.05rem;
+}
+.editor-banner #editor-user-label {
+  font-size: 0.9rem;
+  color: rgba(241,245,249,0.78);
+}
+.editor-banner .editor-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(241,245,249,0.7);
+}
+.editor-status {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  align-items: flex-start;
+  min-width: 220px;
+}
+.editor-status.hidden {
+  display: none;
+}
+.editor-banner .editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+.editor-banner .btn-pill {
   border-radius: 999px;
-  padding: 6px 14px;
-  border: 1px solid rgba(37,99,235,0.6);
-  background: rgba(37,99,235,0.06);
+  padding: 0.45rem 1.1rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border: 1px solid transparent;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
   cursor: pointer;
 }
-.editor-banner button:hover {
-  background: rgba(37,99,235,0.14);
+.editor-banner .btn-pill--ghost {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.28);
+  color: #f8fafc;
+}
+.editor-banner .btn-pill--ghost:hover {
+  background: rgba(255,255,255,0.18);
+  border-color: rgba(255,255,255,0.5);
+}
+.editor-banner .btn-pill--primary {
+  background: #f8fafc;
+  color: #1d4ed8;
+  border-color: transparent;
+  box-shadow: 0 10px 25px rgba(15,23,42,0.25);
+}
+.editor-banner .btn-pill--primary:hover {
+  background: #e2e8f0;
 }
 .editor-banner[data-editor-disabled="true"] {
-  justify-content: center;
+  justify-content: space-between;
   flex-wrap: wrap;
 }
 .editor-banner .editor-disabled-note {
   font-size: 0.9rem;
-  color: var(--muted);
+  color: rgba(241,245,249,0.9);
 }
 .editor-banner[hidden] {
   display: none !important;
@@ -398,13 +465,23 @@ html:not(.editor-mode-on) .editor-add-card {
 .editor-banner button[hidden] {
   display: none !important;
 }
-.editor-status {
+.editor-banner .editor-cta {
   display: flex;
-  gap: 8px;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-width: 200px;
 }
-.editor-status.hidden {
-  display: none;
+@media (max-width: 640px) {
+  .editor-banner {
+    padding: 1rem;
+  }
+  .editor-banner .editor-cta,
+  .editor-status {
+    width: 100%;
+  }
+  .editor-banner .editor-actions {
+    width: 100%;
+  }
 }
 
 /* PRIVACY_IMPRINT_MAIN_TEXT_NORMAL */
@@ -702,18 +779,25 @@ dialog[open] .content {
 </nav>
 </header>
 <div class="viewport"><main class="container">
-<div class="editor-banner" hidden id="editor-banner">
-  <div>
-    <strong>Editor:</strong>
-    <span id="editor-label">Nicht angemeldet</span>
+<div class="editor-banner" data-require-session hidden id="editor-banner">
+  <div class="editor-info">
+    <p class="editor-eyebrow">Projekteditor</p>
+    <div class="editor-headline">
+      <strong id="editor-label">Nicht angemeldet</strong>
+      <span id="editor-user-label"></span>
+    </div>
+    <p class="editor-hint">Aktiviere den Modus, um Projekte live zu pflegen.</p>
   </div>
-  <div class="editor-status" hidden id="editor-status">
-    <span id="editor-user-label"></span>
-    <button hidden type="button" id="editor-toggle">Editor-Modus: Aus</button>
-    <button hidden type="button" id="editor-add">+ Neues Projekt</button>
-    <button hidden type="button" id="editor-logout">Logout</button>
+  <div class="editor-cta">
+    <div class="editor-status" hidden id="editor-status">
+      <div class="editor-actions">
+        <button class="btn-pill btn-pill--ghost" hidden type="button" id="editor-toggle">Editor-Modus: Aus</button>
+        <button class="btn-pill btn-pill--ghost" hidden type="button" id="editor-add">+ Neues Projekt</button>
+        <button class="btn-pill btn-pill--ghost" hidden type="button" id="editor-logout">Logout</button>
+      </div>
+    </div>
+    <button class="btn-pill btn-pill--primary" hidden type="button" id="editor-login-button">Admin-Login</button>
   </div>
-  <button hidden type="button" id="editor-login-button">Admin-Login</button>
 </div>
 
 <div aria-hidden="true" class="project-editor" hidden id="project-editor-modal">
