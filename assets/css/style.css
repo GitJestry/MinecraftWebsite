@@ -2413,7 +2413,7 @@ footer { background: rgba(8,10,16,.65); backdrop-filter: blur(3px); border-top: 
 .lang-toggle:hover { box-shadow: 0 4px 18px rgba(0,0,0,.28); }
 
 /* === Consent modal === */
-.consent-modal { position: fixed; inset: 0; display: none; z-index: 1200; }
+.consent-modal { position: fixed; inset: 0; display: none; z-index: 10001; }
 .consent-modal.show { display:block; }
 .consent-backdrop { position:absolute; inset:0; background: rgba(0,0,0,.4); }
 .consent-dialog { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
