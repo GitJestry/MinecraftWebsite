@@ -2336,6 +2336,10 @@
       alert('Titel darf nicht leer sein.');
       return;
     }
+    if (!data.downloadFile) {
+      alert('Bitte gib eine Download-Datei oder URL an – jedes Projekt benötigt ein Download-Ziel.');
+      return;
+    }
     try {
       let result;
       if (currentMode === 'edit' && data.id) {
