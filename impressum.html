@@ -30,15 +30,6 @@
     letter-spacing: 0 !important;
   }
 
-  .legal-page header.nav-min {
-    font-family: "MIRL-Minecraft", monospace;
-    letter-spacing: .02em;
-  }
-
-  .legal-page header.nav-min .btn-tab {
-    text-transform: uppercase;
-  }
-
   main p, main li, .content p, .content li, .main-content p, .main-content li, article p, article li {
     font-weight: 400 !important;
     font-style: normal !important;
@@ -301,7 +292,7 @@
 </head>
 <body class="legal-page">
 <header class="nav-min see-through" role="banner">
-  <nav class="container navbar" aria-label="Top navigation">
+  <nav aria-label="Top navigation" class="container navbar">
     <a class="btn-tab" href="index.html"><span class="lang-en">Home</span><span class="lang-de">Start</span></a>
     <a class="btn-tab" href="links.html"><span class="lang-en">Links</span><span class="lang-de">Links</span></a>
     <a class="btn-tab" href="projects.html"><span class="lang-en">Projects</span><span class="lang-de">Projekte</span></a>
@@ -479,6 +470,45 @@
   </footer>
 </div>
 
+<script>
+// v16: Fixed header + hide after scrolling far enough
+(function(){
+  var header = document.querySelector('header.nav-min');
+  if (!header) return;
+  var threshold = 600; // px from top before we hide
+  function apply(){
+    var y = window.pageYOffset || document.documentElement.scrollTop || 0;
+    if (y > threshold) header.classList.add('nav-hidden'); else header.classList.remove('nav-hidden');
+  }
+  window.addEventListener('scroll', apply, {passive:true});
+  window.addEventListener('load', apply);
+  apply();
+})();
+</script>
+<script>
+(function() {
+  var header = document.querySelector('header.nav-min');
+  if (!header) return;
+  var lastY = window.scrollY || 0;
+  var hidden = false;
+  var threshold = 140; // how far you must scroll before hide behavior can trigger
+
+  function onScroll() {
+    var y = window.scrollY || 0;
+    // Only allow hide when we've gone past threshold and scrolling down
+    if (y > threshold && y > lastY + 6 && !hidden) {
+      header.classList.add('is-hidden');
+      hidden = true;
+    } else if ((y < threshold || y < lastY - 6) && hidden) {
+      // show on scroll up or when returning near top
+      header.classList.remove('is-hidden');
+      hidden = false;
+    }
+    lastY = y;
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+})();
+</script>
 <script src="assets/js/site.js"></script>
 </body>
 </html>
