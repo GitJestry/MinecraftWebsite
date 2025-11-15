@@ -2657,14 +2657,12 @@ body.legal-page header.nav {
   top: 0;
   left: 0;
   right: 0;
-  background: rgba(8, 10, 16, .65);
-  backdrop-filter: blur(4px);
   border-bottom: 1px solid var(--border);
   z-index: 18;
 }
 body.legal-page header.nav-min.see-through {
-  background: rgba(8, 10, 16, .65) !important;
-  backdrop-filter: blur(4px) !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
 }
 body.legal-page .viewport::before,
 body.legal-page .viewport::after {
