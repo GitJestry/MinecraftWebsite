@@ -62,6 +62,8 @@
   const categoryInput = document.getElementById('pe-category');
   const tagsInput = document.getElementById('pe-tags');
   const shortInput = document.getElementById('pe-short');
+  const modalHeroInput = document.getElementById('pe-modal-hero');
+  const modalBodyInput = document.getElementById('pe-modal-body');
   const downloadInput = document.getElementById('pe-download');
   const imageInput = document.getElementById('pe-image');
   const deleteBtn = document.getElementById('project-editor-delete');
@@ -75,6 +77,7 @@
   let token = null;
   let editorOn = false;
   let projectsById = Object.create(null);
+  const modalDefaults = new Map();
   let currentMode = 'create'; // 'create' | 'edit'
   let editingProject = null;
 
@@ -218,6 +221,65 @@
     return 'datapack';
   }
 
+  function resolveModalId(project, typeHint) {
+    if (!project) return '';
+    const explicit = (project.modalTarget || '').trim();
+    if (explicit) return explicit;
+    const id = (project.id || '').trim();
+    if (!id) return '';
+    const matchByData = document.querySelector(`.modal[data-project-id="${id}"]`);
+    if (matchByData && matchByData.id) {
+      return matchByData.id;
+    }
+    const direct = document.getElementById(id);
+    if (direct && direct.classList && direct.classList.contains('modal')) {
+      return direct.id;
+    }
+    const prefix = normaliseType(typeHint) === 'printing' ? 'pr-' : 'dp-';
+    const guess = document.getElementById(prefix + id);
+    if (guess && guess.classList && guess.classList.contains('modal')) {
+      return guess.id;
+    }
+    return '';
+  }
+
+  function rememberModalDefaults(modalId, modal) {
+    if (!modalId || !modal || modalDefaults.has(modalId)) return;
+    const hero = modal.querySelector('.modal-hero .muted');
+    const body = modal.querySelector('.modal-body');
+    modalDefaults.set(modalId, {
+      hero: hero ? hero.textContent.trim() : '',
+      body: body ? body.innerHTML.trim() : '',
+    });
+  }
+
+  function getModalRef(project) {
+    if (!project) {
+      return { modalId: '', modal: null };
+    }
+    const type = normaliseType(project.type);
+    const modalId = resolveModalId(project, type);
+    const modal = modalId ? document.getElementById(modalId) : null;
+    if (modal) {
+      rememberModalDefaults(modalId, modal);
+    }
+    return { modalId, modal };
+  }
+
+  function extractModalHero(project) {
+    const { modal } = getModalRef(project);
+    if (!modal) return '';
+    const hero = modal.querySelector('.modal-hero .muted');
+    return hero ? hero.textContent.trim() : '';
+  }
+
+  function extractModalBody(project) {
+    const { modal } = getModalRef(project);
+    if (!modal) return '';
+    const body = modal.querySelector('.modal-body');
+    return body ? body.innerHTML.trim() : '';
+  }
+
   function updateSubtitle(type, mode) {
     if (!editorSubEl) return;
     const safeType = normaliseType(type);
@@ -352,28 +414,8 @@
     const subcats = category || (tags.join(',') || '');
     if (subcats) card.setAttribute('data-subcats', subcats);
 
-    let modalId = '';
-    if (project.modalTarget) {
-      modalId = String(project.modalTarget).trim();
-    }
-    if (!modalId && project.id) {
-      const modalMatch = document.querySelector(`.modal[data-project-id="${project.id}"]`);
-      if (modalMatch && modalMatch.id) {
-        modalId = modalMatch.id;
-      }
-    }
-    if (!modalId && project.id) {
-      const direct = document.getElementById(project.id);
-      if (direct && direct.classList && direct.classList.contains('modal')) {
-        modalId = direct.id;
-      }
-    }
-    if (!modalId && project.id) {
-      const guess = document.getElementById((isDatapack ? 'dp-' : 'pr-') + project.id);
-      if (guess && guess.classList && guess.classList.contains('modal')) {
-        modalId = guess.id;
-      }
-    }
+    const modalInfo = getModalRef(project);
+    const modalId = modalInfo.modalId;
     if (modalId) {
       card.dataset.modalTarget = modalId;
       card.setAttribute('aria-controls', modalId);
@@ -400,6 +442,67 @@
 
     attachCardEditorTools(card, project);
     grid.appendChild(card);
+  }
+
+  function initModalTabs(modal) {
+    if (!modal) return;
+    const tabs = Array.from(modal.querySelectorAll('.tabs [role="tab"]'));
+    const panels = Array.from(modal.querySelectorAll('.tabpanels [role="tabpanel"]'));
+    if (!tabs.length || !panels.length) return;
+
+    function setTab(name) {
+      tabs.forEach((tab) => {
+        const on = tab.getAttribute('data-tab') === name;
+        tab.classList.toggle('active', on);
+        tab.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      panels.forEach((panel) => {
+        const on = panel.id.endsWith(name);
+        panel.classList.toggle('active', on);
+      });
+    }
+
+    tabs.forEach((tab) => {
+      if (tab.dataset.mirlTabsBound === '1') return;
+      tab.dataset.mirlTabsBound = '1';
+      tab.addEventListener('click', () => setTab(tab.getAttribute('data-tab')));
+    });
+
+    const defaultTab = tabs.find((tab) => tab.classList.contains('active')) || tabs[0];
+    const defaultName = defaultTab ? (defaultTab.getAttribute('data-tab') || 'description') : 'description';
+    setTab(defaultName || 'description');
+  }
+
+  function applyProjectModalContent(project) {
+    const { modalId, modal } = getModalRef(project);
+    if (!modalId || !modal) return;
+    const defaults = modalDefaults.get(modalId) || { hero: '', body: '' };
+
+    const heroEl = modal.querySelector('.modal-hero .muted');
+    if (heroEl) {
+      const customHero = typeof project.modalHero === 'string' ? project.modalHero.trim() : '';
+      const fallbackHero = customHero
+        || (typeof project.shortDescription === 'string' ? project.shortDescription.trim() : '')
+        || defaults.hero
+        || '';
+      heroEl.textContent = fallbackHero;
+    }
+
+    const bodyEl = modal.querySelector('.modal-body');
+    let bodyApplied = false;
+    if (bodyEl) {
+      if (typeof project.modalBody === 'string' && project.modalBody.trim()) {
+        bodyEl.innerHTML = project.modalBody;
+        bodyApplied = true;
+      } else if (defaults.body) {
+        bodyEl.innerHTML = defaults.body;
+        bodyApplied = true;
+      }
+    }
+
+    if (bodyApplied) {
+      initModalTabs(modal);
+    }
   }
 
   function updateCounts(){
@@ -431,6 +534,7 @@
     clearGrid(dpGrid);
     clearGrid(prGrid);
     data.forEach(renderProjectCard);
+    data.forEach(applyProjectModalContent);
 
     // Add "add" cards for editor mode
     if (dpGrid) dpGrid.appendChild(createAddCard('datapack'));
@@ -484,6 +588,20 @@
     const tags = Array.isArray(project.tags) ? project.tags.join(', ') : (project.tags || '');
     tagsInput.value = tags;
     shortInput.value = project.shortDescription || '';
+    if (modalHeroInput) {
+      if (typeof project.modalHero === 'string') {
+        modalHeroInput.value = project.modalHero;
+      } else {
+        modalHeroInput.value = extractModalHero(project);
+      }
+    }
+    if (modalBodyInput) {
+      if (typeof project.modalBody === 'string' && project.modalBody.trim()) {
+        modalBodyInput.value = project.modalBody;
+      } else {
+        modalBodyInput.value = extractModalBody(project);
+      }
+    }
     downloadInput.value = project.downloadFile || '';
     imageInput.value = project.image || '';
   }
@@ -498,9 +616,11 @@
     const tagsRaw = (tagsInput.value || '').trim();
     const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
     const shortDescription = (shortInput.value || '').trim();
+    const modalHero = modalHeroInput ? (modalHeroInput.value || '').trim() : '';
+    const modalBody = modalBodyInput ? (modalBodyInput.value || '').trim() : '';
     const downloadFile = (downloadInput.value || '').trim();
     const image = (imageInput.value || '').trim();
-    return { id, type, title, mcVersion, status, category, tags, shortDescription, downloadFile, image };
+    return { id, type, title, mcVersion, status, category, tags, shortDescription, modalHero, modalBody, downloadFile, image };
   }
 
   function openEditorForCreate(type){
@@ -516,6 +636,8 @@
     categoryInput.value = '';
     tagsInput.value = '';
     shortInput.value = '';
+    if (modalHeroInput) modalHeroInput.value = '';
+    if (modalBodyInput) modalBodyInput.value = '';
     downloadInput.value = '';
     imageInput.value = 'assets/img/logo.jpg';
     applyTypeUi(safeType);
