@@ -2,6 +2,8 @@ import 'dotenv/config';
 import express from 'express';
 import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import DownloadStore from './download-store.js';
 
 const { PORT = 3001 } = process.env;
@@ -48,6 +50,7 @@ function verifyPassword(password) {
 const app = express();
 app.disable('x-powered-by');
 app.use(express.json({ limit: '32kb' }));
+const uploadBodyParser = express.raw({ type: '*/*', limit: '50mb' });
 
 // Very simple CORS so you can open projects.html directly from disk during dev.
 app.use((req, res, next) => {
@@ -150,6 +153,133 @@ function slugify(str) {
     .replace(/(^-|-$)+/g, '') || 'project';
 }
 
+function httpError(status, code) {
+  const err = new Error(code || 'bad_request');
+  err.status = status;
+  err.code = code || 'bad_request';
+  return err;
+}
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const tempUploadsDir = path.join(__dirname, '../data/uploads/tmp');
+const downloadUploadsDir = path.join(__dirname, '../../downloads/uploads');
+const imageUploadsDir = path.join(__dirname, '../../assets/img/uploads');
+await fs.mkdir(tempUploadsDir, { recursive: true });
+await fs.mkdir(downloadUploadsDir, { recursive: true });
+await fs.mkdir(imageUploadsDir, { recursive: true });
+
+
+const DOWNLOAD_EXTENSIONS = new Set(['.zip', '.mcworld', '.mcpack', '.mcaddon', '.stl', '.obj', '.gcode']);
+const DOWNLOAD_MIME_TYPES = new Set([
+  'application/zip',
+  'application/x-zip-compressed',
+  'application/octet-stream',
+  'model/stl',
+  'application/vnd.ms-pki.stl',
+]);
+const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.svg']);
+const IMAGE_MIME_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml']);
+const PENDING_UPLOAD_TTL_MS = 30 * 60 * 1000;
+const pendingUploads = new Map();
+
+function normaliseUploadKind(value) {
+  const kind = String(value || '').trim().toLowerCase();
+  if (kind === 'download' || kind === 'image') {
+    return kind;
+  }
+  return null;
+}
+
+function isAllowedUpload(file, kind) {
+  const ext = (path.extname(file.originalname || file.filename || '') || '').toLowerCase();
+  if (kind === 'image') {
+    if (IMAGE_EXTENSIONS.has(ext)) return true;
+    if (file.mimetype && IMAGE_MIME_TYPES.has(file.mimetype.toLowerCase())) return true;
+    return false;
+  }
+  if (kind === 'download') {
+    if (DOWNLOAD_EXTENSIONS.has(ext)) return true;
+    if (file.mimetype && DOWNLOAD_MIME_TYPES.has(file.mimetype.toLowerCase())) return true;
+    return false;
+  }
+  return false;
+}
+
+function buildRelativeUploadPath(kind, filename) {
+  if (kind === 'image') {
+    return path.posix.join('assets/img/uploads', filename);
+  }
+  return path.posix.join('downloads/uploads', filename);
+}
+
+function parsePendingUploads(value) {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+  const result = {};
+  if (typeof value.download === 'string' && value.download.trim()) {
+    result.download = value.download.trim();
+  }
+  if (typeof value.image === 'string' && value.image.trim()) {
+    result.image = value.image.trim();
+  }
+  return Object.keys(result).length ? result : null;
+}
+
+async function cleanupExpiredUploads() {
+  const now = Date.now();
+  for (const [id, entry] of pendingUploads.entries()) {
+    if (now - entry.createdAt > PENDING_UPLOAD_TTL_MS) {
+      pendingUploads.delete(id);
+      try {
+        await fs.unlink(entry.tempPath);
+      } catch (err) {}
+    }
+  }
+}
+
+async function commitPendingUpload(kind, uploadId, expectedPath) {
+  if (!uploadId) {
+    return;
+  }
+  const entry = pendingUploads.get(uploadId);
+  if (!entry) {
+    throw httpError(400, 'upload_not_found');
+  }
+  if (entry.kind !== kind) {
+    throw httpError(400, 'upload_kind_mismatch');
+  }
+  const trimmedExpected = String(expectedPath || '').trim();
+  if (!trimmedExpected || trimmedExpected !== entry.suggestedPath) {
+    throw httpError(400, 'upload_path_mismatch');
+  }
+  await fs.mkdir(path.dirname(entry.finalPath), { recursive: true });
+  await fs.rename(entry.tempPath, entry.finalPath);
+  pendingUploads.delete(uploadId);
+}
+
+async function finalizePendingUploads(pendingRefs, project) {
+  if (!pendingRefs) {
+    return;
+  }
+  const tasks = [];
+  if (pendingRefs.download) {
+    tasks.push(commitPendingUpload('download', pendingRefs.download, project.downloadFile));
+  }
+  if (pendingRefs.image) {
+    tasks.push(commitPendingUpload('image', pendingRefs.image, project.image));
+  }
+  await Promise.all(tasks);
+}
+
+cleanupExpiredUploads().catch(() => {});
+const cleanupTimer = setInterval(() => {
+  cleanupExpiredUploads().catch(() => {});
+}, PENDING_UPLOAD_TTL_MS);
+if (cleanupTimer.unref) {
+  cleanupTimer.unref();
+}
+
 // List all projects
 app.get('/editor/projects', async (req, res, next) => {
   try {
@@ -178,6 +308,7 @@ app.get('/editor/projects/:id', requireAuth, async (req, res, next) => {
 app.post('/editor/projects', requireAuth, async (req, res, next) => {
   try {
     const body = req.body || {};
+    const pendingRefs = parsePendingUploads(body.pendingUploads);
     let { id } = body;
     const projects = await readProjects();
     if (!id || typeof id !== 'string' || !id.trim()) {
@@ -212,6 +343,7 @@ app.post('/editor/projects', requireAuth, async (req, res, next) => {
       createdAt: now,
       updatedAt: now,
     };
+    await finalizePendingUploads(pendingRefs, project);
     projects.push(project);
     await writeProjects(projects);
     return res.status(201).json(project);
@@ -224,6 +356,7 @@ app.post('/editor/projects', requireAuth, async (req, res, next) => {
 app.put('/editor/projects/:id', requireAuth, async (req, res, next) => {
   try {
     const body = req.body || {};
+    const pendingRefs = parsePendingUploads(body.pendingUploads);
     const projects = await readProjects();
     const idx = projects.findIndex((p) => p.id === req.params.id);
     if (idx === -1) {
@@ -246,9 +379,62 @@ app.put('/editor/projects/:id', requireAuth, async (req, res, next) => {
       modalStats: typeof body.modalStats === 'string' ? body.modalStats : (existing.modalStats || ''),
       updatedAt: new Date().toISOString(),
     };
+    await finalizePendingUploads(pendingRefs, updated);
     projects[idx] = updated;
     await writeProjects(projects);
     return res.json(updated);
+  } catch (err) {
+    return next(err);
+  }
+});
+
+app.post('/editor/uploads', requireAuth, uploadBodyParser, async (req, res, next) => {
+  try {
+    const kind = normaliseUploadKind(req.query && req.query.kind);
+    const buffer = Buffer.isBuffer(req.body) ? req.body : null;
+    const originalName = String(req.get('x-upload-filename') || '').trim() || 'upload.bin';
+    const mimeType = String(req.get('content-type') || '').trim();
+    if (!kind || !buffer || !buffer.length) {
+      return res.status(400).json({ error: 'invalid_upload' });
+    }
+    const fileInfo = { originalname: originalName, mimetype: mimeType };
+    if (!isAllowedUpload(fileInfo, kind)) {
+      return res.status(400).json({ error: 'invalid_file_type' });
+    }
+    const uploadId = crypto.randomUUID();
+    const ext = (path.extname(originalName) || '').toLowerCase();
+    const baseName = path.basename(originalName, ext) || 'upload';
+    const safeBase = slugify(baseName) || 'upload';
+    const finalName = `${safeBase}-${uploadId.slice(0, 8)}${ext}`;
+    const suggestedPath = buildRelativeUploadPath(kind, finalName);
+    const finalDir = kind === 'image' ? imageUploadsDir : downloadUploadsDir;
+    const finalPath = path.join(finalDir, finalName);
+    const tempPath = path.join(tempUploadsDir, `${uploadId}-${Date.now()}${ext || ''}`);
+    await fs.writeFile(tempPath, buffer);
+    pendingUploads.set(uploadId, {
+      id: uploadId,
+      kind,
+      tempPath,
+      finalPath,
+      suggestedPath,
+      createdAt: Date.now(),
+    });
+    return res.json({ uploadId, suggestedPath, originalName });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+app.delete('/editor/uploads/:id', requireAuth, async (req, res, next) => {
+  try {
+    const uploadId = req.params.id;
+    const entry = pendingUploads.get(uploadId);
+    if (!entry) {
+      return res.status(404).json({ error: 'upload_not_found' });
+    }
+    pendingUploads.delete(uploadId);
+    await fs.unlink(entry.tempPath).catch(() => {});
+    return res.json({ ok: true });
   } catch (err) {
     return next(err);
   }
@@ -315,7 +501,11 @@ app.get('/healthz', (req, res) => {
 
 app.use((err, req, res, next) => {
   console.error(err);
-  return res.status(500).json({ error: 'internal_error' });
+  const status = typeof err?.status === 'number' ? err.status : 500;
+  const message = err && typeof err.code === 'string'
+    ? err.code
+    : (typeof err?.message === 'string' && err.message ? err.message : 'internal_error');
+  return res.status(status).json({ error: message || 'internal_error' });
 });
 
 console.log('Editor admin user from configuration:', {

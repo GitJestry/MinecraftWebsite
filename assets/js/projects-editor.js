@@ -36,6 +36,148 @@
     return 'assets/data/projects.json';
   }
 
+  function buildPendingUploadsPayload(downloadFile, image) {
+    const refs = {};
+    const downloadPath = (downloadFile || '').trim();
+    const imagePath = (image || '').trim();
+    if (pendingUploads.download && pendingUploads.download.path === downloadPath) {
+      refs.download = pendingUploads.download.id;
+    }
+    if (pendingUploads.image && pendingUploads.image.path === imagePath) {
+      refs.image = pendingUploads.image.id;
+    }
+    return Object.keys(refs).length ? refs : null;
+  }
+
+  function markPendingUploadsCommitted(refs) {
+    if (!refs || typeof refs !== 'object') {
+      return;
+    }
+    if (refs.download && pendingUploads.download && pendingUploads.download.id === refs.download) {
+      pendingUploads.download = null;
+    }
+    if (refs.image && pendingUploads.image && pendingUploads.image.id === refs.image) {
+      pendingUploads.image = null;
+    }
+  }
+
+  function setUploadButtonBusy(kind, busy) {
+    const btn = kind === 'download' ? downloadFileBtn : imageFileBtn;
+    if (!btn) return;
+    btn.disabled = !!busy || USE_LOCAL_EDITOR_API;
+    btn.setAttribute('aria-busy', busy ? 'true' : 'false');
+  }
+
+  function handlePendingInputChange(kind, input) {
+    if (!input) return;
+    const entry = pendingUploads[kind];
+    if (!entry) return;
+    const value = (input.value || '').trim();
+    if (!value || value !== entry.path) {
+      discardPendingUpload(kind).catch(() => {});
+    }
+  }
+
+  function bindPendingInputWatcher(kind, input) {
+    if (!input) return;
+    ['input', 'change'].forEach((eventName) => {
+      input.addEventListener(eventName, () => handlePendingInputChange(kind, input));
+    });
+  }
+
+  async function discardPendingUpload(kind) {
+    const entry = pendingUploads[kind];
+    if (!entry) {
+      return;
+    }
+    pendingUploads[kind] = null;
+    if (USE_LOCAL_EDITOR_API) {
+      return;
+    }
+    try {
+      await api('/editor/uploads/' + encodeURIComponent(entry.id), {
+        method: 'DELETE',
+        skipLocalStub: true,
+      });
+    } catch (err) {
+      // best effort cleanup
+    }
+  }
+
+  function discardAllPendingUploads() {
+    const kinds = ['download', 'image'];
+    return Promise.all(kinds.map((kind) => discardPendingUpload(kind))).then(() => {});
+  }
+
+  function ensureUploadsAvailable() {
+    if (USE_LOCAL_EDITOR_API) {
+      alert('Datei-Uploads stehen im lokalen Modus nicht zur Verfügung. Bitte starte den Editor-Server.');
+      return false;
+    }
+    return true;
+  }
+
+  function handleUploadButtonClick(kind) {
+    if (!assertEditorAvailable(true)) {
+      return;
+    }
+    if (!sessionActive || !token || !editorOn) {
+      alert('Bitte zuerst einloggen und den Editor-Modus aktivieren.');
+      return;
+    }
+    if (!ensureUploadsAvailable()) {
+      return;
+    }
+    const picker = kind === 'download' ? downloadFilePicker : imageFilePicker;
+    if (picker && typeof picker.click === 'function') {
+      try { picker.click(); } catch (err) {}
+    }
+  }
+
+  async function handleUploadFileSelection(kind, file) {
+    if (!file) return;
+    if (!assertEditorAvailable(true)) {
+      return;
+    }
+    if (!sessionActive || !token || !editorOn) {
+      alert('Bitte zuerst einloggen und den Editor-Modus aktivieren.');
+      return;
+    }
+    if (!ensureUploadsAvailable()) {
+      return;
+    }
+    setUploadButtonBusy(kind, true);
+    try {
+      const target = `/editor/uploads?kind=${encodeURIComponent(kind)}`;
+      const filename = (file.name && file.name.trim()) ? file.name.trim() : (kind === 'image' ? 'upload.png' : 'upload.zip');
+      const response = await api(target, {
+        method: 'POST',
+        body: file,
+        headers: {
+          'Content-Type': file.type || 'application/octet-stream',
+          'X-Upload-Filename': filename,
+        },
+        skipLocalStub: true,
+        retryAttempts: 1,
+      });
+      if (!response || !response.uploadId || !response.suggestedPath) {
+        throw new Error('Ungültige Antwort vom Server.');
+      }
+      await discardPendingUpload(kind);
+      pendingUploads[kind] = { id: response.uploadId, path: response.suggestedPath };
+      if (kind === 'download' && downloadInput) {
+        downloadInput.value = response.suggestedPath;
+      } else if (kind === 'image' && imageInput) {
+        imageInput.value = response.suggestedPath;
+      }
+    } catch (err) {
+      const message = err && err.message ? err.message : 'Upload fehlgeschlagen.';
+      alert('Konnte Datei nicht hochladen: ' + message);
+    } finally {
+      setUploadButtonBusy(kind, false);
+    }
+  }
+
   const STATIC_PROJECTS_URL = resolveProjectsDataUrl();
   const DEFAULT_EDITOR_DISABLED_REASON = 'Editorfunktionen sind in dieser statischen Veröffentlichung deaktiviert.';
   const DEFAULT_API_RETRY_ATTEMPTS = 1;
@@ -443,6 +585,28 @@
 
   const API_BASE = computeApiBase();
   const API_SAME_ORIGIN = API_BASE === '';
+  const USE_LOCAL_EDITOR_API = detectLocalEditorMode();
+
+  function detectLocalEditorMode() {
+    if (typeof window !== 'undefined') {
+      if (typeof window.MIRL_USE_LOCAL_EDITOR !== 'undefined') {
+        return !!window.MIRL_USE_LOCAL_EDITOR;
+      }
+      const proto = window.location && window.location.protocol;
+      if (proto === 'file:') {
+        return true;
+      }
+    }
+    if (typeof document !== 'undefined' && document.documentElement) {
+      const modeAttr = document.documentElement.getAttribute('data-editor-mode');
+      if (modeAttr) {
+        const mode = modeAttr.trim().toLowerCase();
+        if (mode === 'local') return true;
+        if (mode === 'remote') return false;
+      }
+    }
+    return false;
+  }
 
   function isTruthyFlag(value) {
     if (value == null) return true;
@@ -565,6 +729,11 @@
   const downloadInput = document.getElementById('pe-download');
   const imageInput = document.getElementById('pe-image');
   const deleteBtn = document.getElementById('project-editor-delete');
+  const downloadFileBtn = document.querySelector('[data-file-trigger="download"]');
+  const imageFileBtn = document.querySelector('[data-file-trigger="image"]');
+
+  const DOWNLOAD_ACCEPT_TYPES = '.zip,.mcworld,.mcpack,.mcaddon,.stl,.obj,.gcode';
+  const IMAGE_ACCEPT_TYPES = 'image/png,image/jpeg,image/webp,image/svg+xml';
 
   function getCurrentTypeValue() {
     return normaliseType(typeInput ? typeInput.value : 'datapack');
@@ -780,6 +949,35 @@
   let currentMode = 'create'; // 'create' | 'edit'
   let editingProject = null;
   let currentModalId = '';
+  const pendingUploads = { download: null, image: null };
+  let downloadFilePicker = null;
+  let imageFilePicker = null;
+  if (typeof document !== 'undefined' && document.body) {
+    downloadFilePicker = document.createElement('input');
+    downloadFilePicker.type = 'file';
+    downloadFilePicker.accept = DOWNLOAD_ACCEPT_TYPES;
+    downloadFilePicker.hidden = true;
+    document.body.appendChild(downloadFilePicker);
+    downloadFilePicker.addEventListener('change', () => {
+      const file = downloadFilePicker.files && downloadFilePicker.files[0];
+      if (file) {
+        handleUploadFileSelection('download', file);
+      }
+      downloadFilePicker.value = '';
+    });
+    imageFilePicker = document.createElement('input');
+    imageFilePicker.type = 'file';
+    imageFilePicker.accept = IMAGE_ACCEPT_TYPES;
+    imageFilePicker.hidden = true;
+    document.body.appendChild(imageFilePicker);
+    imageFilePicker.addEventListener('change', () => {
+      const file = imageFilePicker.files && imageFilePicker.files[0];
+      if (file) {
+        handleUploadFileSelection('image', file);
+      }
+      imageFilePicker.value = '';
+    });
+  }
 
   if (editorForm) {
     resetModalUi();
@@ -894,6 +1092,8 @@
     delete opts.retryAttempts;
     delete opts.retryDelay;
     delete opts.retryOnStatuses;
+    const skipLocalStub = !!opts.skipLocalStub;
+    delete opts.skipLocalStub;
     const headers = { ...(opts.headers || {}) };
     if (!(opts.body instanceof FormData) && !('Content-Type' in headers)) {
       headers['Content-Type'] = 'application/json';
@@ -906,7 +1106,7 @@
     }
     opts.headers = headers;
     opts.credentials = API_SAME_ORIGIN ? 'include' : 'omit';
-    if (typeof path === 'string' && path.startsWith('/editor/')) {
+    if (!skipLocalStub && USE_LOCAL_EDITOR_API && typeof path === 'string' && path.startsWith('/editor/')) {
       return handleLocalEditorRequest(path, opts);
     }
     const url = API_BASE ? API_BASE + path : path;
@@ -2422,6 +2622,7 @@
     editorModal.setAttribute('aria-hidden','true');
     editingProject = null;
     resetValidationState();
+    discardAllPendingUploads().catch(() => {});
   }
 
   function fillFormFromProject(project){
@@ -2464,7 +2665,12 @@
     const modalStats = serialised.stats;
     const downloadFile = (downloadInput.value || '').trim();
     const image = (imageInput.value || '').trim();
-    return { id, type, title, mcVersion, status, category, tags, shortDescription, modalHero, modalBody, modalBadges, modalHeroActions, modalStats, downloadFile, image };
+    const pendingUploadsPayload = buildPendingUploadsPayload(downloadFile, image);
+    const payload = { id, type, title, mcVersion, status, category, tags, shortDescription, modalHero, modalBody, modalBadges, modalHeroActions, modalStats, downloadFile, image };
+    if (pendingUploadsPayload) {
+      payload.pendingUploads = pendingUploadsPayload;
+    }
+    return { payload, pendingUploadsPayload };
   }
 
   function openEditorForCreate(type){
@@ -2549,23 +2755,24 @@
       return;
     }
     updateValidationSummary([]);
-    const data = collectFormData();
+    const { payload, pendingUploadsPayload } = collectFormData();
     try {
       let result;
-      if (currentMode === 'edit' && data.id) {
-        result = await api('/editor/projects/' + encodeURIComponent(data.id), {
+      if (currentMode === 'edit' && payload.id) {
+        result = await api('/editor/projects/' + encodeURIComponent(payload.id), {
           method: 'PUT',
-          body: JSON.stringify(data)
+          body: JSON.stringify(payload)
         });
       } else {
         result = await api('/editor/projects', {
           method: 'POST',
-          body: JSON.stringify(data)
+          body: JSON.stringify(payload)
         });
       }
       if (result && result.id) {
         projectsById[result.id] = result;
         await loadProjects();
+        markPendingUploadsCommitted(pendingUploadsPayload);
         closeEditorModal();
       } else {
         alert('Server hat keine gültige Antwort zurückgegeben.');
@@ -2631,6 +2838,9 @@
     });
   });
 
+  bindPendingInputWatcher('download', downloadInput);
+  bindPendingInputWatcher('image', imageInput);
+
   if (editorForm) {
     editorForm.addEventListener('submit', handleFormSubmit);
   }
@@ -2647,6 +2857,21 @@
         handleDeleteProject(editingProject);
       }
     });
+  }
+
+  if (downloadFileBtn) {
+    if (USE_LOCAL_EDITOR_API) {
+      downloadFileBtn.disabled = true;
+      downloadFileBtn.title = 'Datei-Uploads stehen im lokalen Modus nicht zur Verfügung.';
+    }
+    downloadFileBtn.addEventListener('click', () => handleUploadButtonClick('download'));
+  }
+  if (imageFileBtn) {
+    if (USE_LOCAL_EDITOR_API) {
+      imageFileBtn.disabled = true;
+      imageFileBtn.title = 'Datei-Uploads stehen im lokalen Modus nicht zur Verfügung.';
+    }
+    imageFileBtn.addEventListener('click', () => handleUploadButtonClick('image'));
   }
 
   loadToken();
