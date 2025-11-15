@@ -1,6 +1,11 @@
 (function(){
   'use strict';
 
+  const STATIC_PROJECTS_URL = 'assets/data/projects.json';
+  const DEFAULT_EDITOR_DISABLED_REASON = 'Editorfunktionen sind in dieser statischen Veröffentlichung deaktiviert.';
+  let editingSupported = true;
+  let editorDisabledReason = DEFAULT_EDITOR_DISABLED_REASON;
+
   function sanitiseApiBase(value) {
     if (value == null) return '';
     const trimmed = String(value).trim();
@@ -112,6 +117,49 @@
     }
   };
 
+  function disableEditorFeatures(reason) {
+    if (!editingSupported) return;
+    editingSupported = false;
+    editorDisabledReason = reason || DEFAULT_EDITOR_DISABLED_REASON;
+    document.documentElement.classList.remove('editor-mode-on');
+    if (label) {
+      label.textContent = editorDisabledReason;
+    }
+    if (userLabel) {
+      userLabel.textContent = '';
+    }
+    if (statusBox) {
+      statusBox.classList.add('hidden');
+    }
+    [loginBtn, logoutBtn, toggleBtn, addBtn].forEach((btn) => {
+      if (btn) {
+        btn.disabled = true;
+        btn.setAttribute('aria-disabled', 'true');
+        btn.style.display = 'none';
+      }
+    });
+    if (banner) {
+      banner.setAttribute('data-editor-disabled', 'true');
+      let note = banner.querySelector('.editor-disabled-note');
+      if (!note) {
+        note = document.createElement('span');
+        note.className = 'editor-disabled-note';
+        banner.appendChild(note);
+      }
+      note.textContent = editorDisabledReason;
+    }
+  }
+
+  function assertEditorAvailable(showAlert) {
+    if (editingSupported) {
+      return true;
+    }
+    if (showAlert && typeof alert === 'function') {
+      alert(editorDisabledReason);
+    }
+    return false;
+  }
+
   function loadToken() {
     try {
       const t = localStorage.getItem(LS_KEY);
@@ -128,20 +176,30 @@
   }
 
   function setLoggedOut() {
+    if (!label) return;
+    if (!editingSupported) {
+      label.textContent = editorDisabledReason;
+      if (userLabel) userLabel.textContent = '';
+      if (statusBox) statusBox.classList.add('hidden');
+      return;
+    }
     label.textContent = 'Nicht angemeldet';
-    userLabel.textContent = '';
-    statusBox.classList.add('hidden');
-    loginBtn.style.display = 'inline-block';
+    if (userLabel) userLabel.textContent = '';
+    if (statusBox) statusBox.classList.add('hidden');
+    if (loginBtn) loginBtn.style.display = 'inline-block';
     editorOn = false;
-    toggleBtn.textContent = 'Editor-Modus: Aus';
+    if (toggleBtn) toggleBtn.textContent = 'Editor-Modus: Aus';
     document.documentElement.classList.remove('editor-mode-on');
   }
 
   function setLoggedIn(username) {
-    label.textContent = 'Editor aktiviert';
-    userLabel.textContent = username ? ('Angemeldet als ' + username) : '';
-    statusBox.classList.remove('hidden');
-    loginBtn.style.display = 'none';
+    if (!editingSupported) {
+      return;
+    }
+    if (label) label.textContent = 'Editor aktiviert';
+    if (userLabel) userLabel.textContent = username ? ('Angemeldet als ' + username) : '';
+    if (statusBox) statusBox.classList.remove('hidden');
+    if (loginBtn) loginBtn.style.display = 'none';
   }
 
   async function api(path, options){
@@ -175,6 +233,10 @@
   }
 
   async function checkSession() {
+    if (!editingSupported) {
+      setLoggedOut();
+      return;
+    }
     if (!token) {
       setLoggedOut();
       return;
@@ -194,6 +256,9 @@
   }
 
   async function handleLogin(){
+    if (!assertEditorAvailable(true)) {
+      return;
+    }
     const username = prompt('Admin-Benutzername', 'admin');
     if (!username) return;
     const password = prompt('Admin-Passwort');
@@ -216,6 +281,10 @@
   }
 
   async function handleLogout(){
+    if (!editingSupported) {
+      setLoggedOut();
+      return;
+    }
     if (!token) {
       setLoggedOut();
       return;
@@ -228,8 +297,14 @@
   }
 
   function toggleEditorMode(){
+    if (!editingSupported) {
+      assertEditorAvailable(true);
+      return;
+    }
     editorOn = !editorOn;
-    toggleBtn.textContent = editorOn ? 'Editor-Modus: An' : 'Editor-Modus: Aus';
+    if (toggleBtn) {
+      toggleBtn.textContent = editorOn ? 'Editor-Modus: An' : 'Editor-Modus: Aus';
+    }
     document.documentElement.classList.toggle('editor-mode-on', editorOn);
   }
 
@@ -1520,14 +1595,41 @@
     }
   }
 
+  let staticProjectsCache = null;
+
+  async function fetchStaticProjects() {
+    if (staticProjectsCache) {
+      return staticProjectsCache;
+    }
+    try {
+      const response = await fetch(STATIC_PROJECTS_URL, { cache: 'no-cache' });
+      if (!response.ok) {
+        throw new Error('HTTP ' + response.status);
+      }
+      const payload = await response.json();
+      if (Array.isArray(payload)) {
+        staticProjectsCache = payload;
+        return payload;
+      }
+    } catch (err) {
+      console.warn('Konnte statische Projektliste nicht laden:', err);
+    }
+    return null;
+  }
+
   async function loadProjects(){
     if (!dpGrid && !prGrid) return;
-    let data;
-    try {
-      data = await api('/editor/projects', { method: 'GET' });
-    } catch (e) {
-      console.warn('Konnte Projektliste nicht laden:', e);
-      return;
+    let data = null;
+    if (editingSupported) {
+      try {
+        data = await api('/editor/projects', { method: 'GET' });
+      } catch (e) {
+        console.warn('Konnte Projektliste nicht vom Editor-Server laden:', e);
+        disableEditorFeatures('Editorfunktionen stehen auf dieser Online-Version nicht zur Verfügung.');
+      }
+    }
+    if (!Array.isArray(data)) {
+      data = await fetchStaticProjects();
     }
     if (!Array.isArray(data)) return;
     projectsById = Object.create(null);
@@ -1626,6 +1728,9 @@
   }
 
   function openEditorForCreate(type){
+    if (!assertEditorAvailable(true)) {
+      return;
+    }
     editingProject = null;
     if (deleteBtn) deleteBtn.hidden = true;
     const safeType = normaliseType(type || 'datapack');
@@ -1649,6 +1754,9 @@
   }
 
   function openEditorForEdit(project){
+    if (!assertEditorAvailable(true)) {
+      return;
+    }
     editingProject = project || null;
     if (deleteBtn) deleteBtn.hidden = !editingProject;
     editorTitleEl.textContent = 'Projekt bearbeiten';
@@ -1660,6 +1768,9 @@
   }
 
   async function handleDeleteProject(project){
+    if (!assertEditorAvailable(true)) {
+      return;
+    }
     if (!editorOn || !token) {
       alert('Bitte zuerst einloggen und Editor-Modus aktivieren.');
       return;
@@ -1682,6 +1793,9 @@
 
   async function handleFormSubmit(e){
     e.preventDefault();
+    if (!assertEditorAvailable(true)) {
+      return;
+    }
     if (!editorOn || !token) {
       alert('Bitte zuerst einloggen und Editor-Modus aktivieren.');
       return;
