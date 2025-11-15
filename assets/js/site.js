@@ -51,6 +51,11 @@
       return editorApiCheckPromise;
     }
     const base = computeEditorApiBase();
+    if (!base) {
+      editorApiReachable = true;
+      editorApiCheckPromise = null;
+      return Promise.resolve(true);
+    }
     const sameOrigin = base === '';
     let url = '/editor/me';
     if (base) {
@@ -400,12 +405,13 @@
   // Expose for debugging
   window.__MIRL = { setLang, getLang };
 
-  const DL_NAMESPACE = 'mirl-minecraftwebsite';
-  const DL_API_BASE = 'https://api.countapi.xyz';
   const DL_LS_KEY = 'mirl.download.tracked.v1';
+  const DL_COUNTS_KEY = 'mirl.download.counts.v1';
   const DL_THROTTLE_MS = 4 * 60 * 60 * 1000; // 4 hours per download/file combo
   const downloadRegistry = new Map();
   let downloadStoreCache = undefined;
+  let downloadCountsCache = undefined;
+  let downloadFallbacks = {};
 
   function safeNumber(value) {
     const num = Number(value);
@@ -456,6 +462,62 @@
     return true;
   }
 
+  function readDownloadCounts() {
+    if (downloadCountsCache !== undefined) return downloadCountsCache;
+    try {
+      const raw = localStorage.getItem(DL_COUNTS_KEY);
+      downloadCountsCache = raw ? JSON.parse(raw) : {};
+    } catch (err) {
+      downloadCountsCache = {};
+    }
+    return downloadCountsCache;
+  }
+
+  function writeDownloadCounts(counts) {
+    downloadCountsCache = counts || {};
+    try {
+      if (!counts || Object.keys(counts).length === 0) {
+        localStorage.removeItem(DL_COUNTS_KEY);
+      } else {
+        localStorage.setItem(DL_COUNTS_KEY, JSON.stringify(downloadCountsCache));
+      }
+    } catch (err) {}
+  }
+
+  function getStoredDownloadCount(projectId, fallbackValue) {
+    const counts = readDownloadCounts();
+    if (!counts || typeof counts !== 'object') {
+      return Number.isFinite(fallbackValue) ? fallbackValue : null;
+    }
+    const override = safeNumber(counts[projectId]);
+    if (Number.isFinite(override)) {
+      return override;
+    }
+    return Number.isFinite(fallbackValue) ? fallbackValue : null;
+  }
+
+  function ensureStoredCount(projectId, fallbackValue) {
+    const value = getStoredDownloadCount(projectId, fallbackValue);
+    updateDownloadDisplay(projectId, value);
+    return value;
+  }
+
+  function incrementStoredCount(projectId) {
+    const counts = { ...(readDownloadCounts() || {}) };
+    const fallback = safeNumber(downloadFallbacks?.[projectId]);
+    const current = safeNumber(counts[projectId]);
+    const base = Number.isFinite(current)
+      ? current
+      : Number.isFinite(fallback)
+        ? fallback
+        : 0;
+    const next = base + 1;
+    counts[projectId] = next;
+    writeDownloadCounts(counts);
+    updateDownloadDisplay(projectId, next);
+    return next;
+  }
+
   function registerDownloadElement(projectId, el, fallbackValue) {
     if (!projectId) return;
     const key = String(projectId);
@@ -502,62 +564,11 @@
     return {};
   }
 
-  async function ensureRemoteCount(projectId, fallbackValue) {
-    const existing = downloadRegistry.get(projectId);
-    const fallback = Number.isFinite(fallbackValue) ? fallbackValue : Number.isFinite(existing?.value) ? existing.value : 0;
-    const encodedNamespace = encodeURIComponent(DL_NAMESPACE);
-    const encodedKey = encodeURIComponent(projectId);
-    try {
-      const res = await fetch(`${DL_API_BASE}/get/${encodedNamespace}/${encodedKey}`);
-      if (res.ok) {
-        const json = await res.json();
-        const value = safeNumber(json.value);
-        if (Number.isFinite(value)) {
-          updateDownloadDisplay(projectId, value);
-          return value;
-        }
-      } else if (res.status === 404) {
-        const createRes = await fetch(`${DL_API_BASE}/create?namespace=${encodedNamespace}&key=${encodedKey}&value=${fallback}`);
-        if (createRes.ok) {
-          const json = await createRes.json();
-          const value = safeNumber(json.value);
-          if (Number.isFinite(value)) {
-            updateDownloadDisplay(projectId, value);
-            return value;
-          }
-        }
-      }
-    } catch (err) {
-      console.warn('[downloads] Unable to read remote count for', projectId, err);
-    }
-    updateDownloadDisplay(projectId, fallback);
-    return fallback;
-  }
-
-  async function incrementRemoteCount(projectId) {
-    const encodedNamespace = encodeURIComponent(DL_NAMESPACE);
-    const encodedKey = encodeURIComponent(projectId);
-    try {
-      const res = await fetch(`${DL_API_BASE}/hit/${encodedNamespace}/${encodedKey}`);
-      if (res.ok) {
-        const json = await res.json();
-        const value = safeNumber(json.value);
-        if (Number.isFinite(value)) {
-          updateDownloadDisplay(projectId, value);
-          return value;
-        }
-      }
-    } catch (err) {
-      console.warn('[downloads] Unable to increment remote count for', projectId, err);
-    }
-    return null;
-  }
-
   function handleDownloadEvent(projectId, fileId) {
     if (!projectId) return;
     registerDownloadElement(projectId);
     if (!shouldRecordDownload(projectId, fileId)) return;
-    incrementRemoteCount(projectId);
+    incrementStoredCount(projectId);
   }
 
   function attachDownloadListeners(links) {
@@ -579,12 +590,16 @@
 
     (async () => {
       const fallbackCounts = await loadDownloadFallbacks();
+      downloadFallbacks = fallbackCounts || {};
       countElements.forEach(el => {
         const projectId = el.getAttribute('data-download-count');
         const fallback = safeNumber(fallbackCounts?.[projectId]);
         registerDownloadElement(projectId, el, fallback);
       });
-      await Promise.all(Array.from(downloadRegistry.keys()).map(id => ensureRemoteCount(id, fallbackCounts?.[id])));
+      Array.from(downloadRegistry.keys()).forEach((id) => {
+        const fallback = safeNumber(fallbackCounts?.[id]);
+        ensureStoredCount(id, fallback);
+      });
     })();
   }
 
