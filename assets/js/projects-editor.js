@@ -1,7 +1,42 @@
 (function(){
   'use strict';
 
-  const STATIC_PROJECTS_URL = 'assets/data/projects.json';
+  function resolveProjectsDataUrl() {
+    if (typeof document !== 'undefined') {
+      try {
+        const html = document.documentElement;
+        if (html) {
+          const attr = html.getAttribute('data-projects-url');
+          if (attr) {
+            try {
+              return new URL(attr, document.baseURI).toString();
+            } catch (err) {
+              return attr;
+            }
+          }
+        }
+        const meta = document.querySelector('meta[name="projects-data-url"]');
+        if (meta) {
+          const content = meta.getAttribute('content');
+          if (content) {
+            try {
+              return new URL(content, document.baseURI).toString();
+            } catch (err) {
+              return content;
+            }
+          }
+        }
+      } catch (err) {}
+    }
+    if (typeof document !== 'undefined') {
+      try {
+        return new URL('assets/data/projects.json', document.baseURI).toString();
+      } catch (err) {}
+    }
+    return 'assets/data/projects.json';
+  }
+
+  const STATIC_PROJECTS_URL = resolveProjectsDataUrl();
   const DEFAULT_EDITOR_DISABLED_REASON = 'Editorfunktionen sind in dieser statischen Veröffentlichung deaktiviert.';
   let editingSupported = true;
   let editorDisabledReason = DEFAULT_EDITOR_DISABLED_REASON;
@@ -76,6 +111,14 @@
         const attr = document.documentElement.getAttribute('data-editor-entry');
         if (attr) {
           return isTruthyFlag(attr);
+        }
+      }
+    } catch (err) {}
+    try {
+      if (typeof document !== 'undefined') {
+        const meta = document.querySelector('meta[name="editor-entry"]');
+        if (meta) {
+          return isTruthyFlag(meta.getAttribute('content'));
         }
       }
     } catch (err) {}
@@ -157,6 +200,33 @@
 
   const entryAccessEnabled = detectEditorEntryFlag();
   let sessionActive = false;
+  let autoLoginTriggered = false;
+
+  function beginLogin(options) {
+    if (!loginBtn) return;
+    const opts = (options && typeof options === 'object') ? options : {};
+    const auto = !!opts.auto;
+    const focus = 'focus' in opts ? !!opts.focus : true;
+    if (auto) {
+      if (autoLoginTriggered) {
+        return;
+      }
+      autoLoginTriggered = true;
+    }
+    setElementVisibility(loginBtn, true);
+    setButtonState(loginBtn, true);
+    if (auto) {
+      handleLogin();
+      return;
+    }
+    if (focus && typeof loginBtn.focus === 'function') {
+      try { loginBtn.focus(); } catch (err) {}
+    }
+  }
+
+  if (typeof window !== 'undefined') {
+    window.MIRL_beginEditorLogin = beginLogin;
+  }
 
   function updateEditorUi() {
     const hasAccessFlag = entryAccessEnabled || sessionActive;
@@ -300,6 +370,9 @@
     editorOn = false;
     if (toggleBtn) toggleBtn.textContent = 'Editor-Modus: Aus';
     document.documentElement.classList.remove('editor-mode-on');
+    if (entryAccessEnabled) {
+      beginLogin({ focus: false });
+    }
     updateEditorUi();
   }
 
@@ -2013,7 +2086,19 @@
   }
 
   loadToken();
-  checkSession();
+  const sessionPromise = checkSession();
+  if (entryAccessEnabled) {
+    const triggerAutoLogin = () => {
+      if (entryAccessEnabled && !sessionActive) {
+        beginLogin({ auto: true });
+      }
+    };
+    if (sessionPromise && typeof sessionPromise.then === 'function') {
+      sessionPromise.catch(() => {}).finally(triggerAutoLogin);
+    } else {
+      triggerAutoLogin();
+    }
+  }
   loadProjects();
   applyTypeUi(typeInput ? typeInput.value : 'datapack');
   updateSubtitle(typeInput ? typeInput.value : 'datapack', 'create');
