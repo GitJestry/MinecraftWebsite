@@ -37,6 +37,68 @@
   const API_BASE = computeApiBase();
   const API_SAME_ORIGIN = API_BASE === '';
 
+  function isTruthyFlag(value) {
+    if (value == null) return true;
+    const normalized = String(value).trim().toLowerCase();
+    if (!normalized) return true;
+    if (['1', 'true', 'yes', 'on'].includes(normalized)) return true;
+    if (['0', 'false', 'no', 'off'].includes(normalized)) return false;
+    return true;
+  }
+
+  function detectEditorEntryFlag() {
+    if (typeof window === 'undefined') return false;
+    const keys = ['editor', 'editor-entry', 'editorMode'];
+    let hasFlag = false;
+    try {
+      const search = window.location && typeof window.location.search === 'string' ? window.location.search : '';
+      if (search) {
+        const params = new URLSearchParams(search);
+        hasFlag = keys.some((key) => {
+          if (!params.has(key)) return false;
+          const raw = params.get(key);
+          if (raw == null) return true;
+          return isTruthyFlag(raw);
+        });
+      }
+    } catch (err) {}
+    if (hasFlag) return true;
+    try {
+      const hash = window.location && typeof window.location.hash === 'string' ? window.location.hash : '';
+      if (hash) {
+        const lowerHash = hash.toLowerCase();
+        hasFlag = keys.some((key) => lowerHash.includes(key));
+      }
+    } catch (err) {}
+    if (hasFlag) return true;
+    try {
+      if (typeof document !== 'undefined' && document.documentElement) {
+        const attr = document.documentElement.getAttribute('data-editor-entry');
+        if (attr) {
+          return isTruthyFlag(attr);
+        }
+      }
+    } catch (err) {}
+    return false;
+  }
+
+  function setElementVisibility(el, show) {
+    if (!el) return;
+    if (show) {
+      el.hidden = false;
+      el.removeAttribute('aria-hidden');
+    } else {
+      el.hidden = true;
+      el.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  function setButtonState(btn, enabled) {
+    if (!btn) return;
+    btn.disabled = !enabled;
+    btn.setAttribute('aria-disabled', enabled ? 'false' : 'true');
+  }
+
   const banner = document.getElementById('editor-banner');
   if (!banner) return;
 
@@ -93,6 +155,55 @@
   const typeAwarePlaceholderNodes = editorForm ? Array.from(editorForm.querySelectorAll('[data-placeholder-datapack]')) : [];
   const typeAwareHintNodes = editorForm ? Array.from(editorForm.querySelectorAll('[data-hint-datapack]')) : [];
 
+  const entryAccessEnabled = detectEditorEntryFlag();
+  let sessionActive = false;
+
+  function updateEditorUi() {
+    const hasAccessFlag = entryAccessEnabled || sessionActive;
+    const bannerVisible = editingSupported ? hasAccessFlag : true;
+    setElementVisibility(banner, bannerVisible);
+
+    if (!bannerVisible) {
+      setElementVisibility(loginBtn, false);
+      setButtonState(loginBtn, false);
+      setElementVisibility(statusBox, false);
+      if (statusBox) statusBox.classList.add('hidden');
+      [toggleBtn, addBtn, logoutBtn].forEach((btn) => {
+        setElementVisibility(btn, false);
+        setButtonState(btn, false);
+      });
+      return;
+    }
+
+    if (!editingSupported) {
+      setElementVisibility(loginBtn, false);
+      setButtonState(loginBtn, false);
+      setElementVisibility(statusBox, false);
+      if (statusBox) statusBox.classList.add('hidden');
+      [toggleBtn, addBtn, logoutBtn].forEach((btn) => {
+        setElementVisibility(btn, false);
+        setButtonState(btn, false);
+      });
+      return;
+    }
+
+    const showLogin = entryAccessEnabled && !sessionActive;
+    setElementVisibility(loginBtn, showLogin);
+    setButtonState(loginBtn, showLogin);
+
+    const showControls = entryAccessEnabled && sessionActive;
+    setElementVisibility(statusBox, showControls);
+    if (statusBox) {
+      statusBox.classList.toggle('hidden', !showControls);
+    }
+    [toggleBtn, addBtn, logoutBtn].forEach((btn) => {
+      setElementVisibility(btn, showControls);
+      setButtonState(btn, showControls);
+    });
+  }
+
+  updateEditorUi();
+
   const LS_KEY = 'mirl.editor.token';
   let token = null;
   let editorOn = false;
@@ -120,6 +231,7 @@
   function disableEditorFeatures(reason) {
     if (!editingSupported) return;
     editingSupported = false;
+    sessionActive = false;
     editorDisabledReason = reason || DEFAULT_EDITOR_DISABLED_REASON;
     document.documentElement.classList.remove('editor-mode-on');
     if (label) {
@@ -132,11 +244,8 @@
       statusBox.classList.add('hidden');
     }
     [loginBtn, logoutBtn, toggleBtn, addBtn].forEach((btn) => {
-      if (btn) {
-        btn.disabled = true;
-        btn.setAttribute('aria-disabled', 'true');
-        btn.style.display = 'none';
-      }
+      setElementVisibility(btn, false);
+      setButtonState(btn, false);
     });
     if (banner) {
       banner.setAttribute('data-editor-disabled', 'true');
@@ -148,6 +257,7 @@
       }
       note.textContent = editorDisabledReason;
     }
+    updateEditorUi();
   }
 
   function assertEditorAvailable(showAlert) {
@@ -176,30 +286,33 @@
   }
 
   function setLoggedOut() {
-    if (!label) return;
+    sessionActive = false;
     if (!editingSupported) {
-      label.textContent = editorDisabledReason;
+      if (label) label.textContent = editorDisabledReason;
       if (userLabel) userLabel.textContent = '';
       if (statusBox) statusBox.classList.add('hidden');
+      updateEditorUi();
       return;
     }
-    label.textContent = 'Nicht angemeldet';
+    if (label) label.textContent = 'Nicht angemeldet';
     if (userLabel) userLabel.textContent = '';
     if (statusBox) statusBox.classList.add('hidden');
-    if (loginBtn) loginBtn.style.display = 'inline-block';
     editorOn = false;
     if (toggleBtn) toggleBtn.textContent = 'Editor-Modus: Aus';
     document.documentElement.classList.remove('editor-mode-on');
+    updateEditorUi();
   }
 
   function setLoggedIn(username) {
+    sessionActive = true;
     if (!editingSupported) {
+      updateEditorUi();
       return;
     }
     if (label) label.textContent = 'Editor aktiviert';
     if (userLabel) userLabel.textContent = username ? ('Angemeldet als ' + username) : '';
     if (statusBox) statusBox.classList.remove('hidden');
-    if (loginBtn) loginBtn.style.display = 'none';
+    updateEditorUi();
   }
 
   async function api(path, options){
@@ -299,6 +412,9 @@
   function toggleEditorMode(){
     if (!editingSupported) {
       assertEditorAvailable(true);
+      return;
+    }
+    if (!entryAccessEnabled || !sessionActive) {
       return;
     }
     editorOn = !editorOn;
