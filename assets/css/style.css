@@ -2193,7 +2193,8 @@ footer { background: rgba(8,10,16,.65); backdrop-filter: blur(3px); border-top: 
   --proj-card-pad: 1rem;
   --proj-card-body-gap: 0.45rem;
   --proj-desc-lines: 2;
-  --proj-card-height: 120px;
+  /* Increased height by ~10% to give each card more breathing room */
+  --proj-card-height: 132px;
   --proj-grid-cols: 3;
 }
 
