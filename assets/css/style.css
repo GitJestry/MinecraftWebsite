@@ -2178,14 +2178,13 @@ footer { background: rgba(8,10,16,.65); backdrop-filter: blur(3px); border-top: 
 
 /* Unified sizing tokens for project cards */
 :root {
-  --proj-card-thumb: 64px;
-  --proj-card-radius: 14px;
-  --proj-card-gap: 0.75rem;
-  --proj-grid-gap: 0.85rem;
-  --proj-card-pad: 0.8rem;
-  --proj-card-body-gap: 0.35rem;
+  --proj-card-thumb: 92px;
+  --proj-card-radius: 16px;
+  --proj-card-gap: 1rem;
+  --proj-grid-gap: 1.1rem;
+  --proj-card-pad: 1rem;
+  --proj-card-body-gap: 0.45rem;
   --proj-desc-lines: 2;
-  --proj-card-width: 320px;
 }
 
 .itemgrid > .card.dp-card,
@@ -2285,13 +2284,13 @@ footer { background: rgba(8,10,16,.65); backdrop-filter: blur(3px); border-top: 
 .itemgrid { align-items: stretch; }
 .itemgrid > * { width: 100%; box-sizing: border-box; }
 
-/* Compact three-up layout for project cards */
+/* Responsive layout for project cards */
 .projects-page .itemgrid {
   display: grid;
   gap: var(--proj-grid-gap);
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--proj-card-width)), var(--proj-card-width)));
-  justify-content: center;
-  max-width: calc(var(--proj-card-width) * 3 + var(--proj-grid-gap) * 2);
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  width: 100%;
+  max-width: 1100px;
   margin-left: auto;
   margin-right: auto;
 }
