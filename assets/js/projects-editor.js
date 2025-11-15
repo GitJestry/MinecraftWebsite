@@ -43,6 +43,276 @@
   let editingSupported = true;
   let editorDisabledReason = DEFAULT_EDITOR_DISABLED_REASON;
 
+  const LOCAL_ADMIN_USERNAME = 'admin';
+  const LOCAL_ADMIN_PASSWORD = 'EmeraldSpire!592';
+  const LOCAL_EDITOR_TOKEN = 'local-editor-token';
+  const LOCAL_SESSION_STORAGE_KEY = 'mirl.editor.session.v1';
+  const LOCAL_PROJECTS_STORAGE_KEY = 'mirl.editor.projects.v1';
+  let localSessionCache = undefined;
+  let localProjectsStore = null;
+
+  function readLocalSession() {
+    if (localSessionCache !== undefined) {
+      return localSessionCache;
+    }
+    if (typeof localStorage === 'undefined') {
+      localSessionCache = null;
+      return localSessionCache;
+    }
+    try {
+      const raw = localStorage.getItem(LOCAL_SESSION_STORAGE_KEY);
+      localSessionCache = raw ? JSON.parse(raw) : null;
+    } catch (err) {
+      localSessionCache = null;
+    }
+    return localSessionCache;
+  }
+
+  function writeLocalSession(data) {
+    localSessionCache = data || null;
+    if (typeof localStorage === 'undefined') {
+      return;
+    }
+    try {
+      if (!data) {
+        localStorage.removeItem(LOCAL_SESSION_STORAGE_KEY);
+      } else {
+        localStorage.setItem(LOCAL_SESSION_STORAGE_KEY, JSON.stringify(localSessionCache));
+      }
+    } catch (err) {}
+  }
+
+  function extractBearerToken(headers) {
+    if (!headers || typeof headers !== 'object') return '';
+    const header = headers.Authorization || headers.authorization || '';
+    if (!header || typeof header !== 'string') return '';
+    return header.replace(/^Bearer\s+/i, '').trim();
+  }
+
+  function createHttpError(status, message) {
+    const error = new Error(message || 'Request failed');
+    error.status = status;
+    return error;
+  }
+
+  function requireLocalAuth(headers) {
+    const token = extractBearerToken(headers);
+    const session = readLocalSession();
+    if (session && token && token === session.token) {
+      return session;
+    }
+    throw createHttpError(401, 'Nicht autorisiert.');
+  }
+
+  function cloneProject(project) {
+    return project ? JSON.parse(JSON.stringify(project)) : project;
+  }
+
+  function normaliseTags(value) {
+    if (Array.isArray(value)) {
+      return value.map((tag) => String(tag || '').trim()).filter(Boolean);
+    }
+    if (typeof value === 'string') {
+      return value.split(',').map((tag) => tag.trim()).filter(Boolean);
+    }
+    return [];
+  }
+
+  function normaliseProjectRecord(project) {
+    const record = cloneProject(project) || {};
+    record.id = (record.id || '').trim();
+    if (!record.id && record.title) {
+      record.id = slugifyId(record.title);
+    }
+    record.type = normaliseType(record.type);
+    record.tags = normaliseTags(record.tags);
+    return record;
+  }
+
+  function persistLocalProjects() {
+    if (typeof localStorage === 'undefined') {
+      return;
+    }
+    try {
+      if (!localProjectsStore || !Array.isArray(localProjectsStore)) {
+        localStorage.removeItem(LOCAL_PROJECTS_STORAGE_KEY);
+      } else {
+        localStorage.setItem(LOCAL_PROJECTS_STORAGE_KEY, JSON.stringify(localProjectsStore));
+      }
+    } catch (err) {}
+  }
+
+  async function loadLocalProjects() {
+    if (localProjectsStore && Array.isArray(localProjectsStore)) {
+      return localProjectsStore;
+    }
+    let stored = null;
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const raw = localStorage.getItem(LOCAL_PROJECTS_STORAGE_KEY);
+        stored = raw ? JSON.parse(raw) : null;
+      } catch (err) {
+        stored = null;
+      }
+    }
+    if (Array.isArray(stored)) {
+      localProjectsStore = stored.map((item) => normaliseProjectRecord(item));
+      persistLocalProjects();
+      return localProjectsStore;
+    }
+    const staticData = await fetchStaticProjects();
+    localProjectsStore = Array.isArray(staticData) ? staticData.map((item) => normaliseProjectRecord(item)) : [];
+    persistLocalProjects();
+    return localProjectsStore;
+  }
+
+  function updateLocalProject(updated) {
+    if (!updated) return;
+    if (!localProjectsStore) {
+      localProjectsStore = [];
+    }
+    const record = normaliseProjectRecord(updated);
+    const entry = cloneProject(record);
+    const index = localProjectsStore.findIndex((project) => project && project.id === entry.id);
+    if (index === -1) {
+      localProjectsStore.push(entry);
+    } else {
+      localProjectsStore[index] = entry;
+    }
+    persistLocalProjects();
+  }
+
+  function removeLocalProject(projectId) {
+    if (!localProjectsStore || !Array.isArray(localProjectsStore)) {
+      return;
+    }
+    const next = localProjectsStore.filter((project) => project && project.id !== projectId);
+    localProjectsStore = next;
+    persistLocalProjects();
+  }
+
+  function parseJsonBody(body) {
+    if (!body) return {};
+    if (typeof body === 'string') {
+      try {
+        return body ? JSON.parse(body) : {};
+      } catch (err) {
+        return {};
+      }
+    }
+    if (typeof body === 'object') {
+      return body;
+    }
+    return {};
+  }
+
+  function buildSessionResponse(session) {
+    if (session && session.username) {
+      return { authenticated: true, user: { username: session.username } };
+    }
+    return { authenticated: false };
+  }
+
+  async function handleLocalEditorRequest(path, opts) {
+    const options = opts && typeof opts === 'object' ? opts : {};
+    const method = (options.method || 'GET').toUpperCase();
+
+    if (path === '/editor/login') {
+      if (method !== 'POST') {
+        throw createHttpError(405, 'Methode nicht erlaubt.');
+      }
+      const payload = parseJsonBody(options.body);
+      const username = String(payload.username || '').trim();
+      const password = String(payload.password || '');
+      if (username === LOCAL_ADMIN_USERNAME && password === LOCAL_ADMIN_PASSWORD) {
+        const session = { username: LOCAL_ADMIN_USERNAME, token: LOCAL_EDITOR_TOKEN };
+        writeLocalSession(session);
+        return { token: LOCAL_EDITOR_TOKEN };
+      }
+      throw createHttpError(401, 'Ungültige Zugangsdaten.');
+    }
+
+    if (path === '/editor/logout') {
+      writeLocalSession(null);
+      return { success: true };
+    }
+
+    if (path === '/editor/me') {
+      const session = readLocalSession();
+      const token = extractBearerToken(options.headers || {});
+      if (session && token === session.token) {
+        return buildSessionResponse(session);
+      }
+      return { authenticated: false };
+    }
+
+    if (path === '/editor/projects') {
+      if (method === 'GET') {
+        const data = await loadLocalProjects();
+        return data.map((project) => cloneProject(project));
+      }
+      requireLocalAuth(options.headers || {});
+      if (method === 'POST') {
+        const payload = normaliseProjectRecord(parseJsonBody(options.body));
+        if (!payload.title) {
+          throw createHttpError(400, 'Titel darf nicht leer sein.');
+        }
+        if (!payload.id) {
+          payload.id = slugifyId(payload.title);
+        }
+        const store = await loadLocalProjects();
+        if (store.some((project) => project && project.id === payload.id)) {
+          throw createHttpError(409, 'Projekt-ID existiert bereits.');
+        }
+        updateLocalProject(payload);
+        const stored = localProjectsStore && Array.isArray(localProjectsStore)
+          ? localProjectsStore.find((project) => project && project.id === payload.id)
+          : null;
+        return cloneProject(stored || payload);
+      }
+      throw createHttpError(405, 'Methode nicht erlaubt.');
+    }
+
+    if (path.startsWith('/editor/projects/')) {
+      const idPart = path.slice('/editor/projects/'.length);
+      const projectId = decodeURIComponent(idPart || '');
+      if (!projectId) {
+        throw createHttpError(404, 'Projekt nicht gefunden.');
+      }
+      const store = await loadLocalProjects();
+      const existing = store.find((project) => project && project.id === projectId);
+      if (method === 'GET') {
+        if (!existing) {
+          throw createHttpError(404, 'Projekt nicht gefunden.');
+        }
+        return cloneProject(existing);
+      }
+      requireLocalAuth(options.headers || {});
+      if (method === 'PUT') {
+        if (!existing) {
+          throw createHttpError(404, 'Projekt nicht gefunden.');
+        }
+        const payload = normaliseProjectRecord(parseJsonBody(options.body));
+        payload.id = projectId;
+        updateLocalProject(payload);
+        const stored = localProjectsStore && Array.isArray(localProjectsStore)
+          ? localProjectsStore.find((project) => project && project.id === projectId)
+          : null;
+        return cloneProject(stored || payload);
+      }
+      if (method === 'DELETE') {
+        if (!existing) {
+          throw createHttpError(404, 'Projekt nicht gefunden.');
+        }
+        removeLocalProject(projectId);
+        return { success: true };
+      }
+      throw createHttpError(405, 'Methode nicht erlaubt.');
+    }
+
+    throw createHttpError(404, 'Pfad nicht gefunden.');
+  }
+
   function delay(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
@@ -434,6 +704,9 @@
     }
     opts.headers = headers;
     opts.credentials = API_SAME_ORIGIN ? 'include' : 'omit';
+    if (typeof path === 'string' && path.startsWith('/editor/')) {
+      return handleLocalEditorRequest(path, opts);
+    }
     const url = API_BASE ? API_BASE + path : path;
     let attempt = 0;
     while (attempt <= retryAttemptsOption) {
