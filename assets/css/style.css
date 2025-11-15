@@ -2173,33 +2173,111 @@ footer { background: rgba(8,10,16,.65); backdrop-filter: blur(3px); border-top: 
 
 
 
-/* ==== Fix: normalize example item cards (dp-card) in Projects page ==== */
-/* Ensure dp-cards align and size like regular .item entries inside item grids */
-.itemgrid > .card.dp-card {
-  grid-template-columns: 84px 1fr;      /* match .item thumb + content */
-  height: auto;                         /* remove fixed card height */
-  min-height: 84px;                     /* at least the thumb size */
+/* === Projects: normalize Datapack & 3D print cards === */
+:root {
+  --proj-card-thumb: 84px;
+  --proj-card-radius: 16px;
+  --proj-card-gap: 1rem;
+  --proj-desc-lines: 2;
+}
+
+.itemgrid > .card.dp-card,
+.itemgrid > .card.pr-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--proj-card-thumb) 1fr;
+  gap: var(--proj-card-gap);
   align-items: center;
-  width: 100%;
+  padding: 1rem;
+  border-radius: var(--proj-card-radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  min-height: var(--proj-card-thumb);
   box-sizing: border-box;
+  transition: transform .12s ease, box-shadow .15s ease;
 }
 
-.itemgrid > .card.dp-card .thumb {
-  width: 84px;
-  height: 84px;
+.itemgrid > .card.dp-card:hover,
+.itemgrid > .card.pr-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 28px rgba(0,0,0,.28);
 }
 
-/* In case any prior rule sets a fixed height on .card.dp-card, override it here */
-.card.dp-card {
-  height: auto;
-  min-height: 84px;
+.itemgrid > .card.dp-card:focus-visible,
+.itemgrid > .card.pr-card:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 4px;
+  box-shadow: var(--accent-glow);
 }
 
-/* Prevent layout glitches when wrapping to narrow columns */
+.itemgrid > .card.dp-card .thumb,
+.itemgrid > .card.pr-card .thumb {
+  width: var(--proj-card-thumb);
+  height: var(--proj-card-thumb);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(200px 120px at 30% 20%, rgba(26,77,255,.18), transparent 60%), #0b0b0f;
+}
+
+.itemgrid > .card.dp-card .thumb img,
+.itemgrid > .card.pr-card .thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.itemgrid > .card.dp-card .meta,
+.itemgrid > .card.pr-card .meta {
+  display: grid;
+  gap: .35rem;
+  min-width: 0;
+}
+
+.itemgrid > .card.dp-card .meta .title,
+.itemgrid > .card.pr-card .meta .title {
+  margin: 0;
+  font-size: 1.18rem;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+
+.itemgrid > .card.dp-card .chips,
+.itemgrid > .card.pr-card .chips {
+  display: flex;
+  gap: .35rem;
+  flex-wrap: wrap;
+  margin: 0;
+}
+
+.itemgrid > .card.dp-card .meta .quick,
+.itemgrid > .card.pr-card .meta .quick,
+.itemgrid > .card.pr-card .meta .muted {
+  color: var(--muted);
+  font-size: .95rem;
+  line-height: 1.4;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--proj-desc-lines);
+}
+
+.itemgrid > .card.pr-card .meta .muted {
+  font-size: .88rem;
+}
+
 .itemgrid { align-items: stretch; }
 .itemgrid > * { width: 100%; box-sizing: border-box; }
 
-/* Gallery images: ensure consistent sizing to avoid overflow */
 .modal .gallery {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -2212,112 +2290,6 @@ footer { background: rgba(8,10,16,.65); backdrop-filter: blur(3px); border-top: 
   border-radius: 10px;
   display: block;
 }
-/* ==== End fix ==== */
-
-
-
-/* ==== Additional 3D Printing fix: make dp-card look exactly like .item in grids ==== */
-.itemgrid > .card.dp-card {
-  padding: .75rem;            /* match .item */
-  border-radius: 12px;        /* match .item */
-  margin: 0;                  /* remove any stray margins */
-}
-
-.itemgrid > .card.dp-card .meta .title {
-  font-size: 1.2rem;          /* match .item */
-  margin: 0 0 .2rem;
-}
-
-.itemgrid > .card.dp-card .actions {
-  margin-top: .4rem;          /* reduce gap like .item layout */
-}
-/* ==== End additional fix ==== */
-
-
-
-/* ==== 3D Printing: make dp-card match .item sizing exactly ==== */
-.itemgrid > .card.dp-card {
-  grid-template-columns: 90px 1fr;   /* match .item */
-  padding: 1rem;                      /* match .item */
-  border-radius: 16px;                /* match .item */
-}
-
-.itemgrid > .card.dp-card .thumb {
-  width: 90px;
-  height: 90px;
-  border-radius: 12px;                /* match .item .thumb */
-}
-
-.itemgrid > .card.dp-card .title {
-  font-size: 1.22rem;                 /* match .item .title */
-}
-
-/* Ensure no fixed height sneaks back in */
-.card.dp-card {
-  height: auto !important;
-  min-height: 90px;
-}
-/* ==== End 3D Printing fix ==== */
-
-/* ===== MIRL: Projects 3D Printing card height normalization (2025-10-28) ===== */
-.itemgrid > .card.dp-card {
-  display: grid !important;
-  grid-template-columns: 84px 1fr !important;   /* match .item thumb + content */
-  gap: 1rem !important;
-  align-items: center !important;
-  padding: 1rem !important;
-  border-radius: 16px !important;
-  height: auto !important;
-  min-height: 84px !important;
-  box-sizing: border-box !important;
-}
-
-.itemgrid > .card.dp-card .thumb {
-  width: 84px !important;
-  height: 84px !important;
-  border-radius: 12px !important;
-  overflow: hidden;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-.itemgrid > .card.dp-card .meta {
-  display: grid;
-  grid-template-rows: auto auto 1fr;  /* title, chips, desc pinned at bottom */
-  min-height: 84px;                   /* align with thumb */
-}
-
-.itemgrid > .card.dp-card .meta .title {
-  font-size: 1.2rem !important;
-  line-height: 1.15;
-  margin: 0 0 .2rem 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
-}
-
-.itemgrid > .card.dp-card .chips {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin: .1rem 0 .25rem;
-}
-
-.itemgrid > .card.dp-card .meta .quick {
-  margin-top: auto;                   /* push to bottom for consistent layout */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 1;              /* match Datapacks quick line count */
-  -webkit-box-orient: vertical;
-}
-
-/* Remove any rogue margins that could stretch the card */
-.itemgrid > .card.dp-card > * { margin-block: 0 !important; }
-/* ===== End fix ===== */
 
 
 /* === Added by release helper === */

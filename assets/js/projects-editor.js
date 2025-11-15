@@ -1,7 +1,36 @@
 (function(){
   'use strict';
 
-  const API_BASE = 'http://localhost:3001'; // server/src/editor-server.js
+  function sanitiseApiBase(value) {
+    if (value == null) return '';
+    const trimmed = String(value).trim();
+    if (!trimmed || trimmed.toLowerCase() === 'same-origin') {
+      return '';
+    }
+    return trimmed.replace(/\/+$/, '');
+  }
+
+  function computeApiBase() {
+    if (typeof window !== 'undefined' && window.MIRL_EDITOR_API) {
+      return sanitiseApiBase(window.MIRL_EDITOR_API);
+    }
+    if (typeof document !== 'undefined' && document.documentElement) {
+      const attr = document.documentElement.getAttribute('data-editor-api');
+      if (attr) {
+        return sanitiseApiBase(attr);
+      }
+    }
+    if (typeof window !== 'undefined') {
+      const origin = window.location && window.location.origin;
+      if (origin && origin !== 'null' && !origin.startsWith('file:')) {
+        return '';
+      }
+    }
+    return sanitiseApiBase('http://localhost:3001');
+  }
+
+  const API_BASE = computeApiBase();
+  const API_SAME_ORIGIN = API_BASE === '';
 
   const banner = document.getElementById('editor-banner');
   if (!banner) return;
@@ -93,17 +122,21 @@
   }
 
   async function api(path, options){
-    const opts = options || {};
-    const headers = opts.headers || {};
+    const opts = options ? { ...options } : {};
+    const headers = { ...(opts.headers || {}) };
     if (!(opts.body instanceof FormData) && !('Content-Type' in headers)) {
       headers['Content-Type'] = 'application/json';
+    }
+    if (!('Accept' in headers)) {
+      headers['Accept'] = 'application/json';
     }
     if (token) {
       headers['Authorization'] = 'Bearer ' + token;
     }
     opts.headers = headers;
-    opts.credentials = 'omit';
-    const res = await fetch(API_BASE + path, opts);
+    opts.credentials = API_SAME_ORIGIN ? 'include' : 'omit';
+    const url = API_BASE ? API_BASE + path : path;
+    const res = await fetch(url, opts);
     if (!res.ok) {
       let err;
       try { err = await res.json(); } catch(e){}
@@ -309,13 +342,45 @@
     if (!grid) return;
 
     const card = document.createElement('article');
-    card.className = isDatapack ? 'card dp-card' : 'card pr-card';
-    card.setAttribute('data-project-id', project.id);
+    card.className = isDatapack ? 'item card dp-card' : 'item card pr-card';
+    if (project.id) {
+      card.setAttribute('data-project-id', project.id);
+    }
     card.setAttribute('data-project-type', type);
     const category = project.category || '';
     const tags = Array.isArray(project.tags) ? project.tags : [];
     const subcats = category || (tags.join(',') || '');
     if (subcats) card.setAttribute('data-subcats', subcats);
+
+    let modalId = '';
+    if (project.modalTarget) {
+      modalId = String(project.modalTarget).trim();
+    }
+    if (!modalId && project.id) {
+      const modalMatch = document.querySelector(`.modal[data-project-id="${project.id}"]`);
+      if (modalMatch && modalMatch.id) {
+        modalId = modalMatch.id;
+      }
+    }
+    if (!modalId && project.id) {
+      const direct = document.getElementById(project.id);
+      if (direct && direct.classList && direct.classList.contains('modal')) {
+        modalId = direct.id;
+      }
+    }
+    if (!modalId && project.id) {
+      const guess = document.getElementById((isDatapack ? 'dp-' : 'pr-') + project.id);
+      if (guess && guess.classList && guess.classList.contains('modal')) {
+        modalId = guess.id;
+      }
+    }
+    if (modalId) {
+      card.dataset.modalTarget = modalId;
+      card.setAttribute('aria-controls', modalId);
+      card.setAttribute('aria-expanded', 'false');
+      card.setAttribute('role', 'button');
+      card.setAttribute('tabindex', '0');
+    }
 
     const imgSrc = project.image || 'assets/img/logo.jpg';
     const chipA = project.mcVersion || (isDatapack ? '1.21.x' : '');
@@ -352,9 +417,7 @@
     if (!dpGrid && !prGrid) return;
     let data;
     try {
-      const res = await fetch(API_BASE + '/editor/projects', { method: 'GET' });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      data = await res.json();
+      data = await api('/editor/projects', { method: 'GET' });
     } catch (e) {
       console.warn('Konnte Projektliste nicht laden:', e);
       return;
@@ -374,6 +437,20 @@
     if (prGrid) prGrid.appendChild(createAddCard('printing'));
 
     updateCounts();
+    try {
+      const evt = typeof CustomEvent === 'function'
+        ? new CustomEvent('projects:cards-refreshed')
+        : null;
+      if (evt) {
+        document.dispatchEvent(evt);
+      } else {
+        const legacy = document.createEvent('Event');
+        legacy.initEvent('projects:cards-refreshed', true, true);
+        document.dispatchEvent(legacy);
+      }
+    } catch (err) {
+      console.warn('Konnte Kartenaktualisierungsevent nicht senden:', err);
+    }
   }
 
   // ---------- Editor modal helpers ----------
