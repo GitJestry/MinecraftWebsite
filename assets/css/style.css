@@ -2638,19 +2638,6 @@ body.legal-page .navbar {
   justify-content: center;
   gap: .8rem;
 }
-body.legal-page .navbar .btn-tab {
-  font-size: clamp(.82rem, 1.35vw, .95rem);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  text-transform: none;
-  letter-spacing: 0;
-  font-weight: 600;
-  padding: .65rem 1.05rem;
-}
-
-body.legal-page .navbar .btn-tab span {
-  font-family: inherit;
-  letter-spacing: inherit;
-}
 body.legal-page footer#pageend .footer-grid {
   gap: .75rem;
 }
@@ -2670,14 +2657,14 @@ body.legal-page header.nav {
   top: 0;
   left: 0;
   right: 0;
-  background: rgba(0, 0, 0, .7);
-  backdrop-filter: blur(6px);
+  background: rgba(8, 10, 16, .65);
+  backdrop-filter: blur(4px);
   border-bottom: 1px solid var(--border);
   z-index: 18;
 }
 body.legal-page header.nav-min.see-through {
-  background: rgba(0, 0, 0, .65) !important;
-  backdrop-filter: blur(6px) !important;
+  background: rgba(8, 10, 16, .65) !important;
+  backdrop-filter: blur(4px) !important;
 }
 body.legal-page .viewport::before,
 body.legal-page .viewport::after {
