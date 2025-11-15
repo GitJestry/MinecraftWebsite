@@ -18,16 +18,25 @@
     color: var(--text);
   }
 
-  body.legal-page h1,
-  body.legal-page h2,
-  body.legal-page h3,
-  body.legal-page h4,
-  body.legal-page p,
-  body.legal-page li,
-  body.legal-page a,
-  body.legal-page span {
+  .legal-main h1,
+  .legal-main h2,
+  .legal-main h3,
+  .legal-main h4,
+  .legal-main p,
+  .legal-main li,
+  .legal-main a,
+  .legal-main span {
     font-family: inherit !important;
     letter-spacing: 0 !important;
+  }
+
+  .legal-page header.nav-min {
+    font-family: "MIRL-Minecraft", monospace;
+    letter-spacing: .02em;
+  }
+
+  .legal-page header.nav-min .btn-tab {
+    text-transform: uppercase;
   }
 
   main p, main li, .content p, .content li, .main-content p, .main-content li, article p, article li {
@@ -142,19 +151,25 @@
 
   .legal-box {
     position: relative;
-    padding: 1.1rem 1.3rem 1rem;
+    padding: clamp(1.25rem, 4vw, 1.6rem);
     border-radius: 18px;
     background: rgba(11, 16, 27, 0.88);
     border: 1px solid rgba(59, 73, 99, 0.7);
     box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.12);
+    line-height: 1.65;
+    font-size: clamp(0.98rem, 1.9vw, 1.06rem);
   }
 
   .legal-box p {
-    margin: 0 0 0.55rem;
+    margin: 0 0 0.65rem;
   }
 
   .legal-box p:last-child {
     margin-bottom: 0;
+  }
+
+  .legal-box ul {
+    margin: 0;
   }
 
   .legal-box strong {
