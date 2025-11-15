@@ -109,7 +109,7 @@ html:not(.editor-mode-on) .editor-add-card {
 
 .project-editor-dialog {
   position: relative;
-  max-width: 760px;
+  max-width: 820px;
   margin: 6vh auto;
   background: var(--surface);
   border-radius: 22px;
@@ -118,6 +118,14 @@ html:not(.editor-mode-on) .editor-add-card {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  max-height: min(92vh, 900px);
+  overflow-y: auto;
+}
+
+@media (max-height: 680px) {
+  .project-editor-dialog {
+    margin: 3vh auto;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -141,6 +149,32 @@ html:not(.editor-mode-on) .editor-add-card {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.9rem 1.2rem;
+}
+
+@media (max-width: 760px) {
+  .project-editor-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.project-editor-form textarea {
+  min-height: 80px;
+}
+
+.project-editor-form textarea.long {
+  min-height: 140px;
+}
+
+.project-editor-hidden-field {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .project-editor-form .field {
@@ -638,10 +672,36 @@ dialog[open] .content {
         <textarea id="pe-modal-hero" maxlength="320" name="modalHero" placeholder="Kurzer Untertitel im Modal"></textarea>
         <p class="hint">Text unter dem Titel im Popup. Leer lassen, um die Kurzbeschreibung zu verwenden.</p>
       </div>
+      <textarea aria-hidden="true" class="project-editor-hidden-field" id="pe-modal-body" name="modalBody" tabindex="-1"></textarea>
       <div class="field field--full">
-        <label for="pe-modal-body">Modal-Inhalt (HTML)</label>
-        <textarea id="pe-modal-body" name="modalBody" placeholder="HTML-Inhalt, der im Popup angezeigt wird"></textarea>
-        <p class="hint">Unterstützt HTML. Der Inhalt ersetzt den Abschnitt innerhalb des Popups.</p>
+        <label for="pe-modal-info">Modal · Info-Liste</label>
+        <textarea id="pe-modal-info" name="modalInfo" placeholder="Label|Wert"></textarea>
+        <p class="hint">Ein Eintrag pro Zeile, z. B. <code>Game|Minecraft Java</code>. Die Liste erscheint in der linken Spalte des Popups.</p>
+      </div>
+      <div class="field field--full">
+        <label for="pe-modal-description">Modal · Beschreibung</label>
+        <textarea class="long" id="pe-modal-description" name="modalDescription" placeholder="HTML oder Text für den Tab &quot;Description&quot;"></textarea>
+        <p class="hint">Inhalt für den Beschreibungstab. HTML wird unterstützt.</p>
+      </div>
+      <div class="field field--full">
+        <label for="pe-modal-install">Modal · Installationsschritte</label>
+        <textarea id="pe-modal-install" name="modalInstallation" placeholder="Schritt 1&#10;Schritt 2"></textarea>
+        <p class="hint">Ein Schritt pro Zeile. Es werden nummerierte Karten im Tab &quot;Installation&quot; erzeugt.</p>
+      </div>
+      <div class="field field--full">
+        <label for="pe-modal-versions">Modal · Versionstabelle</label>
+        <textarea id="pe-modal-versions" name="modalVersions" placeholder="v1.0|1.21.8|2025‑09‑10|downloads/datei.zip"></textarea>
+        <p class="hint">Optional. Format pro Zeile: <code>Release|Minecraft|Datum|Download-URL</code>. Der Download-Text wird automatisch gesetzt.</p>
+      </div>
+      <div class="field field--full">
+        <label for="pe-modal-changelog">Modal · Changelog</label>
+        <textarea class="long" id="pe-modal-changelog" name="modalChangelog" placeholder="&lt;p&gt;&lt;strong&gt;v1.0&lt;/strong&gt; – Erstveröffentlichung.&lt;/p&gt;"></textarea>
+        <p class="hint">HTML-Inhalt für den Tab &quot;Changelog&quot;. Leer lassen, um den Tab auszublenden.</p>
+      </div>
+      <div class="field field--full">
+        <label for="pe-modal-gallery">Modal · Galerie</label>
+        <textarea id="pe-modal-gallery" name="modalGallery" placeholder="assets/img/beispiel.jpg|Bildbeschreibung"></textarea>
+        <p class="hint">Optional. Ein Bild pro Zeile im Format <code>Bild-URL|Alt-Text</code>.</p>
       </div>
       <div class="field field--full" data-label-datapack="Download-Datei (ZIP)" data-label-printing="Download (STL oder ZIP)">
         <label for="pe-download">Download-Datei (ZIP)</label>
