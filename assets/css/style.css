@@ -2180,9 +2180,11 @@ footer { background: rgba(8,10,16,.65); backdrop-filter: blur(3px); border-top: 
   --proj-card-thumb: 64px;
   --proj-card-radius: 14px;
   --proj-card-gap: 0.75rem;
+  --proj-grid-gap: 0.85rem;
   --proj-card-pad: 0.8rem;
   --proj-card-body-gap: 0.35rem;
   --proj-desc-lines: 2;
+  --proj-card-width: 320px;
 }
 
 .itemgrid > .card.dp-card,
@@ -2285,14 +2287,12 @@ footer { background: rgba(8,10,16,.65); backdrop-filter: blur(3px); border-top: 
 /* Compact three-up layout for project cards */
 .projects-page .itemgrid {
   display: grid;
-  gap: 0.85rem;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-}
-
-@media (min-width: 1080px) {
-  .projects-page .itemgrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+  gap: var(--proj-grid-gap);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--proj-card-width)), var(--proj-card-width)));
+  justify-content: center;
+  max-width: calc(var(--proj-card-width) * 3 + var(--proj-grid-gap) * 2);
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .projects-page .itemgrid > .item {
