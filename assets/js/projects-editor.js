@@ -44,12 +44,81 @@
   let editorDisabledReason = DEFAULT_EDITOR_DISABLED_REASON;
 
   const LOCAL_ADMIN_USERNAME = 'admin';
-  const LOCAL_ADMIN_PASSWORD = 'EmeraldSpire!592';
+  const LOCAL_PASSWORD_SALT = 'mirl-editor::v1';
+  const LOCAL_ADMIN_PASSWORD_HASH = '5c216a33f072ffb714c1bbf9ca2de0668621baf8b7158e3d591feea0f048cbe3';
   const LOCAL_EDITOR_TOKEN = 'local-editor-token';
   const LOCAL_SESSION_STORAGE_KEY = 'mirl.editor.session.v1';
   const LOCAL_PROJECTS_STORAGE_KEY = 'mirl.editor.projects.v1';
   let localSessionCache = undefined;
   let localProjectsStore = null;
+
+  function getCryptoSubtle() {
+    if (typeof globalThis !== 'undefined' && globalThis.crypto && globalThis.crypto.subtle) {
+      return globalThis.crypto.subtle;
+    }
+    if (typeof window !== 'undefined' && window.crypto && window.crypto.subtle) {
+      return window.crypto.subtle;
+    }
+    try {
+      if (typeof require === 'function') {
+        const cryptoModule = require('crypto');
+        if (cryptoModule && cryptoModule.webcrypto && cryptoModule.webcrypto.subtle) {
+          return cryptoModule.webcrypto.subtle;
+        }
+      }
+    } catch (err) {}
+    return null;
+  }
+
+  function getTextEncoderCtor() {
+    if (typeof TextEncoder !== 'undefined') {
+      return TextEncoder;
+    }
+    try {
+      if (typeof require === 'function') {
+        const util = require('util');
+        if (util && util.TextEncoder) {
+          return util.TextEncoder;
+        }
+      }
+    } catch (err) {}
+    return null;
+  }
+
+  function bufferToHex(buffer) {
+    if (!buffer) return '';
+    const view = buffer instanceof ArrayBuffer ? new Uint8Array(buffer) : new Uint8Array(buffer.buffer || buffer);
+    let hex = '';
+    for (let i = 0; i < view.length; i += 1) {
+      hex += view[i].toString(16).padStart(2, '0');
+    }
+    return hex;
+  }
+
+  async function hashPasswordWithSalt(password) {
+    const subtle = getCryptoSubtle();
+    const TextEncoderCtor = getTextEncoderCtor();
+    if (!subtle || !TextEncoderCtor) {
+      return null;
+    }
+    const encoder = new TextEncoderCtor();
+    const normalized = typeof password === 'string' && password.normalize ? password.normalize('NFKC') : String(password || '');
+    const data = encoder.encode(LOCAL_PASSWORD_SALT + normalized);
+    try {
+      const digest = await subtle.digest('SHA-256', data);
+      return bufferToHex(digest);
+    } catch (err) {
+      return null;
+    }
+  }
+
+  async function verifyLocalAdminPassword(password) {
+    const hash = await hashPasswordWithSalt(password);
+    if (!hash) {
+      return null;
+    }
+    return hash === LOCAL_ADMIN_PASSWORD_HASH;
+  }
 
   function readLocalSession() {
     if (localSessionCache !== undefined) {
@@ -224,7 +293,14 @@
       const payload = parseJsonBody(options.body);
       const username = String(payload.username || '').trim();
       const password = String(payload.password || '');
-      if (username === LOCAL_ADMIN_USERNAME && password === LOCAL_ADMIN_PASSWORD) {
+      if (username !== LOCAL_ADMIN_USERNAME) {
+        throw createHttpError(401, 'Ungültige Zugangsdaten.');
+      }
+      const passwordCheck = await verifyLocalAdminPassword(password);
+      if (passwordCheck === null) {
+        throw createHttpError(500, 'Passwortverifizierung nicht verfügbar.');
+      }
+      if (passwordCheck) {
         const session = { username: LOCAL_ADMIN_USERNAME, token: LOCAL_EDITOR_TOKEN };
         writeLocalSession(session);
         return { token: LOCAL_EDITOR_TOKEN };

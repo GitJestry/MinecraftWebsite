@@ -14,3 +14,19 @@ This repository houses a static website that functions as a showcase and downloa
 - **Responsive layout** ensures the experience works on desktop browsers and mobile devices, supporting visitors who follow links from social media.
 
 Overall, the site serves as a central hub where the client can share their creative output, invite collaboration, and grow their audience through curated downloads and an engaging presentation.
+
+## Editor Login
+
+The in-browser projects editor can be enabled by visiting `/editor/`. Because the site is statically hosted on GitHub Pages, authentication is handled entirely client-side. To avoid exposing a readable password, the editor now checks credentials by hashing the provided password with `SHA-256` and a salt before comparing it to the stored hash.
+
+If you want to rotate the admin password:
+
+1. Choose a new password.
+2. Generate a salted hash locally (example command below).
+3. Update `LOCAL_ADMIN_PASSWORD_HASH` in `assets/js/projects-editor.js` with the new hash.
+
+```bash
+node -e "const crypto=require('crypto');const salt='mirl-editor::v1';const password='YOUR_NEW_PASSWORD';console.log(crypto.createHash('sha256').update(salt+password,'utf8').digest('hex'));"
+```
+
+Only the salted hash is stored in the repository, so the plaintext password never ships with the site files.
