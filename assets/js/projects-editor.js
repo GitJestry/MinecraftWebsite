@@ -256,7 +256,7 @@
 
   function updateEditorUi() {
     const hasAccessFlag = entryAccessEnabled || sessionActive;
-    const bannerVisible = editingSupported ? hasAccessFlag : true;
+    const bannerVisible = editingSupported ? hasAccessFlag : false;
     setElementVisibility(banner, bannerVisible);
 
     if (!bannerVisible) {
