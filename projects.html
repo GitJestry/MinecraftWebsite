@@ -383,6 +383,14 @@ html:not(.editor-mode-on) .editor-add-card {
 .editor-banner button:hover {
   background: rgba(37,99,235,0.14);
 }
+.editor-banner[data-editor-disabled="true"] {
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.editor-banner .editor-disabled-note {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
 .editor-status {
   display: flex;
   gap: 8px;
@@ -1293,12 +1301,14 @@ window.addEventListener('load', function() {
 <script>
 (function(){
   const ENDPOINT = '/analytics/downloads';
+  const STATIC_COUNTS_URL = 'assets/data/download-counts.json';
   const downloadLinks = Array.from(document.querySelectorAll('[data-track-download]'));
   if (!downloadLinks.length) {
     return;
   }
 
   const projectIds = new Set();
+  let analyticsEnabled = true;
 
   function toPayload(link, projectId) {
     const fileId = (link.getAttribute('data-download-file') || '').trim();
@@ -1314,6 +1324,9 @@ window.addEventListener('load', function() {
   }
 
   function recordDownload(link, projectId) {
+    if (!analyticsEnabled) {
+      return;
+    }
     const body = toPayload(link, projectId);
     if (navigator.sendBeacon) {
       const blob = new Blob([body], { type: 'application/json' });
@@ -1351,6 +1364,38 @@ window.addEventListener('load', function() {
     return;
   }
 
+  function updateCountElements(counts) {
+    document.querySelectorAll('[data-download-count]').forEach((el) => {
+      const projectId = (el.getAttribute('data-download-count') || '').trim();
+      const value = counts && Object.prototype.hasOwnProperty.call(counts, projectId)
+        ? counts[projectId]
+        : undefined;
+      if (typeof value === 'number' && value >= 0) {
+        el.textContent = value.toLocaleString();
+      } else {
+        el.textContent = '—';
+      }
+    });
+  }
+
+  function loadStaticCounts() {
+    analyticsEnabled = false;
+    fetch(STATIC_COUNTS_URL, { cache: 'no-cache' })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Failed to load static counts');
+        }
+        return response.json();
+      })
+      .then((payload) => {
+        const counts = payload?.counts || payload || {};
+        updateCountElements(counts);
+      })
+      .catch(() => {
+        updateCountElements({});
+      });
+  }
+
   const query = encodeURIComponent(Array.from(projectIds).join(','));
   fetch(`${ENDPOINT}?ids=${query}`)
     .then((response) => {
@@ -1361,20 +1406,10 @@ window.addEventListener('load', function() {
     })
     .then((payload) => {
       const counts = payload?.counts || {};
-      document.querySelectorAll('[data-download-count]').forEach((el) => {
-        const projectId = (el.getAttribute('data-download-count') || '').trim();
-        const value = counts[projectId];
-        if (typeof value === 'number' && value >= 0) {
-          el.textContent = value.toLocaleString();
-        } else {
-          el.textContent = '—';
-        }
-      });
+      updateCountElements(counts);
     })
     .catch(() => {
-      document.querySelectorAll('[data-download-count]').forEach((el) => {
-        el.textContent = '—';
-      });
+      loadStaticCounts();
     });
 })();
 </script>
