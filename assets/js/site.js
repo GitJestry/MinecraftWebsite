@@ -318,6 +318,202 @@
   // Expose for debugging
   window.__MIRL = { setLang, getLang };
 
+  const DL_NAMESPACE = 'mirl-minecraftwebsite';
+  const DL_API_BASE = 'https://api.countapi.xyz';
+  const DL_LS_KEY = 'mirl.download.tracked.v1';
+  const DL_THROTTLE_MS = 4 * 60 * 60 * 1000; // 4 hours per download/file combo
+  const downloadRegistry = new Map();
+  let downloadStoreCache = undefined;
+
+  function safeNumber(value) {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : null;
+  }
+
+  function formatDownloadValue(value) {
+    if (!Number.isFinite(value)) return '—';
+    const lang = getLang();
+    const locale = lang === 'de' ? 'de-DE' : 'en-US';
+    try {
+      return new Intl.NumberFormat(locale).format(value);
+    } catch (err) {
+      return String(value);
+    }
+  }
+
+  function readDownloadStore() {
+    if (downloadStoreCache !== undefined) return downloadStoreCache;
+    try {
+      const raw = localStorage.getItem(DL_LS_KEY);
+      downloadStoreCache = raw ? JSON.parse(raw) : {};
+    } catch (err) {
+      downloadStoreCache = null;
+    }
+    return downloadStoreCache;
+  }
+
+  function writeDownloadStore(store) {
+    downloadStoreCache = store;
+    if (store === null) return;
+    try {
+      localStorage.setItem(DL_LS_KEY, JSON.stringify(store));
+    } catch (err) {
+      downloadStoreCache = null;
+    }
+  }
+
+  function shouldRecordDownload(projectId, fileId) {
+    const store = readDownloadStore();
+    if (store === null) return true;
+    const key = `${projectId}::${fileId || ''}`;
+    const now = Date.now();
+    const last = Number(store[key]) || 0;
+    if (now - last < DL_THROTTLE_MS) return false;
+    store[key] = now;
+    writeDownloadStore(store);
+    return true;
+  }
+
+  function registerDownloadElement(projectId, el, fallbackValue) {
+    if (!projectId) return;
+    const key = String(projectId);
+    let entry = downloadRegistry.get(key);
+    if (!entry) {
+      entry = { elements: new Set(), value: Number.isFinite(fallbackValue) ? fallbackValue : null };
+      downloadRegistry.set(key, entry);
+    }
+    if (el) entry.elements.add(el);
+    if (Number.isFinite(fallbackValue)) {
+      entry.value = Number.isFinite(entry.value) ? entry.value : fallbackValue;
+    }
+    updateDownloadDisplay(key, entry.value);
+  }
+
+  function updateDownloadDisplay(projectId, value) {
+    const entry = downloadRegistry.get(projectId);
+    if (!entry) return;
+    if (Number.isFinite(value)) {
+      entry.value = value;
+    }
+    const displayValue = Number.isFinite(entry.value) ? entry.value : null;
+    entry.elements.forEach(el => {
+      el.textContent = displayValue === null ? '—' : formatDownloadValue(displayValue);
+      if (displayValue === null) {
+        el.removeAttribute('data-download-count-value');
+      } else {
+        el.setAttribute('data-download-count-value', String(displayValue));
+      }
+    });
+  }
+
+  async function loadDownloadFallbacks() {
+    try {
+      const res = await fetch('assets/data/download-counts.json', { cache: 'no-store' });
+      if (!res.ok) throw new Error('Failed to load fallback counts');
+      const data = await res.json();
+      if (data && typeof data === 'object' && data.counts) {
+        return data.counts;
+      }
+    } catch (err) {
+      console.warn('[downloads] Unable to load fallback counts:', err);
+    }
+    return {};
+  }
+
+  async function ensureRemoteCount(projectId, fallbackValue) {
+    const existing = downloadRegistry.get(projectId);
+    const fallback = Number.isFinite(fallbackValue) ? fallbackValue : Number.isFinite(existing?.value) ? existing.value : 0;
+    const encodedNamespace = encodeURIComponent(DL_NAMESPACE);
+    const encodedKey = encodeURIComponent(projectId);
+    try {
+      const res = await fetch(`${DL_API_BASE}/get/${encodedNamespace}/${encodedKey}`);
+      if (res.ok) {
+        const json = await res.json();
+        const value = safeNumber(json.value);
+        if (Number.isFinite(value)) {
+          updateDownloadDisplay(projectId, value);
+          return value;
+        }
+      } else if (res.status === 404) {
+        const createRes = await fetch(`${DL_API_BASE}/create?namespace=${encodedNamespace}&key=${encodedKey}&value=${fallback}`);
+        if (createRes.ok) {
+          const json = await createRes.json();
+          const value = safeNumber(json.value);
+          if (Number.isFinite(value)) {
+            updateDownloadDisplay(projectId, value);
+            return value;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('[downloads] Unable to read remote count for', projectId, err);
+    }
+    updateDownloadDisplay(projectId, fallback);
+    return fallback;
+  }
+
+  async function incrementRemoteCount(projectId) {
+    const encodedNamespace = encodeURIComponent(DL_NAMESPACE);
+    const encodedKey = encodeURIComponent(projectId);
+    try {
+      const res = await fetch(`${DL_API_BASE}/hit/${encodedNamespace}/${encodedKey}`);
+      if (res.ok) {
+        const json = await res.json();
+        const value = safeNumber(json.value);
+        if (Number.isFinite(value)) {
+          updateDownloadDisplay(projectId, value);
+          return value;
+        }
+      }
+    } catch (err) {
+      console.warn('[downloads] Unable to increment remote count for', projectId, err);
+    }
+    return null;
+  }
+
+  function handleDownloadEvent(projectId, fileId) {
+    if (!projectId) return;
+    registerDownloadElement(projectId);
+    if (!shouldRecordDownload(projectId, fileId)) return;
+    incrementRemoteCount(projectId);
+  }
+
+  function attachDownloadListeners(links) {
+    links.forEach(link => {
+      link.addEventListener('click', () => {
+        const projectId = link.getAttribute('data-track-download');
+        const fileId = link.getAttribute('data-download-file') || link.getAttribute('href') || '';
+        handleDownloadEvent(projectId, fileId);
+      });
+    });
+  }
+
+  function initDownloadTracking() {
+    const countElements = Array.from(document.querySelectorAll('[data-download-count]'));
+    const downloadLinks = Array.from(document.querySelectorAll('[data-track-download]'));
+    if (!countElements.length && !downloadLinks.length) return;
+
+    attachDownloadListeners(downloadLinks);
+
+    (async () => {
+      const fallbackCounts = await loadDownloadFallbacks();
+      countElements.forEach(el => {
+        const projectId = el.getAttribute('data-download-count');
+        const fallback = safeNumber(fallbackCounts?.[projectId]);
+        registerDownloadElement(projectId, el, fallback);
+      });
+      await Promise.all(Array.from(downloadRegistry.keys()).map(id => ensureRemoteCount(id, fallbackCounts?.[id])));
+    })();
+  }
+
+  document.addEventListener('langchange', () => {
+    downloadRegistry.forEach((entry, projectId) => {
+      if (Number.isFinite(entry.value)) {
+        updateDownloadDisplay(projectId, entry.value);
+      }
+    });
+  });
+
   document.addEventListener('DOMContentLoaded', function(){
     const lang = getLang();
     document.documentElement.setAttribute('lang', lang);
@@ -339,6 +535,7 @@
     updateDocTitles(lang);
     updateBannerTexts(lang);
     patchLinkCards();
+    initDownloadTracking();
   });
 
 })();
