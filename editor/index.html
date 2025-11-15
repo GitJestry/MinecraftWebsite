@@ -198,6 +198,34 @@ html:not(.editor-mode-on) .editor-add-card {
   resize: vertical;
 }
 
+.editor-file-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.6rem;
+  margin-top: 0.3rem;
+  font-size: 0.85rem;
+}
+
+.editor-file-button {
+  border: 1px dashed rgba(148,163,184,0.7);
+  background: rgba(15,23,42,0.02);
+  border-radius: 999px;
+  padding: 0.25rem 0.85rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: inherit;
+}
+
+.editor-file-button:hover {
+  border-color: rgba(59,130,246,0.9);
+  color: rgba(59,130,246,0.9);
+}
+
+.editor-file-selected {
+  color: var(--muted);
+}
+
 .project-editor-error {
   margin: 0;
   padding: 0.35rem 0.75rem;
@@ -867,11 +895,11 @@ dialog[open] .content {
       </div>
       <div class="field field--full" data-label-datapack="Download-Datei (ZIP)" data-label-printing="Download (STL oder ZIP)">
         <label for="pe-download">Download-Datei (ZIP)</label>
-        <input data-placeholder-datapack="downloads/mein-datapack.zip" data-placeholder-printing="downloads/mein-modell.zip oder externe URL" id="pe-download" maxlength="200" name="downloadFile" placeholder="downloads/mein-datapack.zip" type="text"/>
+        <input data-file-prefix="downloads/" data-file-accept=".zip,.mcpack,.mcaddon,.rar,.stl,.obj,.gcode,.3mf,.zip" data-file-button="Datei auswählen" data-file-helper="Wähle eine Datei oder gib eine URL ein." data-placeholder-datapack="downloads/mein-datapack.zip" data-placeholder-printing="downloads/mein-modell.zip oder externe URL" id="pe-download" maxlength="200" name="downloadFile" placeholder="downloads/mein-datapack.zip" type="text"/>
       </div>
       <div class="field field--full">
         <label for="pe-image">Vorschaubild</label>
-        <input id="pe-image" maxlength="200" name="image" placeholder="assets/img/logo.jpg" type="text"/>
+        <input data-file-prefix="assets/img/" data-file-accept="image/*" data-file-button="Bild auswählen" data-file-helper="Wähle eine Bilddatei oder gib einen Pfad ein." id="pe-image" maxlength="200" name="image" placeholder="assets/img/logo.jpg" type="text"/>
       </div>
       <div class="project-editor-footer">
         <button class="btn danger" hidden id="project-editor-delete" type="button">Projekt löschen</button>

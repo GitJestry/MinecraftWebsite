@@ -566,6 +566,8 @@
   const imageInput = document.getElementById('pe-image');
   const deleteBtn = document.getElementById('project-editor-delete');
 
+  enhanceFilePickerTargets(document);
+
   function getCurrentTypeValue() {
     return normaliseType(typeInput ? typeInput.value : 'datapack');
   }
@@ -1224,6 +1226,89 @@
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '')
       || 'project';
+  }
+
+  function formatFileSize(bytes) {
+    const value = Number(bytes);
+    if (!Number.isFinite(value) || value <= 0) {
+      return '';
+    }
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    let size = value;
+    let unitIndex = 0;
+    while (size >= 1024 && unitIndex < units.length - 1) {
+      size /= 1024;
+      unitIndex += 1;
+    }
+    const fixed = unitIndex === 0 || size >= 10 ? Math.round(size) : Math.round(size * 10) / 10;
+    return fixed + ' ' + units[unitIndex];
+  }
+
+  function sanitizeFilename(name) {
+    const base = String(name == null ? '' : name).split(/[\\/]/).pop() || 'file';
+    return base
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9._-]+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      || 'file';
+  }
+
+  function enhanceFilePickerTargets(root) {
+    const scope = root || document;
+    if (!scope || typeof scope.querySelectorAll !== 'function') {
+      return;
+    }
+    const inputs = scope.querySelectorAll('input[data-file-prefix]:not([data-file-picker-ready="1"])');
+    inputs.forEach((input) => {
+      input.setAttribute('data-file-picker-ready', '1');
+      const prefixAttr = input.getAttribute('data-file-prefix') || '';
+      const prefix = prefixAttr && /\/$/.test(prefixAttr) ? prefixAttr : (prefixAttr ? prefixAttr + '/' : '');
+      const buttonLabel = input.getAttribute('data-file-button') || 'Datei auswählen';
+      const helper = input.getAttribute('data-file-helper') || '';
+      const accept = input.getAttribute('data-file-accept') || '*/*';
+
+      const actions = document.createElement('div');
+      actions.className = 'editor-file-actions';
+
+      const trigger = document.createElement('button');
+      trigger.type = 'button';
+      trigger.className = 'editor-file-button';
+      trigger.textContent = buttonLabel;
+
+      const status = document.createElement('span');
+      status.className = 'editor-file-selected';
+      status.textContent = helper || 'Kein Upload ausgewählt.';
+
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = accept;
+      fileInput.hidden = true;
+
+      trigger.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', () => {
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) {
+          return;
+        }
+        const sanitized = sanitizeFilename(file.name);
+        const finalPath = prefix ? prefix + sanitized : sanitized;
+        input.value = finalPath;
+        try {
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+        } catch (err) {}
+        const sizeLabel = formatFileSize(file.size);
+        status.textContent = sizeLabel ? `${file.name} (${sizeLabel})` : file.name;
+        status.title = file.name;
+      });
+
+      actions.appendChild(trigger);
+      actions.appendChild(status);
+      actions.appendChild(fileInput);
+      input.insertAdjacentElement('afterend', actions);
+    });
   }
 
   const htmlDecoder = typeof document !== 'undefined' ? document.createElement('textarea') : null;
@@ -1941,6 +2026,14 @@
     row.querySelector('[data-field="version-file"]').value = data.downloadFile || '';
     row.querySelector('[data-field="version-track"]').value = data.trackId || '';
     row.querySelector('.editor-repeat-remove').addEventListener('click', () => makeRemoveHandler(modalVersionsList, addVersionRow)(row));
+    const versionFileInput = row.querySelector('[data-field="version-file"]');
+    if (versionFileInput) {
+      versionFileInput.setAttribute('data-file-prefix', 'downloads/');
+      versionFileInput.setAttribute('data-file-accept', '.zip,.mcpack,.mcaddon,.rar,.stl,.obj,.gcode,.3mf,.zip');
+      versionFileInput.setAttribute('data-file-button', 'Datei auswählen');
+      versionFileInput.setAttribute('data-file-helper', 'Download-Datei auswählen oder Pfad einfügen.');
+    }
+    enhanceFilePickerTargets(row);
     modalVersionsList.appendChild(row);
   }
 
@@ -2024,6 +2117,14 @@
     row.querySelector('[data-field="gallery-src"]').value = data.src || '';
     row.querySelector('[data-field="gallery-alt"]').value = data.alt || '';
     row.querySelector('.editor-repeat-remove').addEventListener('click', () => makeRemoveHandler(modalGalleryList, addGalleryRow)(row));
+    const gallerySrcInput = row.querySelector('[data-field="gallery-src"]');
+    if (gallerySrcInput) {
+      gallerySrcInput.setAttribute('data-file-prefix', 'assets/img/gallery/');
+      gallerySrcInput.setAttribute('data-file-accept', 'image/*');
+      gallerySrcInput.setAttribute('data-file-button', 'Bild auswählen');
+      gallerySrcInput.setAttribute('data-file-helper', 'Bilddatei auswählen oder URL einfügen.');
+    }
+    enhanceFilePickerTargets(row);
     modalGalleryList.appendChild(row);
   }
 
