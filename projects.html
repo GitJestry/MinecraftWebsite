@@ -109,14 +109,15 @@ html:not(.editor-mode-on) .editor-add-card {
 
 .project-editor-dialog {
   position: relative;
-  max-width: 880px;
-  width: min(92vw, 880px);
-  max-height: 90vh;
-  margin: 4vh auto;
+  max-width: 960px;
+  width: min(94vw, 960px);
+  height: min(95vh, 960px);
+  max-height: 95vh;
+  margin: 2.5vh auto;
   background: var(--surface);
   border-radius: 22px;
   box-shadow: 0 24px 60px rgba(0,0,0,0.35);
-  padding: 1.9rem 2rem 1.4rem;
+  padding: 1.9rem 2.1rem 1.4rem;
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
@@ -146,7 +147,8 @@ html:not(.editor-mode-on) .editor-add-card {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  padding-right: 0.35rem;
+  padding-right: 0.6rem;
+  padding-bottom: 0.4rem;
 }
 
 .project-editor-form .field {
@@ -198,20 +200,117 @@ html:not(.editor-mode-on) .editor-add-card {
   min-height: 90px;
 }
 
-#pe-modal-body {
-  min-height: 220px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  line-height: 1.5;
-  white-space: pre-wrap;
+.editor-section {
+  border-top: 1px solid rgba(148,163,184,0.35);
+  padding-top: 0.65rem;
+  margin-top: 0.65rem;
 }
 
-#pe-modal-badges,
-#pe-modal-actions,
-#pe-modal-stats {
-  min-height: 120px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  line-height: 1.5;
-  white-space: pre-wrap;
+.editor-section:first-of-type {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.editor-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.45rem;
+}
+
+.editor-repeat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.editor-repeat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: flex-start;
+  position: relative;
+  padding-right: 2rem;
+}
+
+.editor-repeat-row > *:not(.editor-repeat-remove) {
+  flex: 1 1 170px;
+}
+
+.editor-repeat-row textarea {
+  min-height: 90px;
+  flex-basis: 100%;
+}
+
+.editor-repeat-remove {
+  position: absolute;
+  top: 50%;
+  right: 0.1rem;
+  transform: translateY(-50%);
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.2rem 0.35rem;
+}
+
+.editor-repeat-remove:hover {
+  color: rgba(220,38,38,0.85);
+}
+
+.editor-repeat-add {
+  align-self: flex-start;
+  border: 1px dashed rgba(148,163,184,0.6);
+  background: transparent;
+  border-radius: 999px;
+  padding: 0.32rem 0.8rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: inherit;
+}
+
+.editor-repeat-add:hover {
+  border-color: rgba(59,130,246,0.85);
+  color: rgba(59,130,246,0.9);
+}
+
+.editor-inline-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  min-height: 38px;
+}
+
+.editor-inline-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+
+.editor-subgrid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.editor-subgrid.two {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.editor-subgrid.three {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.editor-subgrid .field {
+  margin: 0;
+}
+
+.editor-muted-label {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 0.25rem;
 }
 
 .project-editor-form input:focus,
@@ -653,25 +752,75 @@ dialog[open] .content {
         <textarea id="pe-modal-hero" maxlength="320" name="modalHero" placeholder="Kurzer Untertitel im Modal"></textarea>
         <p class="hint">Text unter dem Titel im Popup. Leer lassen, um die Kurzbeschreibung zu verwenden.</p>
       </div>
-      <div class="field field--full">
-        <label for="pe-modal-body">Modal-Inhalt (HTML)</label>
-        <textarea id="pe-modal-body" name="modalBody" placeholder="HTML-Inhalt, der im Popup angezeigt wird"></textarea>
-        <p class="hint">Unterstützt HTML. Der Inhalt ersetzt den Abschnitt innerhalb des Popups.</p>
+      <textarea aria-hidden="true" hidden id="pe-modal-body" name="modalBody"></textarea>
+      <textarea aria-hidden="true" hidden id="pe-modal-badges" name="modalBadges"></textarea>
+      <textarea aria-hidden="true" hidden id="pe-modal-actions" name="modalHeroActions"></textarea>
+      <textarea aria-hidden="true" hidden id="pe-modal-stats" name="modalStats"></textarea>
+      <div class="field field--full editor-section">
+        <h3 class="editor-section-title">Modal-Badges</h3>
+        <div class="editor-repeat" id="pe-modal-badges-list"></div>
+        <button class="editor-repeat-add" data-add="badge" type="button">+ Badge hinzufügen</button>
+        <p class="hint">Badge-Beschriftungen unter dem Titel. Aktiviere „Punkt anzeigen“, um den Status-Indikator vor dem Text zu verwenden.</p>
       </div>
-      <div class="field field--full">
-        <label for="pe-modal-badges">Modal-Badges (HTML)</label>
-        <textarea id="pe-modal-badges" name="modalBadges" placeholder="&lt;span class=&quot;badge&quot;&gt;Stable&lt;/span&gt;"></textarea>
-        <p class="hint">Optional: HTML für die Badge-Liste unter dem Titel. Leer lassen, um die vorhandenen Badges zu übernehmen.</p>
+      <div class="field field--full editor-section">
+        <h3 class="editor-section-title">Modal-Aktionen</h3>
+        <div class="editor-repeat" id="pe-modal-actions-list"></div>
+        <button class="editor-repeat-add" data-add="action" type="button">+ Aktion hinzufügen</button>
+        <p class="hint">Buttons im Header des Popups. Ohne Einträge wird der Standard-Download verwendet.</p>
       </div>
-      <div class="field field--full">
-        <label for="pe-modal-actions">Modal-Aktionen (HTML)</label>
-        <textarea id="pe-modal-actions" name="modalHeroActions" placeholder="&lt;a class=&quot;btn primary&quot; href=&quot;...&quot;&gt;Download&lt;/a&gt;"></textarea>
-        <p class="hint">Buttons oder Links neben den Badges (z. B. Download). HTML wird direkt im Header eingesetzt.</p>
+      <div class="field field--full editor-section">
+        <h3 class="editor-section-title">Modal-Statistiken</h3>
+        <div class="editor-repeat" id="pe-modal-stats-list"></div>
+        <button class="editor-repeat-add" data-add="stat" type="button">+ Statistik hinzufügen</button>
+        <p class="hint">Wertekacheln neben den Aktionen, z. B. Version, Größe oder Downloads.</p>
       </div>
-      <div class="field field--full">
-        <label for="pe-modal-stats">Modal-Statistiken (HTML)</label>
-        <textarea id="pe-modal-stats" name="modalStats" placeholder="&lt;div class=&quot;stat&quot;&gt;...&lt;/div&gt;"></textarea>
-        <p class="hint">HTML-Inhalt für das Statistik-Raster. Leer lassen, um den Standard aus dem Modal zu verwenden.</p>
+      <div class="field field--full editor-section">
+        <h3 class="editor-section-title">Modal-Infos &amp; Inhalt</h3>
+        <div class="editor-subgrid two">
+          <div class="field">
+            <label for="pe-modal-info-title">Titel (Info-Karte)</label>
+            <input id="pe-modal-info-title" placeholder="Project info" type="text"/>
+          </div>
+          <div class="field">
+            <label for="pe-modal-tags-title">Titel (Tag-Karte)</label>
+            <input id="pe-modal-tags-title" placeholder="Tags" type="text"/>
+          </div>
+        </div>
+        <div class="field">
+          <p class="editor-muted-label">Infozeilen</p>
+          <div class="editor-repeat" id="pe-modal-info-list"></div>
+          <button class="editor-repeat-add" data-add="info" type="button">+ Infozeile hinzufügen</button>
+        </div>
+        <div class="field">
+          <p class="editor-muted-label">Tags</p>
+          <div class="editor-repeat" id="pe-modal-tags-list"></div>
+          <button class="editor-repeat-add" data-add="tag" type="button">+ Tag hinzufügen</button>
+        </div>
+        <div class="field">
+          <p class="editor-muted-label">Beschreibung (Absätze)</p>
+          <div class="editor-repeat" id="pe-modal-description-list"></div>
+          <button class="editor-repeat-add" data-add="description" type="button">+ Absatz hinzufügen</button>
+        </div>
+        <div class="field">
+          <p class="editor-muted-label">Installation (Schritte)</p>
+          <div class="editor-repeat" id="pe-modal-steps-list"></div>
+          <button class="editor-repeat-add" data-add="step" type="button">+ Schritt hinzufügen</button>
+        </div>
+        <div class="field">
+          <p class="editor-muted-label">Versionstabelle</p>
+          <div class="editor-repeat" id="pe-modal-versions-list"></div>
+          <button class="editor-repeat-add" data-add="version" type="button">+ Version hinzufügen</button>
+        </div>
+        <div class="field">
+          <p class="editor-muted-label">Changelog-Einträge</p>
+          <div class="editor-repeat" id="pe-modal-changelog-list"></div>
+          <button class="editor-repeat-add" data-add="changelog" type="button">+ Eintrag hinzufügen</button>
+        </div>
+        <div class="field">
+          <p class="editor-muted-label">Galerie-Bilder</p>
+          <div class="editor-repeat" id="pe-modal-gallery-list"></div>
+          <button class="editor-repeat-add" data-add="gallery" type="button">+ Bild hinzufügen</button>
+        </div>
       </div>
       <div class="field field--full" data-label-datapack="Download-Datei (ZIP)" data-label-printing="Download (STL oder ZIP)">
         <label for="pe-download">Download-Datei (ZIP)</label>
