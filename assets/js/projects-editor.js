@@ -701,11 +701,7 @@
   const tagsSuggestionsEl = document.getElementById('pe-tags-suggestions');
   const tagsAddBtn = document.getElementById('pe-tags-add');
   const shortInput = document.getElementById('pe-short');
-  const modalHeroInput = document.getElementById('pe-modal-hero');
   const modalBodyInput = document.getElementById('pe-modal-body');
-  const modalBadgesInput = document.getElementById('pe-modal-badges');
-  const modalActionsInput = document.getElementById('pe-modal-actions');
-  const modalStatsInput = document.getElementById('pe-modal-stats');
   const modalDescriptionList = document.getElementById('pe-modal-description-list');
   const modalVersionsList = document.getElementById('pe-modal-versions-list');
   const modalChangelogList = document.getElementById('pe-modal-changelog-list');
@@ -1636,20 +1632,6 @@
     const statsEl = modal.querySelector('.modal-hero .stats');
     if (statsEl) statsEl.hidden = !statsHtml.trim();
     return { modalId, modal };
-  }
-
-  function extractModalHero(project) {
-    const { modal } = getModalRef(project);
-    if (!modal) return '';
-    const hero = modal.querySelector('.modal-hero .muted');
-    return hero ? hero.textContent.trim() : '';
-  }
-
-  function extractModalBody(project) {
-    const { modal } = getModalRef(project);
-    if (!modal) return '';
-    const body = modal.querySelector('.modal-body');
-    return body ? body.innerHTML.trim() : '';
   }
 
   function extractModalSectionHtml(project, selector) {
@@ -2669,9 +2651,6 @@
     setChangelogRows([]);
     setGalleryRows([]);
     if (modalBodyInput) modalBodyInput.value = '';
-    if (modalBadgesInput) modalBadgesInput.value = '';
-    if (modalActionsInput) modalActionsInput.value = '';
-    if (modalStatsInput) modalStatsInput.value = '';
   }
 
   function applyModalBodyData(data) {
@@ -2682,16 +2661,64 @@
     setGalleryRows(bodyData.gallery || []);
   }
 
+  function buildFallbackModalBodyData(project) {
+    const record = project || {};
+    const safeType = normaliseType(record.type);
+    const tags = Array.isArray(record.tags) ? record.tags : [];
+    const sidebar = buildAutoSidebarData(safeType, record.status, record.category, record.mcVersion, tags);
+    const pitch = typeof record.shortDescription === 'string' ? record.shortDescription.trim() : '';
+    return {
+      infoTitle: sidebar.infoTitle,
+      infoItems: sidebar.infoItems,
+      tagsTitle: sidebar.tagsTitle,
+      tags: sidebar.tags,
+      description: pitch ? [pitch] : [],
+      steps: [],
+      versions: [],
+      changelog: [],
+      gallery: [],
+    };
+  }
+
   function populateModalUi(project) {
     const { modalId } = getModalRef(project);
     currentModalId = modalId || '';
     const defaults = modalDefaults.get(modalId) || { hero: '', body: '' };
     const bodyHtml = (project && typeof project.modalBody === 'string' && project.modalBody.trim()) ? project.modalBody : defaults.body;
+    const parsed = parseModalBodyContent(bodyHtml || '');
+    const fallback = buildFallbackModalBodyData(project);
+    const data = { ...fallback };
+    if (parsed) {
+      if (typeof parsed.infoTitle === 'string' && parsed.infoTitle.trim()) {
+        data.infoTitle = parsed.infoTitle;
+      }
+      if (Array.isArray(parsed.infoItems) && parsed.infoItems.length) {
+        data.infoItems = parsed.infoItems;
+      }
+      if (typeof parsed.tagsTitle === 'string' && parsed.tagsTitle.trim()) {
+        data.tagsTitle = parsed.tagsTitle;
+      }
+      if (Array.isArray(parsed.tags) && parsed.tags.length) {
+        data.tags = parsed.tags;
+      }
+      if (Array.isArray(parsed.description) && parsed.description.length) {
+        data.description = parsed.description;
+      }
+      if (Array.isArray(parsed.steps) && parsed.steps.length) {
+        data.steps = parsed.steps;
+      }
+      if (Array.isArray(parsed.versions) && parsed.versions.length) {
+        data.versions = parsed.versions;
+      }
+      if (Array.isArray(parsed.changelog) && parsed.changelog.length) {
+        data.changelog = parsed.changelog;
+      }
+      if (Array.isArray(parsed.gallery) && parsed.gallery.length) {
+        data.gallery = parsed.gallery;
+      }
+    }
     if (modalBodyInput) modalBodyInput.value = bodyHtml || '';
-    if (modalBadgesInput) modalBadgesInput.value = '';
-    if (modalActionsInput) modalActionsInput.value = '';
-    if (modalStatsInput) modalStatsInput.value = '';
-    applyModalBodyData(parseModalBodyContent(bodyHtml || ''));
+    applyModalBodyData(data);
   }
 
   function collectModalBodyData() {
@@ -2713,16 +2740,34 @@
     const status = ctx.status || '';
     const mcVersion = ctx.mcVersion || '';
     const downloadFile = (ctx.downloadFile || '').trim();
-    const sidebar = buildAutoSidebarData(safeType, status, category, mcVersion, tags);
-    const contentData = collectModalBodyData();
-    const bodyData = {
-      ...contentData,
-      infoTitle: sidebar.infoTitle,
-      infoItems: sidebar.infoItems,
-      tagsTitle: sidebar.tagsTitle,
-      tags: sidebar.tags,
-      steps: [],
+    const shortDescription = typeof ctx.shortDescription === 'string'
+      ? ctx.shortDescription.trim()
+      : (shortInput ? (shortInput.value || '').trim() : '');
+    const fallbackRecord = {
+      type: safeType,
+      status,
+      category,
+      mcVersion,
+      tags,
+      shortDescription,
     };
+    const fallbackBody = buildFallbackModalBodyData(fallbackRecord);
+    const contentData = collectModalBodyData();
+    const bodyData = { ...fallbackBody };
+    if (contentData) {
+      if (Array.isArray(contentData.description) && contentData.description.length) {
+        bodyData.description = contentData.description;
+      }
+      if (Array.isArray(contentData.versions) && contentData.versions.length) {
+        bodyData.versions = contentData.versions;
+      }
+      if (Array.isArray(contentData.changelog) && contentData.changelog.length) {
+        bodyData.changelog = contentData.changelog;
+      }
+      if (Array.isArray(contentData.gallery) && contentData.gallery.length) {
+        bodyData.gallery = contentData.gallery;
+      }
+    }
     const badgesHtml = buildAutoBadgesHtml(safeType, status, mcVersion, tags, category);
     const actionsHtml = buildAutoHeroActionsHtml(downloadFile, fallbackId);
     const statsHtml = buildAutoStatsHtml({
@@ -2732,15 +2777,12 @@
       downloadUrl: downloadFile,
     });
     const bodyHtml = buildModalBodyHtml(modalId, bodyData, fallbackId);
-    if (modalBadgesInput) modalBadgesInput.value = badgesHtml;
-    if (modalActionsInput) modalActionsInput.value = actionsHtml;
-    if (modalStatsInput) modalStatsInput.value = statsHtml;
     if (modalBodyInput) modalBodyInput.value = bodyHtml;
     return {
+      body: bodyHtml,
       badges: badgesHtml,
       actions: actionsHtml,
       stats: statsHtml,
-      body: bodyHtml,
       modalId,
     };
   }
@@ -3061,13 +3103,6 @@
       tagsInput.value = tags;
     }
     shortInput.value = project.shortDescription || '';
-    if (modalHeroInput) {
-      if (typeof project.modalHero === 'string') {
-        modalHeroInput.value = project.modalHero;
-      } else {
-        modalHeroInput.value = extractModalHero(project);
-      }
-    }
     populateModalUi(project);
     downloadInput.value = project.downloadFile || '';
     imageInput.value = project.image || '';
@@ -3088,7 +3123,6 @@
       ? tagsController.getValues()
       : normaliseTags(tagsInput.value || '');
     const shortDescription = (shortInput.value || '').trim();
-    const modalHero = modalHeroInput ? (modalHeroInput.value || '').trim() : '';
     const downloadFile = (downloadInput.value || '').trim();
     const serialised = serialiseModalUi({
       projectId: id || slugifyId(title),
@@ -3098,13 +3132,11 @@
       tags,
       mcVersion,
       downloadFile,
+      shortDescription,
     });
     const modalBody = serialised.body;
-    const modalBadges = serialised.badges;
-    const modalHeroActions = serialised.actions;
-    const modalStats = serialised.stats;
     const image = (imageInput.value || '').trim();
-    return { id, type, title, mcVersion, status, category, tags, shortDescription, modalHero, modalBody, modalBadges, modalHeroActions, modalStats, downloadFile, image };
+    return { id, type, title, mcVersion, status, category, tags, shortDescription, modalBody, downloadFile, image };
   }
 
   function openEditorForCreate(type){
@@ -3132,7 +3164,6 @@
       tagsInput.value = '';
     }
     shortInput.value = '';
-    if (modalHeroInput) modalHeroInput.value = '';
     resetModalUi();
     currentModalId = '';
     downloadInput.value = '';
