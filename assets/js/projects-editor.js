@@ -551,15 +551,7 @@
   const modalBadgesInput = document.getElementById('pe-modal-badges');
   const modalActionsInput = document.getElementById('pe-modal-actions');
   const modalStatsInput = document.getElementById('pe-modal-stats');
-  const modalBadgesList = document.getElementById('pe-modal-badges-list');
-  const modalActionsList = document.getElementById('pe-modal-actions-list');
-  const modalStatsList = document.getElementById('pe-modal-stats-list');
-  const modalInfoTitleInput = document.getElementById('pe-modal-info-title');
-  const modalTagsTitleInput = document.getElementById('pe-modal-tags-title');
-  const modalInfoList = document.getElementById('pe-modal-info-list');
-  const modalTagsList = document.getElementById('pe-modal-tags-list');
   const modalDescriptionList = document.getElementById('pe-modal-description-list');
-  const modalStepsList = document.getElementById('pe-modal-steps-list');
   const modalVersionsList = document.getElementById('pe-modal-versions-list');
   const modalChangelogList = document.getElementById('pe-modal-changelog-list');
   const modalGalleryList = document.getElementById('pe-modal-gallery-list');
@@ -1450,6 +1442,114 @@
       .join('');
   }
 
+  function formatStatusLabel(status) {
+    const value = String(status == null ? '' : status).trim();
+    if (!value) return '';
+    const key = value.toLowerCase();
+    if (key === 'released') return 'Stable';
+    if (key === 'beta') return 'Beta';
+    if (key === 'wip') return 'WIP';
+    if (key === 'planned') return 'Planned';
+    return value.charAt(0).toUpperCase() + value.slice(1);
+  }
+
+  function deriveDownloadFileId(path) {
+    if (!path) return '';
+    const cleaned = String(path).split(/[?#]/)[0];
+    const parts = cleaned.split('/').filter(Boolean);
+    return parts.pop() || cleaned || 'download';
+  }
+
+  function buildAutoSidebarData(type, status, category, mcVersion, tags) {
+    const safeType = type === 'printing' ? 'printing' : 'datapack';
+    const infoItems = [];
+    if (safeType === 'datapack') {
+      infoItems.push({ key: 'Game', value: 'Minecraft Java' });
+    }
+    infoItems.push({ key: 'Type', value: safeType === 'printing' ? '3D Print' : 'Datapack' });
+    if (category) {
+      infoItems.push({ key: 'Category', value: category });
+    }
+    if (mcVersion) {
+      const label = safeType === 'printing' ? 'Print setup' : 'Minecraft';
+      infoItems.push({ key: label, value: mcVersion });
+    }
+    const statusLabel = formatStatusLabel(status);
+    if (statusLabel) {
+      infoItems.push({ key: 'Status', value: statusLabel });
+    }
+    infoItems.push({ key: 'License', value: 'MIT • CC BY-NC-SA', url: '#license' });
+    const tagList = Array.isArray(tags) ? tags.filter((tag) => tag && tag.trim()) : [];
+    return {
+      infoTitle: 'Project info',
+      infoItems,
+      tagsTitle: tagList.length ? 'Tags' : '',
+      tags: tagList,
+    };
+  }
+
+  function buildAutoBadgesHtml(type, status, mcVersion, tags, category) {
+    const safeType = type === 'printing' ? 'printing' : 'datapack';
+    const badges = [];
+    const statusLabel = formatStatusLabel(status);
+    if (statusLabel) {
+      badges.push({ text: statusLabel, hasDot: true });
+    }
+    if (mcVersion) {
+      const label = safeType === 'printing' ? mcVersion : `Minecraft ${mcVersion}`;
+      badges.push({ text: label, hasDot: false });
+    }
+    if (category) {
+      badges.push({ text: category, hasDot: false });
+    } else if (Array.isArray(tags) && tags.length) {
+      badges.push({ text: tags[0], hasDot: false });
+    }
+    return buildBadgeHtml(badges);
+  }
+
+  function buildAutoHeroActionsHtml(downloadUrl, projectId) {
+    const href = (downloadUrl || '').trim();
+    if (!href) return '';
+    const fallbackId = projectId || deriveDownloadFileId(href);
+    const action = {
+      href,
+      downloadFile: deriveDownloadFileId(href),
+      trackId: fallbackId,
+      labelEn: 'Download',
+      labelDe: 'Herunterladen',
+      hasIcon: true,
+    };
+    return buildHeroActionsHtml([action], fallbackId);
+  }
+
+  function formatUpdatedLabel(isoString) {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    if (!Number.isFinite(date.getTime())) {
+      return '';
+    }
+    try {
+      return date.toLocaleString('en-US', { month: 'short', year: 'numeric' });
+    } catch (err) {
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+    }
+  }
+
+  function buildAutoStatsHtml(options) {
+    const opts = options || {};
+    const versionValue = opts.latestVersion ? escapeHtml(opts.latestVersion) : '—';
+    const updatedLabel = formatUpdatedLabel(opts.updatedAt) || '—';
+    const projectAttr = opts.projectId ? ` data-download-count="${escapeAttr(opts.projectId)}"` : '';
+    const sizeAttr = opts.downloadUrl ? ` data-download-size="${escapeAttr(opts.downloadUrl)}"` : '';
+    const stats = [];
+    stats.push(`<div class="stat"><div class="label">Version</div><div class="value">${versionValue}</div></div>`);
+    stats.push(`<div class="stat"><div class="label">Last updated</div><div class="value">${escapeHtml(updatedLabel)}</div></div>`);
+    stats.push(`<div class="stat"><div class="label"><span class="lang-en">Downloads</span><span class="lang-de">Downloads</span></div><div class="value"${projectAttr}>—</div></div>`);
+    stats.push(`<div class="stat"><div class="label">Size</div><div class="value"${sizeAttr}>—</div></div>`);
+    return stats.join('');
+  }
+
   function parseStatsHtml(html) {
     if (!html) return [];
     const container = document.createElement('div');
@@ -1765,245 +1865,21 @@
     };
   }
 
-  function addBadgeRow(data = {}) {
-    if (!modalBadgesList) return;
-    const row = document.createElement('div');
-    row.className = 'editor-repeat-row';
-    row.innerHTML = `
-      <input type="text" data-field="badge-text" placeholder="Badge-Text">
-      <label class="editor-inline-checkbox"><input type="checkbox" data-field="badge-dot"> Punkt anzeigen</label>
-      <button type="button" class="editor-repeat-remove" title="Entfernen">×</button>
-    `;
-    const textInput = row.querySelector('[data-field="badge-text"]');
-    const dotInput = row.querySelector('[data-field="badge-dot"]');
-    textInput.value = data.text || '';
-    dotInput.checked = !!data.hasDot;
-    row.querySelector('.editor-repeat-remove').addEventListener('click', () => makeRemoveHandler(modalBadgesList, addBadgeRow)(row));
-    modalBadgesList.appendChild(row);
-  }
-
-  function setBadgeRows(items) {
-    if (!modalBadgesList) return;
-    clearContainer(modalBadgesList);
-    const list = Array.isArray(items) && items.length ? items : [{}];
-    list.forEach((item) => addBadgeRow(item));
-  }
-
-  function collectBadges() {
-    if (!modalBadgesList) return [];
-    return Array.from(modalBadgesList.querySelectorAll('.editor-repeat-row'))
-      .map((row) => {
-        const text = (row.querySelector('[data-field="badge-text"]') || {}).value || '';
-        if (!text.trim()) return null;
-        const hasDot = !!(row.querySelector('[data-field="badge-dot"]') || {}).checked;
-        return { text: text.trim(), hasDot };
-      })
-      .filter(Boolean);
-  }
-
-  function addActionRow(data = {}) {
-    if (!modalActionsList) return;
-    const row = document.createElement('div');
-    row.className = 'editor-repeat-row';
-    row.innerHTML = `
-      <input type="text" data-field="action-label-en" placeholder="Label (EN)">
-      <input type="text" data-field="action-label-de" placeholder="Label (DE)">
-      <input type="text" data-field="action-href" placeholder="https://...">
-      <input type="text" data-field="action-download" placeholder="Download-Dateiname (optional)">
-      <input type="text" data-field="action-track" placeholder="Tracking-ID (optional)">
-      <label class="editor-inline-checkbox"><input type="checkbox" data-field="action-icon"> Download-Icon anzeigen</label>
-      <button type="button" class="editor-repeat-remove" title="Entfernen">×</button>
-    `;
-    row.querySelector('[data-field="action-label-en"]').value = data.labelEn || '';
-    row.querySelector('[data-field="action-label-de"]').value = data.labelDe || '';
-    row.querySelector('[data-field="action-href"]').value = data.href || '';
-    row.querySelector('[data-field="action-download"]').value = data.downloadFile || '';
-    row.querySelector('[data-field="action-track"]').value = data.trackId || '';
-    row.querySelector('[data-field="action-icon"]').checked = !!data.hasIcon;
-    row.querySelector('.editor-repeat-remove').addEventListener('click', () => makeRemoveHandler(modalActionsList, addActionRow)(row));
-    modalActionsList.appendChild(row);
-  }
-
-  function setActionRows(items) {
-    if (!modalActionsList) return;
-    clearContainer(modalActionsList);
-    const list = Array.isArray(items) && items.length ? items : [{}];
-    list.forEach((item) => addActionRow(item));
-  }
-
-  function collectActions() {
-    if (!modalActionsList) return [];
-    return Array.from(modalActionsList.querySelectorAll('.editor-repeat-row'))
-      .map((row) => {
-        const href = (row.querySelector('[data-field="action-href"]') || {}).value || '';
-        const labelEn = (row.querySelector('[data-field="action-label-en"]') || {}).value || '';
-        const labelDe = (row.querySelector('[data-field="action-label-de"]') || {}).value || '';
-        const downloadFile = (row.querySelector('[data-field="action-download"]') || {}).value || '';
-        const trackId = (row.querySelector('[data-field="action-track"]') || {}).value || '';
-        const hasIcon = !!(row.querySelector('[data-field="action-icon"]') || {}).checked;
-        if (!href.trim()) return null;
-        return { href: href.trim(), labelEn: labelEn.trim(), labelDe: labelDe.trim(), downloadFile: downloadFile.trim(), trackId: trackId.trim(), hasIcon };
-      })
-      .filter(Boolean);
-  }
-
-  function addStatRow(data = {}) {
-    if (!modalStatsList) return;
-    const row = document.createElement('div');
-    row.className = 'editor-repeat-row';
-    row.innerHTML = `
-      <input type="text" data-field="stat-label-en" placeholder="Label (EN)">
-      <input type="text" data-field="stat-label-de" placeholder="Label (DE)">
-      <input type="text" data-field="stat-value" placeholder="Wert">
-      <button type="button" class="editor-repeat-remove" title="Entfernen">×</button>
-    `;
-    row.dataset.labelFallback = data.label || '';
-    row.querySelector('[data-field="stat-label-en"]').value = data.labelEn || '';
-    row.querySelector('[data-field="stat-label-de"]').value = data.labelDe || '';
-    row.querySelector('[data-field="stat-value"]').value = data.value || '';
-    row.querySelector('.editor-repeat-remove').addEventListener('click', () => makeRemoveHandler(modalStatsList, addStatRow)(row));
-    modalStatsList.appendChild(row);
-  }
-
-  function setStatRows(items) {
-    if (!modalStatsList) return;
-    clearContainer(modalStatsList);
-    const list = Array.isArray(items) && items.length ? items : [{}];
-    list.forEach((item) => addStatRow(item));
-  }
-
-  function collectStats() {
-    if (!modalStatsList) return [];
-    return Array.from(modalStatsList.querySelectorAll('.editor-repeat-row'))
-      .map((row) => {
-        const value = (row.querySelector('[data-field="stat-value"]') || {}).value || '';
-        const labelEn = (row.querySelector('[data-field="stat-label-en"]') || {}).value || '';
-        const labelDe = (row.querySelector('[data-field="stat-label-de"]') || {}).value || '';
-        const fallback = row.dataset.labelFallback || '';
-        if (!(value.trim() || labelEn.trim() || labelDe.trim() || fallback.trim())) return null;
-        return { value: value.trim(), labelEn: labelEn.trim(), labelDe: labelDe.trim(), label: fallback.trim() };
-      })
-      .filter(Boolean);
-  }
-
-  function addInfoRow(data = {}) {
-    if (!modalInfoList) return;
-    const row = document.createElement('div');
-    row.className = 'editor-repeat-row';
-    row.innerHTML = `
-      <input type="text" data-field="info-key" placeholder="Bezeichnung">
-      <input type="text" data-field="info-value" placeholder="Wert">
-      <input type="text" data-field="info-url" placeholder="Link (optional)">
-      <label class="editor-inline-checkbox"><input type="checkbox" data-field="info-new-tab"> In neuem Tab öffnen</label>
-      <button type="button" class="editor-repeat-remove" title="Entfernen">×</button>
-    `;
-    row.querySelector('[data-field="info-key"]').value = data.key || '';
-    row.querySelector('[data-field="info-value"]').value = data.value || '';
-    row.querySelector('[data-field="info-url"]').value = data.url || '';
-    row.querySelector('[data-field="info-new-tab"]').checked = !!data.newTab;
-    row.querySelector('.editor-repeat-remove').addEventListener('click', () => makeRemoveHandler(modalInfoList, addInfoRow)(row));
-    modalInfoList.appendChild(row);
-  }
-
-  function setInfoRows(items) {
-    if (!modalInfoList) return;
-    clearContainer(modalInfoList);
-    const list = Array.isArray(items) && items.length ? items : [{}];
-    list.forEach((item) => addInfoRow(item));
-  }
-
-  function collectInfoRows() {
-    if (!modalInfoList) return [];
-    return Array.from(modalInfoList.querySelectorAll('.editor-repeat-row'))
-      .map((row) => {
-        const key = (row.querySelector('[data-field="info-key"]') || {}).value || '';
-        const value = (row.querySelector('[data-field="info-value"]') || {}).value || '';
-        const url = (row.querySelector('[data-field="info-url"]') || {}).value || '';
-        const newTab = !!(row.querySelector('[data-field="info-new-tab"]') || {}).checked;
-        if (!(key.trim() || value.trim())) return null;
-        return { key: key.trim(), value: value.trim(), url: url.trim(), newTab };
-      })
-      .filter(Boolean);
-  }
-
-  function addTagRow(data = {}) {
-    if (!modalTagsList) return;
-    const row = document.createElement('div');
-    row.className = 'editor-repeat-row';
-    row.innerHTML = `
-      <input type="text" data-field="tag-text" placeholder="Tag">
-      <button type="button" class="editor-repeat-remove" title="Entfernen">×</button>
-    `;
-    const value = typeof data === 'string' ? data : (data.text || '');
-    row.querySelector('[data-field="tag-text"]').value = value;
-    row.querySelector('.editor-repeat-remove').addEventListener('click', () => makeRemoveHandler(modalTagsList, addTagRow)(row));
-    modalTagsList.appendChild(row);
-  }
-
-  function setTagRows(items) {
-    if (!modalTagsList) return;
-    clearContainer(modalTagsList);
-    const list = Array.isArray(items) && items.length ? items : [{}];
-    list.forEach((item) => addTagRow(item));
-  }
-
-  function collectTags() {
-    if (!modalTagsList) return [];
-    return Array.from(modalTagsList.querySelectorAll('.editor-repeat-row'))
-      .map((row) => {
-        const text = (row.querySelector('[data-field="tag-text"]') || {}).value || '';
-        return text.trim() ? text.trim() : null;
-      })
-      .filter(Boolean);
-  }
-
-  function addTextRow(container, data = {}, field = 'text', placeholder = '') {
-    if (!container) return;
-    const row = document.createElement('div');
-    row.className = 'editor-repeat-row';
-    row.innerHTML = `
-      <textarea data-field="${field}" placeholder="${placeholder}"></textarea>
-      <button type="button" class="editor-repeat-remove" title="Entfernen">×</button>
-    `;
-    row.querySelector(`[data-field="${field}"]`).value = data[field] || data.text || '';
-    row.querySelector('.editor-repeat-remove').addEventListener('click', () => makeRemoveHandler(container, (d) => addTextRow(container, d, field, placeholder))(row));
-    container.appendChild(row);
-  }
-
   function addDescriptionRow(data = {}) {
-    addTextRow(modalDescriptionList, data, 'text', 'Absatz-Text');
-  }
-
-  function addStepRow(data = {}) {
-    addTextRow(modalStepsList, data, 'text', 'Schritt');
-  }
-
-  function setDescriptionRows(items) {
     if (!modalDescriptionList) return;
-    clearContainer(modalDescriptionList);
-    const list = Array.isArray(items) && items.length ? items.map((text) => ({ text })) : [{}];
-    list.forEach((item) => addDescriptionRow(item));
-  }
-
-  function collectDescriptionRows() {
-    if (!modalDescriptionList) return [];
-    return Array.from(modalDescriptionList.querySelectorAll('[data-field="text"]'))
-      .map((textarea) => (textarea.value || '').trim())
-      .filter(Boolean);
-  }
-
-  function setStepRows(items) {
-    if (!modalStepsList) return;
-    clearContainer(modalStepsList);
-    const list = Array.isArray(items) && items.length ? items.map((text) => ({ text })) : [{}];
-    list.forEach((item) => addStepRow(item));
-  }
-
-  function collectStepRows() {
-    if (!modalStepsList) return [];
-    return Array.from(modalStepsList.querySelectorAll('[data-field="text"]'))
-      .map((textarea) => (textarea.value || '').trim())
-      .filter(Boolean);
+    const row = document.createElement('div');
+    row.className = 'editor-repeat-row';
+    row.innerHTML = `
+      <textarea data-field="text" placeholder="Absatz-Text"></textarea>
+      <button type="button" class="editor-repeat-remove" title="Entfernen">×</button>
+    `;
+    const textarea = row.querySelector('[data-field="text"]');
+    if (textarea) {
+      const value = typeof data === 'string' ? data : (data.text || '');
+      textarea.value = value;
+    }
+    row.querySelector('.editor-repeat-remove').addEventListener('click', () => makeRemoveHandler(modalDescriptionList, addDescriptionRow)(row));
+    modalDescriptionList.appendChild(row);
   }
 
   function addVersionRow(data = {}) {
@@ -2152,18 +2028,10 @@
   }
 
   function resetModalUi() {
-    setBadgeRows([]);
-    setActionRows([]);
-    setStatRows([]);
-    setInfoRows([]);
-    setTagRows([]);
     setDescriptionRows([]);
-    setStepRows([]);
     setVersionRows([]);
     setChangelogRows([]);
     setGalleryRows([]);
-    if (modalInfoTitleInput) modalInfoTitleInput.value = '';
-    if (modalTagsTitleInput) modalTagsTitleInput.value = '';
     if (modalBodyInput) modalBodyInput.value = '';
     if (modalBadgesInput) modalBadgesInput.value = '';
     if (modalActionsInput) modalActionsInput.value = '';
@@ -2172,12 +2040,7 @@
 
   function applyModalBodyData(data) {
     const bodyData = data || createEmptyModalBody();
-    if (modalInfoTitleInput) modalInfoTitleInput.value = bodyData.infoTitle || '';
-    if (modalTagsTitleInput) modalTagsTitleInput.value = bodyData.tagsTitle || '';
-    setInfoRows(bodyData.infoItems || []);
-    setTagRows(bodyData.tags || []);
     setDescriptionRows(bodyData.description || []);
-    setStepRows(bodyData.steps || []);
     setVersionRows(bodyData.versions || []);
     setChangelogRows(bodyData.changelog || []);
     setGalleryRows(bodyData.gallery || []);
@@ -2186,43 +2049,52 @@
   function populateModalUi(project) {
     const { modalId } = getModalRef(project);
     currentModalId = modalId || '';
-    const defaults = modalDefaults.get(modalId) || { hero: '', body: '', badges: '', heroActions: '', stats: '' };
-    const badgesHtml = (project && typeof project.modalBadges === 'string' && project.modalBadges.trim()) ? project.modalBadges : defaults.badges;
-    const actionsHtml = (project && typeof project.modalHeroActions === 'string' && project.modalHeroActions.trim()) ? project.modalHeroActions : defaults.heroActions;
-    const statsHtml = (project && typeof project.modalStats === 'string' && project.modalStats.trim()) ? project.modalStats : defaults.stats;
+    const defaults = modalDefaults.get(modalId) || { hero: '', body: '' };
     const bodyHtml = (project && typeof project.modalBody === 'string' && project.modalBody.trim()) ? project.modalBody : defaults.body;
-    if (modalBadgesInput) modalBadgesInput.value = badgesHtml || '';
-    if (modalActionsInput) modalActionsInput.value = actionsHtml || '';
-    if (modalStatsInput) modalStatsInput.value = statsHtml || '';
     if (modalBodyInput) modalBodyInput.value = bodyHtml || '';
-    setBadgeRows(parseBadgesHtml(badgesHtml || ''));
-    setActionRows(parseHeroActionsHtml(actionsHtml || ''));
-    setStatRows(parseStatsHtml(statsHtml || ''));
+    if (modalBadgesInput) modalBadgesInput.value = '';
+    if (modalActionsInput) modalActionsInput.value = '';
+    if (modalStatsInput) modalStatsInput.value = '';
     applyModalBodyData(parseModalBodyContent(bodyHtml || ''));
   }
 
   function collectModalBodyData() {
     return {
-      infoTitle: modalInfoTitleInput ? modalInfoTitleInput.value.trim() : '',
-      infoItems: collectInfoRows(),
-      tagsTitle: modalTagsTitleInput ? modalTagsTitleInput.value.trim() : '',
-      tags: collectTags(),
       description: collectDescriptionRows(),
-      steps: collectStepRows(),
       versions: collectVersionRows(),
       changelog: collectChangelogRows(),
       gallery: collectGalleryRows(),
     };
   }
 
-  function serialiseModalUi(projectId, type) {
-    const safeType = normaliseType(type || 'datapack');
-    const fallbackId = projectId && projectId.trim() ? projectId.trim() : slugifyId(titleInput ? titleInput.value : '');
+  function serialiseModalUi(context) {
+    const ctx = context && typeof context === 'object' ? context : {};
+    const safeType = normaliseType(ctx.type || 'datapack');
+    const fallbackId = ctx.projectId && ctx.projectId.trim() ? ctx.projectId.trim() : slugifyId(titleInput ? titleInput.value : '');
     const modalId = currentModalId || `${safeType === 'printing' ? 'pr' : 'dp'}-${fallbackId || 'project'}`;
-    const badgesHtml = buildBadgeHtml(collectBadges());
-    const actionsHtml = buildHeroActionsHtml(collectActions(), fallbackId);
-    const statsHtml = buildStatsHtml(collectStats());
-    const bodyData = collectModalBodyData();
+    const tags = Array.isArray(ctx.tags) ? ctx.tags : [];
+    const category = (ctx.category || '').trim();
+    const status = ctx.status || '';
+    const mcVersion = ctx.mcVersion || '';
+    const downloadFile = (ctx.downloadFile || '').trim();
+    const sidebar = buildAutoSidebarData(safeType, status, category, mcVersion, tags);
+    const contentData = collectModalBodyData();
+    const bodyData = {
+      ...contentData,
+      infoTitle: sidebar.infoTitle,
+      infoItems: sidebar.infoItems,
+      tagsTitle: sidebar.tagsTitle,
+      tags: sidebar.tags,
+      steps: [],
+    };
+    const badgesHtml = buildAutoBadgesHtml(safeType, status, mcVersion, tags, category);
+    const actionsHtml = buildAutoHeroActionsHtml(downloadFile, fallbackId);
+    const statsHtml = buildAutoStatsHtml({
+      latestVersion: bodyData.versions && bodyData.versions.length ? bodyData.versions[0].release : '',
+      updatedAt: new Date().toISOString(),
+      projectId: fallbackId,
+      downloadUrl: downloadFile,
+    });
     const bodyHtml = buildModalBodyHtml(modalId, bodyData, fallbackId);
     if (modalBadgesInput) modalBadgesInput.value = badgesHtml;
     if (modalActionsInput) modalActionsInput.value = actionsHtml;
@@ -2562,12 +2434,20 @@
     const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
     const shortDescription = (shortInput.value || '').trim();
     const modalHero = modalHeroInput ? (modalHeroInput.value || '').trim() : '';
-    const serialised = serialiseModalUi(id || slugifyId(title), type);
+    const downloadFile = (downloadInput.value || '').trim();
+    const serialised = serialiseModalUi({
+      projectId: id || slugifyId(title),
+      type,
+      status,
+      category,
+      tags,
+      mcVersion,
+      downloadFile,
+    });
     const modalBody = serialised.body;
     const modalBadges = serialised.badges;
     const modalHeroActions = serialised.actions;
     const modalStats = serialised.stats;
-    const downloadFile = (downloadInput.value || '').trim();
     const image = (imageInput.value || '').trim();
     return { id, type, title, mcVersion, status, category, tags, shortDescription, modalHero, modalBody, modalBadges, modalHeroActions, modalStats, downloadFile, image };
   }
@@ -2696,13 +2576,7 @@
 
   if (editorForm) {
     const addHandlers = {
-      badge: () => addBadgeRow({}),
-      action: () => addActionRow({}),
-      stat: () => addStatRow({}),
-      info: () => addInfoRow({}),
-      tag: () => addTagRow({}),
       description: () => addDescriptionRow({}),
-      step: () => addStepRow({}),
       version: () => addVersionRow({}),
       changelog: () => addChangelogRow({}),
       gallery: () => addGalleryRow({}),
