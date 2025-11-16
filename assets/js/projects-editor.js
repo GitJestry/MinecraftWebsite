@@ -50,9 +50,18 @@
   const LOCAL_SESSION_STORAGE_KEY = 'mirl.editor.session.v1';
   const LOCAL_PROJECTS_STORAGE_KEY = 'mirl.editor.projects.v1';
   const LOCAL_LABEL_HISTORY_KEY = 'mirl.editor.labels.v1';
+  const LOCAL_UPLOAD_METADATA_KEY = 'mirl.editor.uploads.meta.v1';
+  const LOCAL_UPLOAD_DB_NAME = 'mirl.editor.uploads.db';
+  const LOCAL_UPLOAD_DB_VERSION = 1;
+  const LOCAL_UPLOAD_DB_STORE = 'files';
+  const LOCAL_UPLOAD_MAX_ITEMS = 60;
   let localSessionCache = undefined;
   let localProjectsStore = null;
   let labelHistoryCache = null;
+  let uploadMetaCache = null;
+  let uploadDbPromise = null;
+  const uploadPreviewUrlCache = new Map();
+  const fileLibrarySlots = [];
   const chipFieldControllers = Object.create(null);
   let projectsById = Object.create(null);
   const labelCollator = (typeof Intl !== 'undefined' && typeof Intl.Collator === 'function')
@@ -156,6 +165,237 @@
         localStorage.setItem(LOCAL_SESSION_STORAGE_KEY, JSON.stringify(localSessionCache));
       }
     } catch (err) {}
+  }
+
+  let uploadDbInstance = null;
+
+  function supportsIndexedDb() {
+    return typeof indexedDB !== 'undefined' && typeof indexedDB.open === 'function';
+  }
+
+  function openUploadDb() {
+    if (!supportsIndexedDb()) {
+      return Promise.resolve(null);
+    }
+    if (uploadDbInstance) {
+      return Promise.resolve(uploadDbInstance);
+    }
+    if (uploadDbPromise) {
+      return uploadDbPromise;
+    }
+    uploadDbPromise = new Promise((resolve) => {
+      try {
+        const request = indexedDB.open(LOCAL_UPLOAD_DB_NAME, LOCAL_UPLOAD_DB_VERSION);
+        request.onerror = () => resolve(null);
+        request.onupgradeneeded = (event) => {
+          const db = event.target && event.target.result;
+          if (db && !db.objectStoreNames.contains(LOCAL_UPLOAD_DB_STORE)) {
+            db.createObjectStore(LOCAL_UPLOAD_DB_STORE, { keyPath: 'id' });
+          }
+        };
+        request.onsuccess = () => {
+          uploadDbInstance = request.result;
+          if (uploadDbInstance) {
+            uploadDbInstance.onclose = () => {
+              uploadDbInstance = null;
+              uploadDbPromise = null;
+            };
+          }
+          resolve(uploadDbInstance);
+        };
+      } catch (err) {
+        resolve(null);
+      }
+    });
+    return uploadDbPromise;
+  }
+
+  async function storeUploadBlob(id, file) {
+    const db = await openUploadDb();
+    if (!db) return false;
+    return new Promise((resolve) => {
+      try {
+        const tx = db.transaction(LOCAL_UPLOAD_DB_STORE, 'readwrite');
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => resolve(false);
+        const store = tx.objectStore(LOCAL_UPLOAD_DB_STORE);
+        store.put({ id, blob: file });
+      } catch (err) {
+        resolve(false);
+      }
+    });
+  }
+
+  async function deleteUploadBlob(id) {
+    if (!id) return false;
+    const db = await openUploadDb();
+    if (!db) return false;
+    return new Promise((resolve) => {
+      try {
+        const tx = db.transaction(LOCAL_UPLOAD_DB_STORE, 'readwrite');
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => resolve(false);
+        const store = tx.objectStore(LOCAL_UPLOAD_DB_STORE);
+        store.delete(id);
+      } catch (err) {
+        resolve(false);
+      }
+    });
+  }
+
+  async function loadUploadBlob(id) {
+    if (!id) return null;
+    const db = await openUploadDb();
+    if (!db) return null;
+    return new Promise((resolve) => {
+      try {
+        const tx = db.transaction(LOCAL_UPLOAD_DB_STORE, 'readonly');
+        const store = tx.objectStore(LOCAL_UPLOAD_DB_STORE);
+        const request = store.get(id);
+        request.onsuccess = () => {
+          const value = request.result;
+          resolve(value && value.blob ? value.blob : null);
+        };
+        request.onerror = () => resolve(null);
+      } catch (err) {
+        resolve(null);
+      }
+    });
+  }
+
+  function readUploadMeta() {
+    if (uploadMetaCache) {
+      return uploadMetaCache;
+    }
+    if (typeof localStorage === 'undefined') {
+      uploadMetaCache = [];
+      return uploadMetaCache;
+    }
+    try {
+      const raw = localStorage.getItem(LOCAL_UPLOAD_METADATA_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      uploadMetaCache = Array.isArray(parsed) ? parsed : [];
+    } catch (err) {
+      uploadMetaCache = [];
+    }
+    return uploadMetaCache;
+  }
+
+  function writeUploadMeta(list) {
+    uploadMetaCache = Array.isArray(list) ? list : [];
+    if (typeof localStorage === 'undefined') {
+      return;
+    }
+    try {
+      localStorage.setItem(LOCAL_UPLOAD_METADATA_KEY, JSON.stringify(uploadMetaCache));
+    } catch (err) {}
+  }
+
+  function revokeUploadPreview(id) {
+    if (!id) return;
+    const url = uploadPreviewUrlCache.get(id);
+    if (url && typeof URL !== 'undefined' && typeof URL.revokeObjectURL === 'function') {
+      try { URL.revokeObjectURL(url); } catch (err) {}
+    }
+    uploadPreviewUrlCache.delete(id);
+  }
+
+  function persistUploadMeta(record) {
+    if (!record) return [];
+    const list = readUploadMeta().slice();
+    const existingIndex = list.findIndex((item) => item && (item.path === record.path || item.id === record.id));
+    if (existingIndex >= 0) {
+      const removed = list.splice(existingIndex, 1)[0];
+      if (removed && removed.id && removed.id !== record.id) {
+        deleteUploadBlob(removed.id);
+        revokeUploadPreview(removed.id);
+      }
+    }
+    list.unshift(record);
+    while (list.length > LOCAL_UPLOAD_MAX_ITEMS) {
+      const removed = list.pop();
+      if (removed && removed.id) {
+        deleteUploadBlob(removed.id);
+        revokeUploadPreview(removed.id);
+      }
+    }
+    writeUploadMeta(list);
+    return list;
+  }
+
+  function getUploadMetaById(id) {
+    return readUploadMeta().find((item) => item && item.id === id) || null;
+  }
+
+  function listUploadsByPrefix(prefix) {
+    const list = readUploadMeta();
+    if (!prefix) {
+      return list.slice();
+    }
+    return list.filter((item) => item && item.prefix === prefix);
+  }
+
+  function guessContentType(filename, fallback) {
+    const lower = String(filename || '').toLowerCase();
+    if (lower.endsWith('.png')) return 'image/png';
+    if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
+    if (lower.endsWith('.gif')) return 'image/gif';
+    if (lower.endsWith('.webp')) return 'image/webp';
+    if (lower.endsWith('.svg')) return 'image/svg+xml';
+    if (lower.endsWith('.zip')) return 'application/zip';
+    if (lower.endsWith('.mcpack')) return 'application/zip';
+    if (lower.endsWith('.mcaddon')) return 'application/zip';
+    if (lower.endsWith('.rar')) return 'application/vnd.rar';
+    if (lower.endsWith('.stl')) return 'model/stl';
+    if (lower.endsWith('.obj')) return 'model/obj';
+    if (lower.endsWith('.gcode')) return 'text/plain';
+    if (lower.endsWith('.3mf')) return 'application/octet-stream';
+    return fallback || 'application/octet-stream';
+  }
+
+  function base64ToBlob(data, type) {
+    try {
+      const binary = typeof atob === 'function' ? atob(data) : null;
+      if (!binary) return null;
+      const len = binary.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i += 1) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return new Blob([bytes], { type: type || 'application/octet-stream' });
+    } catch (err) {
+      return null;
+    }
+  }
+
+  async function getUploadBlobData(upload) {
+    if (!upload) return null;
+    if (upload.inlineData) {
+      return base64ToBlob(upload.inlineData, upload.type || 'application/octet-stream');
+    }
+    return loadUploadBlob(upload.id);
+  }
+
+  function formatUploadTimestamp(value) {
+    if (!value) return '';
+    try {
+      const date = new Date(value);
+      if (!Number.isFinite(date.getTime())) {
+        return '';
+      }
+      if (typeof Intl !== 'undefined' && Intl.DateTimeFormat) {
+        const formatter = new Intl.DateTimeFormat('de-DE', { year: 'numeric', month: 'short', day: 'numeric' });
+        return formatter.format(date);
+      }
+      return date.toISOString().slice(0, 10);
+    } catch (err) {
+      return '';
+    }
+  }
+
+  function extractExtension(filename) {
+    const match = /\.([a-z0-9]+)$/i.exec(String(filename || ''));
+    return match ? match[1].toUpperCase() : 'FILE';
   }
 
   function extractBearerToken(headers) {
@@ -707,11 +947,15 @@
   const modalVersionsList = document.getElementById('pe-modal-versions-list');
   const modalChangelogList = document.getElementById('pe-modal-changelog-list');
   const modalGalleryList = document.getElementById('pe-modal-gallery-list');
+  const versionChainListEl = document.querySelector('#pe-version-chain .editor-version-chain-list');
   const downloadInput = document.getElementById('pe-download');
   const imageInput = document.getElementById('pe-image');
   const deleteBtn = document.getElementById('project-editor-delete');
 
+  let versionAutoNumber = 1;
+
   enhanceFilePickerTargets(document);
+  handleVersionRowsMutated();
 
   function getCurrentTypeValue() {
     return normaliseType(typeInput ? typeInput.value : 'datapack');
@@ -1803,34 +2047,212 @@
     });
   }
 
+  function registerFileLibrarySlot(slot) {
+    if (!slot || !slot.grid) return;
+    fileLibrarySlots.push(slot);
+    renderFileLibrary(slot);
+  }
+
+  function refreshFileLibraries(prefix) {
+    fileLibrarySlots.forEach((slot) => {
+      if (!slot) return;
+      if (!prefix || slot.prefix === prefix) {
+        renderFileLibrary(slot);
+      }
+    });
+  }
+
+  function applyUploadSelection(upload, slot) {
+    if (!upload || !slot || !slot.input) return;
+    const value = upload.path || upload.filename || '';
+    slot.input.value = value;
+    try {
+      slot.input.dispatchEvent(new Event('input', { bubbles: true }));
+      slot.input.dispatchEvent(new Event('change', { bubbles: true }));
+    } catch (err) {}
+    if (slot.status) {
+      const sizeLabel = formatFileSize(upload.size);
+      slot.status.textContent = sizeLabel ? `${upload.filename} (${sizeLabel})` : upload.filename;
+    }
+  }
+
+  async function exportUploadRecord(upload) {
+    if (!upload) return;
+    const blob = await getUploadBlobData(upload);
+    if (!blob) {
+      alert('Datei konnte nicht geladen werden.');
+      return;
+    }
+    if (typeof URL === 'undefined' || typeof document === 'undefined') {
+      alert('Export wird von diesem Browser nicht unterstützt.');
+      return;
+    }
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = upload.filename || 'upload.bin';
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(() => {
+      if (link.parentNode) link.parentNode.removeChild(link);
+      try { URL.revokeObjectURL(url); } catch (err) {}
+    }, 50);
+  }
+
+  async function loadUploadPreview(upload, thumb) {
+    if (!upload || !thumb) return;
+    if (!upload.type || upload.type.indexOf('image/') !== 0) {
+      thumb.textContent = extractExtension(upload.filename);
+      return;
+    }
+    const cacheKey = upload.id;
+    if (cacheKey && uploadPreviewUrlCache.has(cacheKey)) {
+      const url = uploadPreviewUrlCache.get(cacheKey);
+      const img = document.createElement('img');
+      img.alt = '';
+      img.src = url;
+      thumb.textContent = '';
+      thumb.appendChild(img);
+      return;
+    }
+    const blob = await getUploadBlobData(upload);
+    if (!blob || typeof URL === 'undefined') {
+      thumb.textContent = extractExtension(upload.filename);
+      return;
+    }
+    const objectUrl = URL.createObjectURL(blob);
+    if (cacheKey) {
+      uploadPreviewUrlCache.set(cacheKey, objectUrl);
+    }
+    const img = document.createElement('img');
+    img.alt = '';
+    img.src = objectUrl;
+    thumb.textContent = '';
+    thumb.appendChild(img);
+  }
+
+  function renderFileLibrary(slot) {
+    if (!slot || !slot.grid || (typeof slot.grid.isConnected !== 'undefined' && !slot.grid.isConnected)) {
+      return;
+    }
+    const uploads = listUploadsByPrefix(slot.prefix).sort((a, b) => {
+      const aTime = a && a.uploadedAt ? (new Date(a.uploadedAt).getTime() || 0) : 0;
+      const bTime = b && b.uploadedAt ? (new Date(b.uploadedAt).getTime() || 0) : 0;
+      return bTime - aTime;
+    });
+    if (slot.empty) {
+      slot.empty.hidden = uploads.length > 0;
+    }
+    clearContainer(slot.grid);
+    uploads.forEach((upload) => {
+      const card = document.createElement('div');
+      card.className = 'editor-media-card';
+      card.tabIndex = 0;
+      card.setAttribute('role', 'button');
+      card.addEventListener('click', () => applyUploadSelection(upload, slot));
+      card.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          applyUploadSelection(upload, slot);
+        }
+      });
+
+      const thumb = document.createElement('div');
+      thumb.className = 'editor-media-thumb';
+      thumb.textContent = extractExtension(upload.filename);
+      loadUploadPreview(upload, thumb);
+      card.appendChild(thumb);
+
+      const title = document.createElement('div');
+      title.className = 'editor-media-title';
+      title.textContent = upload.filename;
+      card.appendChild(title);
+
+      const meta = document.createElement('div');
+      meta.className = 'editor-media-meta';
+      const sizeLabel = formatFileSize(upload.size);
+      if (sizeLabel) {
+        const sizeEl = document.createElement('span');
+        sizeEl.textContent = sizeLabel;
+        meta.appendChild(sizeEl);
+      }
+      const dateLabel = formatUploadTimestamp(upload.uploadedAt);
+      if (dateLabel) {
+        const dateEl = document.createElement('small');
+        dateEl.textContent = dateLabel;
+        meta.appendChild(dateEl);
+      }
+      card.appendChild(meta);
+
+      const actions = document.createElement('div');
+      actions.className = 'editor-media-actions';
+      const useBtn = document.createElement('button');
+      useBtn.type = 'button';
+      useBtn.className = 'editor-media-btn';
+      useBtn.textContent = 'Übernehmen';
+      useBtn.addEventListener('click', (event) => {
+        event.stopPropagation();
+        applyUploadSelection(upload, slot);
+      });
+      const exportBtn = document.createElement('button');
+      exportBtn.type = 'button';
+      exportBtn.className = 'editor-media-btn secondary';
+      exportBtn.textContent = 'Export';
+      exportBtn.addEventListener('click', (event) => {
+        event.stopPropagation();
+        exportUploadRecord(upload);
+      });
+      actions.appendChild(useBtn);
+      actions.appendChild(exportBtn);
+      card.appendChild(actions);
+
+      slot.grid.appendChild(card);
+    });
+  }
+
   async function uploadEditorAsset(file, options) {
     if (!file) {
       throw new Error('missing_file');
-    }
-    if (!assertEditorAvailable(false)) {
-      throw new Error('upload_unavailable');
     }
     const opts = options && typeof options === 'object' ? options : {};
     const prefix = typeof opts.prefix === 'string' ? opts.prefix : '';
     const filename = typeof opts.filename === 'string' && opts.filename.trim()
       ? opts.filename.trim()
       : sanitizeFilename(file.name);
-    const base64 = await readFileAsBase64(file);
-    const payload = {
+    const record = {
+      id: 'upload-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
       prefix,
       filename,
-      contentType: file.type || '',
-      data: base64,
+      path: prefix ? prefix + filename : filename,
+      type: file.type || guessContentType(filename, file.type),
+      size: file.size || 0,
+      uploadedAt: new Date().toISOString(),
+      inlineData: '',
     };
-    const response = await api('/editor/uploads', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-      retryAttempts: 0,
-    });
-    if (!response || typeof response.path !== 'string') {
-      throw new Error('upload_failed');
+    let stored = false;
+    try {
+      stored = await storeUploadBlob(record.id, file);
+    } catch (err) {
+      stored = false;
     }
-    return response;
+    if (!stored) {
+      try {
+        record.inlineData = await readFileAsBase64(file);
+        stored = !!record.inlineData;
+      } catch (err) {
+        stored = false;
+      }
+    }
+    if (!stored) {
+      throw new Error('upload_unavailable');
+    }
+    if (!record.inlineData) {
+      delete record.inlineData;
+    }
+    persistUploadMeta(record);
+    refreshFileLibraries(prefix);
+    return { path: record.path, size: record.size, type: record.type, local: true };
   }
 
   function enhanceFilePickerTargets(root) {
@@ -1903,6 +2325,31 @@
       actions.appendChild(status);
       actions.appendChild(fileInput);
       input.insertAdjacentElement('afterend', actions);
+
+      const library = document.createElement('div');
+      library.className = 'editor-file-library';
+      const head = document.createElement('div');
+      head.className = 'editor-file-library-head';
+      const headTitle = document.createElement('strong');
+      headTitle.textContent = prefix ? `Uploads · ${prefix}` : 'Uploads';
+      const headDesc = document.createElement('span');
+      headDesc.textContent = 'Klicke auf ein Asset, um den Pfad zu übernehmen.';
+      head.appendChild(headTitle);
+      head.appendChild(headDesc);
+      const grid = document.createElement('div');
+      grid.className = 'editor-file-library-grid';
+      const empty = document.createElement('p');
+      empty.className = 'editor-file-library-empty';
+      empty.textContent = 'Noch keine Uploads gespeichert.';
+      const note = document.createElement('p');
+      note.className = 'editor-file-library-note';
+      note.textContent = 'Uploads werden lokal gespeichert – exportiere Dateien und füge sie deinem Repository hinzu.';
+      library.appendChild(head);
+      library.appendChild(grid);
+      library.appendChild(empty);
+      library.appendChild(note);
+      actions.insertAdjacentElement('afterend', library);
+      registerFileLibrarySlot({ prefix, input, status, grid, empty, note, wrapper: library });
     });
   }
 
@@ -2256,6 +2703,7 @@
         const release = cells[0] ? cells[0].textContent.trim() : '';
         const minecraft = cells[1] ? cells[1].textContent.trim() : '';
         const date = cells[2] ? cells[2].textContent.trim() : '';
+        const notesEl = cells[3] ? cells[3].querySelector('.version-file-note') : null;
         const link = cells[3] ? cells[3].querySelector('a') : null;
         const labelEnNode = link ? link.querySelector('.lang-en') : null;
         const labelDeNode = link ? link.querySelector('.lang-de') : null;
@@ -2265,8 +2713,9 @@
         const url = link ? link.getAttribute('href') || '' : '';
         const downloadFile = link ? link.getAttribute('data-download-file') || '' : '';
         const trackId = link ? link.getAttribute('data-track-download') || '' : '';
-        if (!(release || minecraft || date || url || labelEn || labelDe || label)) return;
-        data.versions.push({ release, minecraft, date, url, labelEn, labelDe, label, downloadFile, trackId });
+        const notes = notesEl ? notesEl.textContent.trim() : '';
+        if (!(release || minecraft || date || url || labelEn || labelDe || label || notes)) return;
+        data.versions.push({ release, minecraft, date, url, labelEn, labelDe, label, downloadFile, trackId, notes });
       });
     }
 
@@ -2349,7 +2798,7 @@
 
     const versionsRows = (bodyData.versions || [])
       .map((entry) => {
-        if (!entry || !(entry.release || entry.minecraft || entry.date || entry.url)) return '';
+        if (!entry || !(entry.release || entry.minecraft || entry.date || entry.url || entry.notes)) return '';
         const release = escapeHtml(entry.release || '');
         const minecraft = escapeHtml(entry.minecraft || '');
         const date = escapeHtml(entry.date || '');
@@ -2376,7 +2825,8 @@
         } else {
           linkHtml = escapeHtml(entry.label || '');
         }
-        return `<tr><td>${release}</td><td>${minecraft}</td><td>${date}</td><td>${linkHtml}</td></tr>`;
+        const notes = entry.notes ? `<div class="version-file-note">${formatInline(entry.notes)}</div>` : '';
+        return `<tr><td>${release}</td><td>${minecraft}</td><td>${date}</td><td>${linkHtml}${notes}</td></tr>`;
       })
       .filter(Boolean)
       .join('');
@@ -2450,6 +2900,80 @@
     while (node.firstChild) node.removeChild(node.firstChild);
   }
 
+  function resetVersionSuggestionCounter(nextValue) {
+    const safe = Number.isFinite(nextValue) ? nextValue : 1;
+    versionAutoNumber = Math.max(1, safe);
+  }
+
+  function getNextVersionSuggestion() {
+    const label = 'v' + String(versionAutoNumber).padStart(2, '0');
+    versionAutoNumber += 1;
+    return label;
+  }
+
+  function readVersionDrafts() {
+    if (!modalVersionsList) return [];
+    return Array.from(modalVersionsList.querySelectorAll('.editor-repeat-row'))
+      .map((row) => {
+        const release = (row.querySelector('[data-field="version-release"]') || {}).value || '';
+        const minecraft = (row.querySelector('[data-field="version-mc"]') || {}).value || '';
+        const date = (row.querySelector('[data-field="version-date"]') || {}).value || '';
+        const notes = (row.querySelector('[data-field="version-notes"]') || {}).value || '';
+        return {
+          release: release.trim(),
+          minecraft: minecraft.trim(),
+          date: date.trim(),
+          notes: notes.trim(),
+        };
+      })
+      .filter((entry) => entry && (entry.release || entry.minecraft || entry.date || entry.notes));
+  }
+
+  function renderVersionChain() {
+    if (!versionChainListEl) return;
+    const drafts = readVersionDrafts();
+    clearContainer(versionChainListEl);
+    if (!drafts.length) {
+      const empty = document.createElement('p');
+      empty.className = 'editor-file-library-empty';
+      empty.textContent = 'Noch keine Versionen erfasst.';
+      versionChainListEl.appendChild(empty);
+      return;
+    }
+    drafts.forEach((entry, index) => {
+      const node = document.createElement('div');
+      node.className = 'editor-version-node' + (index === 0 ? ' head' : '');
+      const missingName = !entry.release;
+      const missingNotes = !entry.notes;
+      if (missingName || missingNotes) {
+        node.classList.add('invalid');
+      }
+      const body = document.createElement('div');
+      const title = document.createElement('strong');
+      title.textContent = entry.release || 'Version ohne Namen';
+      body.appendChild(title);
+      const metaParts = [];
+      if (entry.date) metaParts.push(entry.date);
+      if (entry.minecraft) metaParts.push(entry.minecraft);
+      if (metaParts.length) {
+        const meta = document.createElement('small');
+        meta.textContent = metaParts.join(' • ');
+        body.appendChild(meta);
+      }
+      const note = document.createElement('p');
+      note.textContent = entry.notes || 'Bitte kurzen Changelog eintragen.';
+      body.appendChild(note);
+      node.appendChild(body);
+      versionChainListEl.appendChild(node);
+    });
+  }
+
+  function handleVersionRowsMutated() {
+    const count = modalVersionsList ? modalVersionsList.querySelectorAll('.editor-repeat-row').length : 0;
+    resetVersionSuggestionCounter(count + 1);
+    renderVersionChain();
+  }
+
   function ensureRow(container, addFn) {
     if (!container) return;
     if (!container.querySelector('.editor-repeat-row')) {
@@ -2461,6 +2985,9 @@
     return function handleRemove(row) {
       if (row && row.remove) row.remove();
       ensureRow(container, addFn);
+      if (container === modalVersionsList) {
+        handleVersionRowsMutated();
+      }
     };
   }
 
@@ -2513,9 +3040,13 @@
       <input type="text" data-field="version-label-de" placeholder="Download-Text (DE)">
       <input type="text" data-field="version-file" placeholder="Download-Dateiname (optional)">
       <input type="text" data-field="version-track" placeholder="Tracking-ID (optional)">
+      <textarea class="editor-version-notes" data-field="version-notes" placeholder="Kurzbeschreibung / Changelog"></textarea>
       <button type="button" class="editor-repeat-remove" title="Entfernen">×</button>
     `;
-    row.querySelector('[data-field="version-release"]').value = data.release || '';
+    const releaseInput = row.querySelector('[data-field="version-release"]');
+    if (releaseInput) {
+      releaseInput.value = data.release || getNextVersionSuggestion();
+    }
     row.querySelector('[data-field="version-mc"]').value = data.minecraft || '';
     row.querySelector('[data-field="version-date"]').value = data.date || '';
     row.querySelector('[data-field="version-url"]').value = data.url || '';
@@ -2523,6 +3054,7 @@
     row.querySelector('[data-field="version-label-de"]').value = data.labelDe || '';
     row.querySelector('[data-field="version-file"]').value = data.downloadFile || '';
     row.querySelector('[data-field="version-track"]').value = data.trackId || '';
+    row.querySelector('[data-field="version-notes"]').value = data.notes || data.details || '';
     row.querySelector('.editor-repeat-remove').addEventListener('click', () => makeRemoveHandler(modalVersionsList, addVersionRow)(row));
     const versionFileInput = row.querySelector('[data-field="version-file"]');
     if (versionFileInput) {
@@ -2533,12 +3065,14 @@
     }
     enhanceFilePickerTargets(row);
     modalVersionsList.appendChild(row);
+    handleVersionRowsMutated();
   }
 
   function setVersionRows(items) {
     if (!modalVersionsList) return;
     clearContainer(modalVersionsList);
     const list = Array.isArray(items) && items.length ? items : [{}];
+    resetVersionSuggestionCounter(list.length + 1);
     list.forEach((item) => addVersionRow(item));
   }
 
@@ -2554,7 +3088,8 @@
         const labelDe = (row.querySelector('[data-field="version-label-de"]') || {}).value || '';
         const downloadFile = (row.querySelector('[data-field="version-file"]') || {}).value || '';
         const trackId = (row.querySelector('[data-field="version-track"]') || {}).value || '';
-        if (!(release.trim() || minecraft.trim() || date.trim() || url.trim())) return null;
+        const notes = (row.querySelector('[data-field="version-notes"]') || {}).value || '';
+        if (!(release.trim() || minecraft.trim() || date.trim() || url.trim() || downloadFile.trim() || notes.trim())) return null;
         return {
           release: release.trim(),
           minecraft: minecraft.trim(),
@@ -2564,9 +3099,27 @@
           labelDe: labelDe.trim(),
           downloadFile: downloadFile.trim(),
           trackId: trackId.trim(),
+          notes: notes.trim(),
         };
       })
       .filter(Boolean);
+  }
+
+  function validateVersionEntries(entries) {
+    if (!Array.isArray(entries) || !entries.length) {
+      return [];
+    }
+    const issues = [];
+    entries.forEach((entry, index) => {
+      if (!entry) return;
+      if (!entry.release) {
+        issues.push(`Version ${index + 1}: Name fehlt`);
+      }
+      if (!entry.notes) {
+        issues.push(`Version ${index + 1}: Changelog fehlt`);
+      }
+    });
+    return issues;
   }
 
   function addChangelogRow(data = {}) {
@@ -3228,6 +3781,16 @@
       return;
     }
     updateValidationSummary([]);
+    const versionEntries = collectVersionRows();
+    const versionIssues = validateVersionEntries(versionEntries);
+    if (versionIssues.length) {
+      updateValidationSummary(versionIssues);
+      if (modalVersionsList) {
+        const firstRelease = modalVersionsList.querySelector('[data-field="version-release"]');
+        focusFirstInvalidField(firstRelease || modalVersionsList.querySelector('[data-field="version-notes"]'));
+      }
+      return;
+    }
     const data = collectFormData();
     try {
       let result;
@@ -3295,6 +3858,17 @@
         closeEditorModal();
       }
     });
+  }
+
+  if (modalVersionsList) {
+    modalVersionsList.addEventListener('input', handleVersionRowsMutated);
+    modalVersionsList.addEventListener('change', handleVersionRowsMutated);
+    if (typeof MutationObserver !== 'undefined') {
+      try {
+        const observer = new MutationObserver(handleVersionRowsMutated);
+        observer.observe(modalVersionsList, { childList: true });
+      } catch (err) {}
+    }
   }
 
   requiredFieldDefs.forEach((def) => {

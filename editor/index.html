@@ -226,6 +226,201 @@ html:not(.editor-mode-on) .editor-add-card {
   color: var(--muted);
 }
 
+.editor-file-library {
+  border: 1px dashed rgba(148,163,184,0.5);
+  border-radius: 14px;
+  padding: 0.8rem;
+  margin-top: 0.8rem;
+  background: rgba(15,23,42,0.03);
+}
+
+.editor-file-library-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+}
+
+.editor-file-library-head strong {
+  font-size: 0.95rem;
+}
+
+.editor-file-library-head span {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.editor-file-library-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.65rem;
+}
+
+.editor-file-library-empty,
+.editor-file-library-note {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.editor-media-card {
+  border: 1px solid rgba(148,163,184,0.5);
+  border-radius: 12px;
+  padding: 0.55rem;
+  background: rgba(15,23,42,0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.editor-media-card:hover,
+.editor-media-card:focus-visible {
+  border-color: rgba(59,130,246,0.8);
+  box-shadow: 0 8px 18px rgba(15,23,42,0.08);
+}
+
+.editor-media-thumb {
+  border-radius: 10px;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: rgba(15,23,42,0.08);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  font-size: 1.9rem;
+  color: rgba(15,23,42,0.45);
+}
+
+.editor-media-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.editor-media-meta {
+  font-size: 0.85rem;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.editor-media-title {
+  font-weight: 600;
+  color: inherit;
+  font-size: 0.9rem;
+}
+
+.editor-media-actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.editor-media-btn {
+  flex: 1;
+  border: none;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  padding: 0.25rem 0.4rem;
+  cursor: pointer;
+  background: rgba(59,130,246,0.12);
+  color: #2563eb;
+}
+
+.editor-media-btn.secondary {
+  background: rgba(15,23,42,0.08);
+  color: inherit;
+}
+
+.editor-version-chain {
+  margin-top: 0.8rem;
+  padding: 0.8rem;
+  border-radius: 12px;
+  border: 1px dashed rgba(148,163,184,0.6);
+  background: rgba(15,23,42,0.02);
+}
+
+.editor-version-chain-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+}
+
+.editor-version-chain-note {
+  margin: 0 0 0.65rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.editor-version-chain-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.editor-version-node {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+}
+
+.editor-version-node::before {
+  content: '';
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(148,163,184,0.4);
+  margin-top: 0.3rem;
+  flex-shrink: 0;
+}
+
+.editor-version-node.head::before {
+  background: rgba(59,130,246,0.9);
+  box-shadow: 0 0 0 6px rgba(59,130,246,0.15);
+}
+
+.editor-version-node.invalid::before {
+  background: rgba(220,38,38,0.9);
+  box-shadow: 0 0 0 6px rgba(220,38,38,0.15);
+}
+
+.editor-version-node.invalid strong,
+.editor-version-node.invalid p {
+  color: #dc2626;
+}
+
+.editor-version-node strong {
+  display: block;
+  font-size: 0.95rem;
+}
+
+.editor-version-node small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.editor-version-node p {
+  margin: 0.15rem 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.editor-version-notes {
+  grid-column: 1 / -1;
+  min-height: 60px;
+}
+
+.version-file-note {
+  margin-top: 0.2rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
 .project-editor-error {
   margin: 0;
   padding: 0.35rem 0.75rem;
@@ -1073,6 +1268,11 @@ dialog[open] .content {
             <p class="editor-subcard-title">Versionstabelle</p>
             <p class="editor-subcard-hint">Tabellenzeilen für Releases oder Druckvarianten.</p>
             <div class="editor-repeat" id="pe-modal-versions-list"></div>
+            <div class="editor-version-chain" id="pe-version-chain">
+              <p class="editor-version-chain-title">Upload-Historie</p>
+              <p class="editor-version-chain-note">Neueste Version oben – jede Version benötigt einen Namen und einen kurzen Changelog.</p>
+              <div class="editor-version-chain-list" aria-live="polite"></div>
+            </div>
             <button class="editor-repeat-add" data-add="version" type="button">+ Version hinzufügen</button>
           </div>
           <div class="editor-subcard">

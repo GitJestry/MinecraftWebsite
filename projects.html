@@ -539,6 +539,10 @@ main p, main li, .content p, .content li, .main-content p, .main-content li, art
 .step::before { counter-increment: step; content: counter(step); width: 28px; height: 28px; display: inline-grid; place-items: center; border-radius: 999px; background: #111; color:#fff; font-weight: 700; margin-top: 2px; }
 .versions-table { width: 100%; border-collapse: collapse; font-size: .95rem; }
 .versions-table th, .versions-table td { padding: 10px 8px; border-bottom: 1px solid rgba(0,0,0,.08); text-align: left; }
+.versions-table .version-file-note { margin-top: 4px; font-size: .85rem; color: rgba(0,0,0,.6); }
+@media (prefers-color-scheme: dark) {
+  .versions-table .version-file-note { color: rgba(255,255,255,.7); }
+}
 .gallery { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; }
 .gallery img { width: 100%; height: 180px; object-fit: cover; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
 @media (max-width: 720px) { .gallery { grid-template-columns: repeat(2,1fr); } }
@@ -1133,8 +1137,8 @@ window.addEventListener('load', function() {
 <table class="versions-table">
 <thead><tr><th>Release</th><th>Minecraft</th><th>Date</th><th>File</th></tr></thead>
 <tbody>
-<tr><td>v1.0.3</td><td>1.21.8</td><td>2025‑09‑10</td><td><a data-download-file="jetpack-datapack-1.21.8.zip" data-track-download="jetpack-datapack" download="" href="downloads/jetpack-datapack-1.21.8.zip"><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></a></td></tr>
-<tr><td>v1.0.2</td><td>1.21.4</td><td>2025‑07‑22</td><td><a data-download-file="jetpack-datapack-1.21.8.zip" data-track-download="jetpack-datapack" download="" href="downloads/jetpack-datapack-1.21.8.zip"><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></a></td></tr>
+<tr><td>v1.0.3</td><td>1.21.8</td><td>2025‑09‑10</td><td><a data-download-file="jetpack-datapack-1.21.8.zip" data-track-download="jetpack-datapack" download="" href="downloads/jetpack-datapack-1.21.8.zip"><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></a><div class="version-file-note">Balance tweaks, Fuel HUD polish und Nether-Portale gefixt.</div></td></tr>
+<tr><td>v1.0.2</td><td>1.21.4</td><td>2025‑07‑22</td><td><a data-download-file="jetpack-datapack-1.21.8.zip" data-track-download="jetpack-datapack" download="" href="downloads/jetpack-datapack-1.21.8.zip"><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></a><div class="version-file-note">Initialer Release für 1.21.4 mit Survival-Rezepten.</div></td></tr>
 </tbody>
 </table>
 </div>
