@@ -2,6 +2,8 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+const MAX_TRACKED_CLIENTS = 2048;
+
 export class DownloadStore {
   constructor(fileLocation) {
     const filePath = typeof fileLocation === 'string'
@@ -47,13 +49,31 @@ export class DownloadStore {
       const data = await this._readAll();
       const entry = data[projectId] || {};
       const count = Number.isFinite(entry.count) ? Number(entry.count) : 0;
-      const nextCount = count + 1;
       const now = new Date().toISOString();
+      const clientHash =
+        typeof metadata.clientHash === 'string' && metadata.clientHash.trim().length > 0
+          ? metadata.clientHash.trim()
+          : undefined;
+
+      let shouldIncrement = true;
+      if (clientHash) {
+        if (!entry.clients) {
+          entry.clients = {};
+        }
+        if (entry.clients[clientHash]) {
+          shouldIncrement = false;
+        }
+        entry.clients[clientHash] = now;
+        this._pruneClients(entry);
+      }
+
+      const nextCount = shouldIncrement ? count + 1 : count;
       data[projectId] = {
         count: nextCount,
         updatedAt: now,
         lastFileId: metadata.fileId || entry.lastFileId,
         lastPath: metadata.path || entry.lastPath,
+        clients: entry.clients,
       };
       await this._writeAll(data);
       return data[projectId];
@@ -73,6 +93,27 @@ export class DownloadStore {
     const run = this._chain.then(() => task());
     this._chain = run.catch(() => {});
     return run;
+  }
+
+  _pruneClients(entry) {
+    if (!entry.clients) {
+      return;
+    }
+    const clientEntries = Object.entries(entry.clients);
+    if (clientEntries.length <= MAX_TRACKED_CLIENTS) {
+      return;
+    }
+    clientEntries
+      .sort(([, a], [, b]) => {
+        if (a === b) {
+          return 0;
+        }
+        return a < b ? -1 : 1;
+      })
+      .slice(0, clientEntries.length - MAX_TRACKED_CLIENTS)
+      .forEach(([client]) => {
+        delete entry.clients[client];
+      });
   }
 }
 

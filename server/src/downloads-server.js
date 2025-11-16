@@ -3,6 +3,7 @@ import express from 'express';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import DownloadStore from './download-store.js';
+import { getHashedClientIp } from './request-utils.js';
 
 const {
   NODE_ENV = 'production',
@@ -143,6 +144,7 @@ app.post('/analytics/downloads', downloadRecordLimiter, async (req, res) => {
     const result = await downloadStore.record(projectId, {
       fileId,
       path: downloadPath,
+      clientHash: getHashedClientIp(req),
     });
 
     return res.status(202).json({ count: result.count });
