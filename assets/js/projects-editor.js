@@ -907,6 +907,7 @@
   const banner = document.getElementById('editor-banner');
   if (!banner) return;
   const bannerRequiresSession = banner.hasAttribute('data-require-session');
+  const bannerSuppressed = banner.hasAttribute('data-hide-editor-ui');
 
   const loginBtn = document.getElementById('editor-login-button');
   const statusBox = document.getElementById('editor-status');
@@ -1398,6 +1399,9 @@
     const hasAccessFlag = entryAccessEnabled || sessionActive;
     let bannerVisible = editingSupported ? hasAccessFlag : false;
     if (bannerRequiresSession && !sessionActive) {
+      bannerVisible = false;
+    }
+    if (bannerSuppressed) {
       bannerVisible = false;
     }
     setElementVisibility(banner, bannerVisible);
