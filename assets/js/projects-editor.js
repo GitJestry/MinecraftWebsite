@@ -37,6 +37,71 @@
   }
 
   const STATIC_PROJECTS_URL = resolveProjectsDataUrl();
+
+  function detectSiteRootUrl() {
+    if (typeof document === 'undefined') {
+      return '';
+    }
+    const scripts = document.getElementsByTagName('script');
+    for (let i = 0; i < scripts.length; i += 1) {
+      const script = scripts[i];
+      if (!script) continue;
+      const src = script.getAttribute('src') || '';
+      if (!src || src.indexOf('projects-editor.js') === -1) {
+        continue;
+      }
+      try {
+        const abs = new URL(src, document.baseURI);
+        const href = abs.href.replace(/assets\/js\/projects-editor\.js(?:[?#].*)?$/, '');
+        if (href) {
+          return href;
+        }
+      } catch (err) {}
+    }
+    if (document.baseURI) {
+      try {
+        const baseUrl = new URL(document.baseURI);
+        baseUrl.search = '';
+        baseUrl.hash = '';
+        const path = baseUrl.pathname || '';
+        if (!path || path.endsWith('/')) {
+          return baseUrl.toString();
+        }
+        baseUrl.pathname = path.replace(/[^/]*$/, '');
+        return baseUrl.toString();
+      } catch (err) {}
+    }
+    return '';
+  }
+
+  const SITE_ROOT_URL = detectSiteRootUrl();
+
+  function resolveProjectStaticUrl(value) {
+    const raw = value == null ? '' : String(value);
+    const trimmed = raw.trim();
+    if (!trimmed) {
+      return '';
+    }
+    const lower = trimmed.toLowerCase();
+    if (lower.startsWith('data:') || lower.startsWith('blob:')) {
+      return trimmed;
+    }
+    const schemeMatch = trimmed.match(/^([a-z][a-z0-9+.-]*:)/i);
+    if (schemeMatch && !schemeMatch[0].toLowerCase().startsWith('http') && !schemeMatch[0].toLowerCase().startsWith('https')) {
+      return trimmed;
+    }
+    const base = SITE_ROOT_URL
+      || (typeof document !== 'undefined' ? document.baseURI : '')
+      || (typeof window !== 'undefined' && window.location ? window.location.href : '');
+    if (!base) {
+      return trimmed;
+    }
+    try {
+      return new URL(trimmed, base).toString();
+    } catch (err) {
+      return trimmed;
+    }
+  }
   const DEFAULT_EDITOR_DISABLED_REASON = 'Editorfunktionen sind in dieser statischen Veröffentlichung deaktiviert.';
   const DEFAULT_API_RETRY_ATTEMPTS = 1;
   const DEFAULT_API_RETRY_DELAY = 400;
@@ -2558,7 +2623,7 @@
   }
 
   function buildAutoHeroActionsHtml(downloadUrl, projectId) {
-    const href = (downloadUrl || '').trim();
+    const href = resolveProjectStaticUrl(downloadUrl);
     if (!href) return '';
     const fallbackId = projectId || deriveDownloadFileId(href);
     const action = {
@@ -2764,7 +2829,8 @@
         const valueText = escapeHtml(item.value || '');
         let valueHtml = valueText;
         if (item.url) {
-          const url = escapeAttr(item.url);
+          const resolvedLink = resolveProjectStaticUrl(item.url) || item.url;
+          const url = escapeAttr(resolvedLink);
           const newTab = item.newTab ? ' target="_blank" rel="noopener"' : '';
           valueHtml = `<a href="${url}"${newTab}>${valueText}</a>`;
         }
@@ -2808,7 +2874,8 @@
         const date = escapeHtml(entry.date || '');
         let linkHtml = '';
         if (entry.url) {
-          const href = escapeAttr(entry.url);
+          const resolvedUrl = resolveProjectStaticUrl(entry.url) || entry.url;
+          const href = escapeAttr(resolvedUrl);
           const downloadFile = entry.downloadFile ? escapeAttr(entry.downloadFile) : '';
           const trackId = entry.trackId ? escapeAttr(entry.trackId) : (trackFallback ? escapeAttr(trackFallback) : '');
           const labelEn = entry.labelEn ? escapeHtml(entry.labelEn) : '';
@@ -2851,7 +2918,8 @@
     const galleryHtml = (bodyData.gallery || [])
       .map((image) => {
         if (!image || !image.src) return '';
-        const src = escapeAttr(image.src);
+        const resolvedSrc = resolveProjectStaticUrl(image.src) || image.src;
+        const src = escapeAttr(resolvedSrc);
         const alt = escapeAttr(image.alt || '');
         return `<img alt="${alt}" loading="lazy" src="${src}"/>`;
       })
@@ -3417,7 +3485,7 @@
       card.setAttribute('tabindex', '0');
     }
 
-    const imgSrc = project.image || 'assets/img/logo.jpg';
+    const imgSrc = resolveProjectStaticUrl(project.image || 'assets/img/logo.jpg') || 'assets/img/logo.jpg';
     const chipA = project.mcVersion || (isDatapack ? '1.21.x' : '');
     const chipB = (tags && tags.length) ? tags[0] : (project.status || '');
 
@@ -3426,7 +3494,7 @@
     if (chipB) chipsHtml += '<span class="chip">' + escapeHtml(chipB) + '</span>';
 
     card.innerHTML =
-      '<div class="thumb"><img alt="' + escapeHtml(project.title) + ' cover" src="' + escapeHtml(imgSrc) + '" loading="lazy"/></div>' +
+      '<div class="thumb"><img alt="' + escapeHtml(project.title) + ' cover" src="' + escapeAttr(imgSrc) + '" loading="lazy"/></div>' +
       '<div class="meta">' +
         '<div class="title">' + escapeHtml(project.title) + '</div>' +
         (chipsHtml ? '<div class="chips">' + chipsHtml + '</div>' : '') +
