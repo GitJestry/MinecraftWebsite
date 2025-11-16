@@ -775,6 +775,24 @@
   let editorOn = false;
   let projectsById = Object.create(null);
   const modalDefaults = new Map();
+  let dynamicModalHost = null;
+
+  function getDynamicModalHost() {
+    if (dynamicModalHost && document.body && document.body.contains(dynamicModalHost)) {
+      return dynamicModalHost;
+    }
+    if (!document.body) {
+      return null;
+    }
+    dynamicModalHost = document.getElementById('editor-generated-modals');
+    if (!dynamicModalHost) {
+      dynamicModalHost = document.createElement('div');
+      dynamicModalHost.id = 'editor-generated-modals';
+      dynamicModalHost.style.display = 'contents';
+      document.body.appendChild(dynamicModalHost);
+    }
+    return dynamicModalHost;
+  }
   let currentMode = 'create'; // 'create' | 'edit'
   let editingProject = null;
   let currentModalId = '';
@@ -1093,6 +1111,101 @@
     return { modalId, modal };
   }
 
+  function ensureDynamicProjectModal(project) {
+    if (!project || typeof document === 'undefined') {
+      return { modalId: '', modal: null };
+    }
+    const ref = getModalRef(project);
+    if (ref.modalId && ref.modal) {
+      return ref;
+    }
+    const safeType = normaliseType(project.type);
+    const fallbackId = (project.id && project.id.trim()) || slugifyId(project.title || 'project');
+    if (!fallbackId) {
+      return { modalId: '', modal: null };
+    }
+    const baseId = `${safeType === 'printing' ? 'pr' : 'dp'}-${fallbackId}`;
+    let modalId = baseId;
+    let counter = 1;
+    while (document.getElementById(modalId)) {
+      modalId = `${baseId}-${counter++}`;
+    }
+    const host = getDynamicModalHost();
+    if (!host) {
+      return { modalId: '', modal: null };
+    }
+    const titleId = `${modalId}-title`;
+    const heroTitle = escapeHtml(project.title || 'Project');
+    const heroSubtitle = escapeHtml(
+      (typeof project.modalHero === 'string' && project.modalHero.trim())
+        || (typeof project.shortDescription === 'string' ? project.shortDescription.trim() : ''),
+    );
+    const badgesHtml = (typeof project.modalBadges === 'string' && project.modalBadges.trim())
+      ? project.modalBadges.trim()
+      : buildAutoBadgesHtml(safeType, project.status, project.mcVersion, project.tags, project.category);
+    const heroActionsHtml = (typeof project.modalHeroActions === 'string' && project.modalHeroActions.trim())
+      ? project.modalHeroActions.trim()
+      : buildAutoHeroActionsHtml(project.downloadFile, fallbackId);
+    let bodyHtml = (typeof project.modalBody === 'string' && project.modalBody.trim())
+      ? project.modalBody
+      : '';
+    if (!bodyHtml) {
+      const sidebar = buildAutoSidebarData(safeType, project.status, project.category, project.mcVersion, project.tags);
+      const fallbackBody = {
+        infoTitle: sidebar.infoTitle,
+        infoItems: sidebar.infoItems,
+        tagsTitle: sidebar.tagsTitle,
+        tags: sidebar.tags,
+        description: project.shortDescription ? [project.shortDescription] : [],
+        steps: [],
+        versions: [],
+        changelog: [],
+        gallery: [],
+      };
+      bodyHtml = buildModalBodyHtml(modalId, fallbackBody, fallbackId);
+    }
+    const statsHtml = (typeof project.modalStats === 'string' && project.modalStats.trim())
+      ? project.modalStats.trim()
+      : buildAutoStatsHtml({
+          latestVersion: '',
+          updatedAt: project.updatedAt || project.createdAt || new Date().toISOString(),
+          projectId: fallbackId,
+          downloadUrl: project.downloadFile || '',
+        });
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = modalId;
+    modal.dataset.projectId = project.id || fallbackId;
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-hidden', 'true');
+    modal.setAttribute('aria-labelledby', titleId);
+    modal.innerHTML =
+      `<div class="modal-backdrop" data-close="${modalId}"></div>` +
+      `<div class="modal-content" role="document">` +
+      `<button aria-label="Close" class="modal-close" data-close="${modalId}">×</button>` +
+      `<header class="modal-hero">` +
+      `<div class="title" id="${titleId}">${heroTitle}</div>` +
+      `<div class="muted">${heroSubtitle}</div>` +
+      `<div class="badges">${badgesHtml}</div>` +
+      `<div class="hero-actions">${heroActionsHtml}</div>` +
+      `<div class="stats">${statsHtml}</div>` +
+      `</header>` +
+      `<div class="modal-body">${bodyHtml}</div>` +
+      `</div>`;
+    host.appendChild(modal);
+    rememberModalDefaults(modalId, modal);
+    initModalTabs(modal);
+    const heroEl = modal.querySelector('.modal-hero .muted');
+    if (heroEl) heroEl.hidden = !heroSubtitle;
+    const badgesEl = modal.querySelector('.modal-hero .badges');
+    if (badgesEl) badgesEl.hidden = !badgesHtml.trim();
+    const actionsEl = modal.querySelector('.modal-hero .hero-actions');
+    if (actionsEl) actionsEl.hidden = !heroActionsHtml.trim();
+    const statsEl = modal.querySelector('.modal-hero .stats');
+    if (statsEl) statsEl.hidden = !statsHtml.trim();
+    return { modalId, modal };
+  }
+
   function extractModalHero(project) {
     const { modal } = getModalRef(project);
     if (!modal) return '';
@@ -1251,6 +1364,61 @@
       || 'file';
   }
 
+  function readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+      if (typeof FileReader === 'undefined') {
+        reject(new Error('file_reader_unavailable'));
+        return;
+      }
+      try {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('file_read_failed'));
+        reader.onload = () => {
+          if (typeof reader.result !== 'string') {
+            reject(new Error('file_read_failed'));
+            return;
+          }
+          const dataUrl = reader.result;
+          const comma = dataUrl.indexOf(',');
+          resolve(comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl);
+        };
+        reader.readAsDataURL(file);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  async function uploadEditorAsset(file, options) {
+    if (!file) {
+      throw new Error('missing_file');
+    }
+    if (!assertEditorAvailable(false)) {
+      throw new Error('upload_unavailable');
+    }
+    const opts = options && typeof options === 'object' ? options : {};
+    const prefix = typeof opts.prefix === 'string' ? opts.prefix : '';
+    const filename = typeof opts.filename === 'string' && opts.filename.trim()
+      ? opts.filename.trim()
+      : sanitizeFilename(file.name);
+    const base64 = await readFileAsBase64(file);
+    const payload = {
+      prefix,
+      filename,
+      contentType: file.type || '',
+      data: base64,
+    };
+    const response = await api('/editor/uploads', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      retryAttempts: 0,
+    });
+    if (!response || typeof response.path !== 'string') {
+      throw new Error('upload_failed');
+    }
+    return response;
+  }
+
   function enhanceFilePickerTargets(root) {
     const scope = root || document;
     if (!scope || typeof scope.querySelectorAll !== 'function') {
@@ -1283,21 +1451,38 @@
       fileInput.hidden = true;
 
       trigger.addEventListener('click', () => fileInput.click());
-      fileInput.addEventListener('change', () => {
+      fileInput.addEventListener('change', async () => {
         const file = fileInput.files && fileInput.files[0];
         if (!file) {
+          status.textContent = helper || 'Kein Upload ausgewählt.';
+          input.value = '';
           return;
         }
         const sanitized = sanitizeFilename(file.name);
-        const finalPath = prefix ? prefix + sanitized : sanitized;
-        input.value = finalPath;
-        try {
-          input.dispatchEvent(new Event('input', { bubbles: true }));
-          input.dispatchEvent(new Event('change', { bubbles: true }));
-        } catch (err) {}
-        const sizeLabel = formatFileSize(file.size);
-        status.textContent = sizeLabel ? `${file.name} (${sizeLabel})` : file.name;
+        const fallbackPath = prefix ? prefix + sanitized : sanitized;
+        status.textContent = 'Upload läuft …';
         status.title = file.name;
+        trigger.disabled = true;
+        try {
+          const result = await uploadEditorAsset(file, { prefix, filename: sanitized });
+          const finalPath = result && result.path ? result.path : fallbackPath;
+          input.value = finalPath;
+          try {
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+          } catch (err) {}
+          const sizeSource = (result && Number.isFinite(result.size)) ? result.size : file.size;
+          const sizeLabel = formatFileSize(sizeSource);
+          status.textContent = sizeLabel ? `${sanitized} (${sizeLabel})` : sanitized;
+          status.title = file.name;
+        } catch (err) {
+          console.warn('Upload fehlgeschlagen:', err);
+          status.textContent = 'Upload fehlgeschlagen';
+          status.title = (err && err.message) || 'Upload fehlgeschlagen';
+          input.value = '';
+        } finally {
+          trigger.disabled = false;
+        }
       });
 
       actions.appendChild(trigger);
@@ -2169,7 +2354,10 @@
     const subcats = category || (tags.join(',') || '');
     if (subcats) card.setAttribute('data-subcats', subcats);
 
-    const modalInfo = getModalRef(project);
+    let modalInfo = getModalRef(project);
+    if (!modalInfo.modalId || !modalInfo.modal) {
+      modalInfo = ensureDynamicProjectModal(project);
+    }
     const modalId = modalInfo.modalId;
     if (modalId) {
       card.dataset.modalTarget = modalId;
