@@ -42,3 +42,20 @@ If you prefer to drag files into a cloud folder and let automation update the si
 4. **Trigger the workflow** manually from the Actions tab or wait for the scheduled run (every 6 hours). When new or updated files are detected, the workflow downloads them, commits the changes, and pushes directly to `main`.
 
 You can customize the cron schedule, add additional directories to sync, or adapt `scripts/sync_uploads.py` to point at other providers if you prefer a different storage service.
+
+## Runtime download analytics configuration
+
+Because the static site is published via GitHub Pages, download counters and upload handling are provided by a separate Node.js
+service that runs at runtime. The front-end now lets you point all download telemetry at that service without rebuilding the
+bundle:
+
+- **HTML attributes** — set `data-download-analytics` on the `<html>` element to the absolute URL of your analytics endpoint
+  (for example `https://downloads.example.com/analytics/downloads`). Use `data-download-counts` to point at the JSON fallback
+  file; set it to `none` if you want to disable the fallback fetch entirely.
+- **Meta tags** — alternatively, add `<meta name="download-analytics" content="…"/>` or `<meta name="download-counts-url"
+  content="…"/>`.
+- **Global variables** — if you prefer to inject configuration at runtime, assign `window.MIRL_DOWNLOADS_ENDPOINT` and/or
+  `window.MIRL_DOWNLOAD_COUNTS_URL` before loading `assets/js/site.js`.
+
+All download counters (`data-download-count`) and automatic file-size labels reuse the configured endpoint, so once the
+runtime service is reachable the UI automatically reflects live download totals.
