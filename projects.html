@@ -537,11 +537,20 @@ main p, main li, .content p, .content li, .main-content p, .main-content li, art
 .step { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start; background: rgba(0,0,0,.04); padding: 12px; border-radius: 12px; }
 @media (prefers-color-scheme: dark) { .step { background: rgba(255,255,255,.08); } }
 .step::before { counter-increment: step; content: counter(step); width: 28px; height: 28px; display: inline-grid; place-items: center; border-radius: 999px; background: #111; color:#fff; font-weight: 700; margin-top: 2px; }
-.versions-table { width: 100%; border-collapse: collapse; font-size: .95rem; }
-.versions-table th, .versions-table td { padding: 10px 8px; border-bottom: 1px solid rgba(0,0,0,.08); text-align: left; }
-.versions-table .version-file-note { margin-top: 4px; font-size: .85rem; color: rgba(0,0,0,.6); }
+/* Versions & changelog timeline */
+.version-timeline { display: flex; flex-direction: column; gap: 12px; }
+.version-entry { border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; background: rgba(15,23,42,0.02); }
+.version-entry.head { box-shadow: 0 8px 20px rgba(0,0,0,0.08); border-color: rgba(59,130,246,0.45); }
+.version-entry-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.version-entry-title { font-weight: 700; font-size: 1.05rem; }
+.version-entry-meta { color: var(--muted); font-size: .9rem; }
+.version-entry-notes { margin: 8px 0 0; color: var(--muted-strong); }
+.version-entry-actions { display: flex; align-items: center; gap: 8px; }
+.version-entry .btn.ghost { padding: 6px 12px; }
+.version-entry .version-file-note { margin-top: 2px; font-size: .9rem; color: var(--muted); }
 @media (prefers-color-scheme: dark) {
-  .versions-table .version-file-note { color: rgba(255,255,255,.7); }
+  .version-entry { background: rgba(15,23,42,0.25); border-color: rgba(148,163,184,0.3); }
+  .version-entry.head { border-color: rgba(96,165,250,0.7); }
 }
 .gallery { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; }
 .gallery img { width: 100%; height: 180px; object-fit: cover; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
@@ -868,15 +877,15 @@ dialog[open] .content {
           <button class="editor-repeat-add" data-add="description" type="button">+ Absatz hinzufügen</button>
         </div>
         <div class="field">
-          <p class="editor-muted-label">Versionstabelle</p>
+          <p class="editor-muted-label">Versionen &amp; Changelog</p>
           <div class="editor-repeat" id="pe-modal-versions-list"></div>
+          <p class="hint">Eine Zeile pro Release: Version, Datum, kompatible Minecraft-Version sowie Download und kurzer Changelog.</p>
+          <div class="editor-version-chain" id="pe-version-chain">
+            <p class="editor-version-chain-title">Upload-Historie</p>
+            <p class="editor-version-chain-note">Neueste Version oben – jede Version benötigt einen Namen, eine Datei/URL und einen kurzen Changelog.</p>
+            <div aria-live="polite" class="editor-version-chain-list"></div>
+          </div>
           <button class="editor-repeat-add" data-add="version" type="button">+ Version hinzufügen</button>
-          <p class="hint">Jede neue Version ergänzt automatisch den Versionsverlauf und den Changelog.</p>
-        </div>
-        <div class="field">
-          <p class="editor-muted-label">Changelog-Einträge</p>
-          <div class="editor-repeat" id="pe-modal-changelog-list"></div>
-          <button class="editor-repeat-add" data-add="changelog" type="button">+ Eintrag hinzufügen</button>
         </div>
         <div class="field">
           <p class="editor-muted-label">Galerie-Bilder</p>
@@ -1117,8 +1126,7 @@ window.addEventListener('load', function() {
 <nav aria-label="Jetpack Datapack Tabs" class="tabs" role="tablist">
 <button aria-selected="true" class="active" data-tab="description" role="tab">Description</button>
 <button aria-selected="false" data-tab="gallery" role="tab">Gallery</button>
-<button aria-selected="false" data-tab="changelog" role="tab"><span class="lang-en">Changelog</span><span class="lang-de">Änderungsprotokoll</span></button>
-<button aria-selected="false" data-tab="versions" role="tab">Versions</button>
+<button aria-selected="false" data-tab="versions" role="tab"><span class="lang-en">Versions &amp; Changelog</span><span class="lang-de">Versionen &amp; Changelog</span></button>
 </nav>
 <div class="tabpanels">
 <div class="active prose" id="dp-jetpack-description" role="tabpanel">
@@ -1134,17 +1142,28 @@ window.addEventListener('load', function() {
 </div>
 </div>
 <div id="dp-jetpack-versions" role="tabpanel">
-<table class="versions-table">
-<thead><tr><th>Release</th><th>Minecraft</th><th>Date</th><th>File</th></tr></thead>
-<tbody>
-<tr><td>v1.0.3</td><td>1.21.8</td><td>2025‑09‑10</td><td><a data-download-file="jetpack-datapack-1.21.8.zip" data-track-download="jetpack-datapack" download="" href="downloads/jetpack-datapack-1.21.8.zip"><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></a><div class="version-file-note">Balance tweaks, Fuel HUD polish und Nether-Portale gefixt.</div></td></tr>
-<tr><td>v1.0.2</td><td>1.21.4</td><td>2025‑07‑22</td><td><a data-download-file="jetpack-datapack-1.21.8.zip" data-track-download="jetpack-datapack" download="" href="downloads/jetpack-datapack-1.21.8.zip"><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></a><div class="version-file-note">Initialer Release für 1.21.4 mit Survival-Rezepten.</div></td></tr>
-</tbody>
-</table>
+<div class="version-timeline">
+<article class="version-entry head">
+<div class="version-entry-header">
+<div>
+<div class="version-entry-title">v1.0.3</div>
+<div class="version-entry-meta">2025‑09‑10 • Minecraft 1.21.8</div>
 </div>
-<div class="prose" id="dp-jetpack-changelog" role="tabpanel">
-<p><strong>v1.0.3</strong> – Balance tweaks, better fuel UI, bugfix for nether portals.</p>
-<p><strong>v1.0.2</strong> – Initial public release for 1.21.4.</p>
+<div class="version-entry-actions"><a class="btn ghost dl" data-download-file="jetpack-datapack-1.21.8.zip" data-track-download="jetpack-datapack" download="" href="downloads/jetpack-datapack-1.21.8.zip"><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></a></div>
+</div>
+<p class="version-entry-notes">Balance tweaks, Fuel HUD polish und Nether-Portale gefixt.</p>
+</article>
+<article class="version-entry">
+<div class="version-entry-header">
+<div>
+<div class="version-entry-title">v1.0.2</div>
+<div class="version-entry-meta">2025‑07‑22 • Minecraft 1.21.4</div>
+</div>
+<div class="version-entry-actions"><a class="btn ghost dl" data-download-file="jetpack-datapack-1.21.8.zip" data-track-download="jetpack-datapack" download="" href="downloads/jetpack-datapack-1.21.8.zip"><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></a></div>
+</div>
+<p class="version-entry-notes">Initialer Release für 1.21.4 mit Survival-Rezepten.</p>
+</article>
+</div>
 </div>
 <div id="dp-jetpack-gallery" role="tabpanel">
 <div class="gallery">
