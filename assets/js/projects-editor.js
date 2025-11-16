@@ -2067,6 +2067,25 @@
     modalDescriptionList.appendChild(row);
   }
 
+  function setDescriptionRows(items) {
+    if (!modalDescriptionList) return;
+    clearContainer(modalDescriptionList);
+    const list = Array.isArray(items) && items.length ? items : [''];
+    list.forEach((item) => addDescriptionRow(item));
+  }
+
+  function collectDescriptionRows() {
+    if (!modalDescriptionList) return [];
+    return Array.from(modalDescriptionList.querySelectorAll('.editor-repeat-row'))
+      .map((row) => {
+        const textarea = row.querySelector('[data-field="text"]');
+        if (!textarea) return null;
+        const value = (textarea.value || '').trim();
+        return value ? value : null;
+      })
+      .filter(Boolean);
+  }
+
   function addVersionRow(data = {}) {
     if (!modalVersionsList) return;
     const row = document.createElement('div');
