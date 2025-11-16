@@ -54,6 +54,7 @@
   let localProjectsStore = null;
   let labelHistoryCache = null;
   const chipFieldControllers = Object.create(null);
+  let projectsById = Object.create(null);
   const labelCollator = (typeof Intl !== 'undefined' && typeof Intl.Collator === 'function')
     ? new Intl.Collator('de', { sensitivity: 'base' })
     : null;
@@ -1201,7 +1202,6 @@
   const LS_KEY = 'mirl.editor.token';
   let token = null;
   let editorOn = false;
-  let projectsById = Object.create(null);
   const modalDefaults = new Map();
   let dynamicModalHost = null;
 
