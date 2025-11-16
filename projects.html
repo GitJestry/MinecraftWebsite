@@ -856,59 +856,18 @@ dialog[open] .content {
       <textarea aria-hidden="true" hidden id="pe-modal-actions" name="modalHeroActions"></textarea>
       <textarea aria-hidden="true" hidden id="pe-modal-stats" name="modalStats"></textarea>
       <div class="field field--full editor-section">
-        <h3 class="editor-section-title">Modal-Badges</h3>
-        <div class="editor-repeat" id="pe-modal-badges-list"></div>
-        <button class="editor-repeat-add" data-add="badge" type="button">+ Badge hinzufügen</button>
-        <p class="hint">Badge-Beschriftungen unter dem Titel. Aktiviere „Punkt anzeigen“, um den Status-Indikator vor dem Text zu verwenden.</p>
-      </div>
-      <div class="field field--full editor-section">
-        <h3 class="editor-section-title">Modal-Aktionen</h3>
-        <div class="editor-repeat" id="pe-modal-actions-list"></div>
-        <button class="editor-repeat-add" data-add="action" type="button">+ Aktion hinzufügen</button>
-        <p class="hint">Buttons im Header des Popups. Ohne Einträge wird der Standard-Download verwendet.</p>
-      </div>
-      <div class="field field--full editor-section">
-        <h3 class="editor-section-title">Modal-Statistiken</h3>
-        <div class="editor-repeat" id="pe-modal-stats-list"></div>
-        <button class="editor-repeat-add" data-add="stat" type="button">+ Statistik hinzufügen</button>
-        <p class="hint">Wertekacheln neben den Aktionen, z. B. Version, Größe oder Downloads.</p>
-      </div>
-      <div class="field field--full editor-section">
-        <h3 class="editor-section-title">Modal-Infos &amp; Inhalt</h3>
-        <div class="editor-subgrid two">
-          <div class="field">
-            <label for="pe-modal-info-title">Titel (Info-Karte)</label>
-            <input id="pe-modal-info-title" placeholder="Project info" type="text"/>
-          </div>
-          <div class="field">
-            <label for="pe-modal-tags-title">Titel (Tag-Karte)</label>
-            <input id="pe-modal-tags-title" placeholder="Tags" type="text"/>
-          </div>
-        </div>
-        <div class="field">
-          <p class="editor-muted-label">Infozeilen</p>
-          <div class="editor-repeat" id="pe-modal-info-list"></div>
-          <button class="editor-repeat-add" data-add="info" type="button">+ Infozeile hinzufügen</button>
-        </div>
-        <div class="field">
-          <p class="editor-muted-label">Tags</p>
-          <div class="editor-repeat" id="pe-modal-tags-list"></div>
-          <button class="editor-repeat-add" data-add="tag" type="button">+ Tag hinzufügen</button>
-        </div>
+        <h3 class="editor-section-title">Modal-Inhalt</h3>
+        <p class="hint">Projektinfos, Badges, Download-Button und Statistiken werden automatisch aus den Feldern oben erzeugt. Hier pflegst du nur die inhaltlichen Bereiche.</p>
         <div class="field">
           <p class="editor-muted-label">Beschreibung (Absätze)</p>
           <div class="editor-repeat" id="pe-modal-description-list"></div>
           <button class="editor-repeat-add" data-add="description" type="button">+ Absatz hinzufügen</button>
         </div>
         <div class="field">
-          <p class="editor-muted-label">Installation (Schritte)</p>
-          <div class="editor-repeat" id="pe-modal-steps-list"></div>
-          <button class="editor-repeat-add" data-add="step" type="button">+ Schritt hinzufügen</button>
-        </div>
-        <div class="field">
           <p class="editor-muted-label">Versionstabelle</p>
           <div class="editor-repeat" id="pe-modal-versions-list"></div>
           <button class="editor-repeat-add" data-add="version" type="button">+ Version hinzufügen</button>
+          <p class="hint">Jede neue Version ergänzt automatisch den Versionsverlauf und den Changelog.</p>
         </div>
         <div class="field">
           <p class="editor-muted-label">Changelog-Einträge</p>
