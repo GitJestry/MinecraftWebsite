@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import express from 'express';
+import fs from 'node:fs/promises';
 import session from 'express-session';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
@@ -14,6 +15,14 @@ import {
 import { totp } from 'otplib';
 import DownloadStore from './download-store.js';
 import { getHashedClientIp } from './request-utils.js';
+import {
+  decodeBase64Payload,
+  isMultipartFormData,
+  MAX_UPLOAD_BYTES,
+  parseMultipartFormData,
+  resolveUploadDestination,
+  sanitizeUploadFilename,
+} from './upload-utils.js';
 
 const {
   NODE_ENV,
@@ -199,11 +208,27 @@ app.use((req, res, next) => {
 
 const csrfProtection = csrf({ cookie: false });
 
+const multipartFormParser = express.raw({
+  limit: MAX_UPLOAD_BYTES + 64 * 1024,
+  type: (req) => isMultipartFormData(req.headers['content-type'] || ''),
+});
+
 const requirePendingMfa = (req, res, next) => {
   if (!req.session?.pendingUser) {
     return res.status(401).json({ error: 'login_required' });
   }
   next();
+};
+
+const requireEditorSession = (req, res, next) => {
+  const user = req.session?.user;
+  if (!user) {
+    return res.status(401).json({ error: 'login_required' });
+  }
+  if (!Array.isArray(user.roles) || !user.roles.includes('editor')) {
+    return res.status(403).json({ error: 'insufficient_scope' });
+  }
+  return next();
 };
 
 const finishAuthentication = (req, res, user, method) => {
@@ -226,6 +251,34 @@ const finishAuthentication = (req, res, user, method) => {
       return res.status(200).json({ status: 'ok' });
     });
   });
+};
+
+const buildMultipartUpload = (req) => {
+  const parsed = parseMultipartFormData(req.body, req.headers['content-type'] || '');
+  if (!parsed) {
+    return null;
+  }
+  const filePart = parsed.files.find((part) => part.fieldName === 'file') || parsed.files[0];
+  if (!filePart) {
+    return null;
+  }
+  const fields = parsed.fields || {};
+  return {
+    buffer: filePart.data,
+    filename: fields.filename || fields.name || filePart.filename,
+    prefix: fields.prefix || fields.target || '',
+    contentType: filePart.contentType || fields.contentType || '',
+  };
+};
+
+const buildJsonUpload = (req) => {
+  const body = (req.body && typeof req.body === 'object' && !Buffer.isBuffer(req.body)) ? req.body : {};
+  return {
+    buffer: decodeBase64Payload(body.data || body.base64 || ''),
+    filename: body.filename || body.name || 'upload.bin',
+    prefix: body.prefix || body.target || '',
+    contentType: typeof body.contentType === 'string' ? body.contentType : '',
+  };
 };
 
 app.get('/healthz', (req, res) => {
@@ -455,6 +508,46 @@ app.post('/auth/logout', csrfProtection, (req, res) => {
     return res.status(204).end();
   });
 });
+
+app.post(
+  '/editor/uploads',
+  requireEditorSession,
+  multipartFormParser,
+  csrfProtection,
+  async (req, res, next) => {
+    try {
+      const isMultipart = isMultipartFormData(req.headers['content-type'] || '');
+      const payload = isMultipart ? buildMultipartUpload(req) : buildJsonUpload(req);
+      if (!payload || !payload.buffer || payload.buffer.length === 0) {
+        return res.status(400).json({ error: 'invalid_data' });
+      }
+      const destination = resolveUploadDestination(payload.prefix);
+      if (!destination) {
+        return res.status(400).json({ error: 'invalid_prefix' });
+      }
+      if (payload.buffer.length > MAX_UPLOAD_BYTES) {
+        return res.status(413).json({ error: 'file_too_large' });
+      }
+      const normalizedType = (payload.contentType || '').toLowerCase();
+      if (destination.publicPrefix.startsWith('assets/img/') && normalizedType) {
+        if (!normalizedType.startsWith('image/')) {
+          return res.status(400).json({ error: 'invalid_type' });
+        }
+      }
+      const filename = sanitizeUploadFilename(payload.filename || 'upload.bin');
+      await fs.mkdir(destination.directoryUrl, { recursive: true });
+      const fileUrl = new URL(filename, destination.directoryUrl);
+      await fs.writeFile(fileUrl, payload.buffer);
+      return res.status(201).json({
+        path: destination.publicPrefix + filename,
+        size: payload.buffer.length,
+        contentType: payload.contentType || 'application/octet-stream',
+      });
+    } catch (error) {
+      return next(error);
+    }
+  },
+);
 
 app.get('/analytics/downloads', async (req, res) => {
   try {

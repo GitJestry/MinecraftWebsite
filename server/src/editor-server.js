@@ -3,6 +3,14 @@ import express from 'express';
 import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import DownloadStore from './download-store.js';
+import {
+  decodeBase64Payload,
+  isMultipartFormData,
+  MAX_UPLOAD_BYTES,
+  parseMultipartFormData,
+  resolveUploadDestination,
+  sanitizeUploadFilename,
+} from './upload-utils.js';
 
 const { PORT = 3001 } = process.env;
 
@@ -123,12 +131,6 @@ app.post('/editor/logout', requireAuth, (req, res) => {
 // --- Projects store ---
 
 const projectsFile = new URL('../data/projects.json', import.meta.url);
-const uploadTargets = [
-  { prefix: 'assets/img/', url: new URL('../../assets/img/', import.meta.url) },
-  { prefix: 'downloads/', url: new URL('../../downloads/', import.meta.url) },
-];
-const MAX_UPLOAD_BYTES = 8 * 1024 * 1024; // 8 MB
-
 async function readProjects() {
   try {
     const txt = await fs.readFile(projectsFile, 'utf8');
@@ -153,60 +155,6 @@ function slugify(str) {
     .trim()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)+/g, '') || 'project';
-}
-
-function sanitizeUploadSegment(value) {
-  return String(value || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-zA-Z0-9._-]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
-
-function sanitizeUploadFilename(name) {
-  const base = String(name || '').split(/[\\/]/).pop() || 'file';
-  return sanitizeUploadSegment(base) || 'file';
-}
-
-function normaliseUploadPrefix(value) {
-  if (!value) return '';
-  const trimmed = String(value).trim().replace(/\\/g, '/');
-  const withoutLeading = trimmed.replace(/^\/+/, '');
-  const withoutTrailing = withoutLeading.replace(/\/+$/, '');
-  if (!withoutTrailing) return '';
-  return withoutTrailing + '/';
-}
-
-function resolveUploadDestination(prefix) {
-  const normalized = normaliseUploadPrefix(prefix);
-  if (!normalized) return null;
-  const target = uploadTargets.find((entry) => normalized.startsWith(entry.prefix));
-  if (!target) return null;
-  const remainder = normalized.slice(target.prefix.length);
-  const segments = remainder
-    .split('/')
-    .map((segment) => sanitizeUploadSegment(segment))
-    .filter(Boolean);
-  const subPath = segments.length ? `${segments.join('/')}/` : '';
-  const directoryUrl = new URL(subPath || '.', target.url);
-  const publicPrefix = target.prefix + subPath;
-  return { directoryUrl, publicPrefix };
-}
-
-function decodeBase64Payload(payload) {
-  if (typeof payload !== 'string') {
-    return null;
-  }
-  const sanitized = payload.trim().replace(/\s+/g, '');
-  if (!sanitized) {
-    return null;
-  }
-  try {
-    return Buffer.from(sanitized, 'base64');
-  } catch (err) {
-    return null;
-  }
 }
 
 function ensureModalFields(target, source) {
@@ -296,25 +244,58 @@ app.post('/editor/projects', requireAuth, async (req, res, next) => {
   }
 });
 
-app.post('/editor/uploads', requireAuth, async (req, res, next) => {
+const multipartFormParser = express.raw({
+  limit: MAX_UPLOAD_BYTES + 64 * 1024,
+  type: (req) => isMultipartFormData(req.headers['content-type'] || ''),
+});
+
+function extractMultipartUpload(req) {
+  const parsed = parseMultipartFormData(req.body, req.headers['content-type'] || '');
+  if (!parsed) {
+    return null;
+  }
+  const filePart = parsed.files.find((part) => part.fieldName === 'file') || parsed.files[0];
+  if (!filePart) {
+    return null;
+  }
+  const fields = parsed.fields || {};
+  return {
+    buffer: filePart.data,
+    filename: fields.filename || fields.name || filePart.filename,
+    prefix: fields.prefix || fields.target || '',
+    contentType: filePart.contentType || fields.contentType || '',
+  };
+}
+
+function extractJsonUpload(req) {
+  const body = (req.body && typeof req.body === 'object' && !Buffer.isBuffer(req.body)) ? req.body : {};
+  return {
+    buffer: decodeBase64Payload(body.data || body.base64 || ''),
+    filename: body.filename || body.name || 'upload.bin',
+    prefix: body.prefix || body.target || '',
+    contentType: typeof body.contentType === 'string' ? body.contentType : '',
+  };
+}
+
+app.post('/editor/uploads', requireAuth, multipartFormParser, async (req, res, next) => {
   try {
-    const body = req.body || {};
-    const destination = resolveUploadDestination(body.prefix || body.target || '');
+    const isMultipart = isMultipartFormData(req.headers['content-type'] || '');
+    const payload = isMultipart ? extractMultipartUpload(req) : extractJsonUpload(req);
+    if (!payload || !payload.buffer) {
+      return res.status(400).json({ error: 'invalid_data' });
+    }
+    const destination = resolveUploadDestination(payload.prefix);
     if (!destination) {
       return res.status(400).json({ error: 'invalid_prefix' });
     }
-    const filename = sanitizeUploadFilename(body.filename || body.name || 'upload.bin');
-    const buffer = decodeBase64Payload(body.data || body.base64 || '');
-    if (!buffer || buffer.length === 0) {
-      return res.status(400).json({ error: 'invalid_data' });
-    }
+    const filename = sanitizeUploadFilename(payload.filename || 'upload.bin');
+    const buffer = payload.buffer;
     if (buffer.length > MAX_UPLOAD_BYTES) {
       return res.status(413).json({ error: 'file_too_large' });
     }
-    const contentType = typeof body.contentType === 'string' ? body.contentType : '';
+    const contentType = (payload.contentType || '').toLowerCase();
     if (destination.publicPrefix.startsWith('assets/img/') && contentType) {
-      const type = contentType.toLowerCase();
-      if (!type.startsWith('image/')) {
+      if (!contentType.startsWith('image/')) {
         return res.status(400).json({ error: 'invalid_type' });
       }
     }
@@ -324,7 +305,7 @@ app.post('/editor/uploads', requireAuth, async (req, res, next) => {
     return res.status(201).json({
       path: destination.publicPrefix + filename,
       size: buffer.length,
-      contentType,
+      contentType: payload.contentType || 'application/octet-stream',
     });
   } catch (err) {
     return next(err);
