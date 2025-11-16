@@ -242,6 +242,62 @@ html:not(.editor-mode-on) .editor-add-card {
   flex-basis: 100%;
 }
 
+.editor-version-row {
+  border: 1px solid rgba(148,163,184,0.35);
+  border-radius: 16px;
+  padding: 1rem 1.25rem 1rem 1rem;
+  gap: 0.8rem;
+  background: rgba(15,23,42,0.015);
+}
+
+.editor-version-row > *:not(.editor-repeat-remove) {
+  flex: 1 1 100%;
+}
+
+.editor-version-row .editor-repeat-remove {
+  top: 1rem;
+  right: 0.35rem;
+  transform: none;
+}
+
+.editor-version-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
+}
+
+.editor-version-grid label,
+.editor-version-downloads label,
+.editor-version-notes-label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 0.2rem;
+}
+
+.editor-version-downloads {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.editor-version-downloads small {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.editor-version-notes {
+  width: 100%;
+  min-height: 96px;
+}
+
 .editor-repeat-remove {
   position: absolute;
   top: 50%;
@@ -537,11 +593,87 @@ main p, main li, .content p, .content li, .main-content p, .main-content li, art
 .step { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start; background: rgba(0,0,0,.04); padding: 12px; border-radius: 12px; }
 @media (prefers-color-scheme: dark) { .step { background: rgba(255,255,255,.08); } }
 .step::before { counter-increment: step; content: counter(step); width: 28px; height: 28px; display: inline-grid; place-items: center; border-radius: 999px; background: #111; color:#fff; font-weight: 700; margin-top: 2px; }
-.versions-table { width: 100%; border-collapse: collapse; font-size: .95rem; }
-.versions-table th, .versions-table td { padding: 10px 8px; border-bottom: 1px solid rgba(0,0,0,.08); text-align: left; }
-.versions-table .version-file-note { margin-top: 4px; font-size: .85rem; color: rgba(0,0,0,.6); }
+.release-log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.release-log-entry {
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 14px;
+  padding: 1rem 1.1rem 1.05rem;
+  background: rgba(0,0,0,.02);
+}
+
 @media (prefers-color-scheme: dark) {
-  .versions-table .version-file-note { color: rgba(255,255,255,.7); }
+  .release-log-entry {
+    border-color: rgba(255,255,255,.12);
+    background: rgba(255,255,255,.06);
+  }
+}
+
+.release-log-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.8rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.release-version {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.release-meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  color: rgba(0,0,0,.6);
+}
+
+.release-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(0,0,0,.05);
+}
+
+@media (prefers-color-scheme: dark) {
+  .release-meta { color: rgba(255,255,255,.7); }
+  .release-meta span { background: rgba(255,255,255,.08); }
+}
+
+.release-log-notes {
+  margin-top: 0.65rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.release-log-download {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.release-log-download .release-file-note {
+  font-size: 0.82rem;
+  color: rgba(0,0,0,.65);
+}
+
+@media (prefers-color-scheme: dark) {
+  .release-log-download .release-file-note {
+    color: rgba(255,255,255,.7);
+  }
 }
 .gallery { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; }
 .gallery img { width: 100%; height: 180px; object-fit: cover; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
@@ -868,15 +1000,10 @@ dialog[open] .content {
           <button class="editor-repeat-add" data-add="description" type="button">+ Absatz hinzufügen</button>
         </div>
         <div class="field">
-          <p class="editor-muted-label">Versionstabelle</p>
+          <p class="editor-muted-label">Release-Historie</p>
+          <p class="hint">Jeder Eintrag kombiniert Version, Kurzbeschreibung und Download. Neueste Version oben eintragen.</p>
           <div class="editor-repeat" id="pe-modal-versions-list"></div>
           <button class="editor-repeat-add" data-add="version" type="button">+ Version hinzufügen</button>
-          <p class="hint">Jede neue Version ergänzt automatisch den Versionsverlauf und den Changelog.</p>
-        </div>
-        <div class="field">
-          <p class="editor-muted-label">Changelog-Einträge</p>
-          <div class="editor-repeat" id="pe-modal-changelog-list"></div>
-          <button class="editor-repeat-add" data-add="changelog" type="button">+ Eintrag hinzufügen</button>
         </div>
         <div class="field">
           <p class="editor-muted-label">Galerie-Bilder</p>
@@ -1117,8 +1244,7 @@ window.addEventListener('load', function() {
 <nav aria-label="Jetpack Datapack Tabs" class="tabs" role="tablist">
 <button aria-selected="true" class="active" data-tab="description" role="tab">Description</button>
 <button aria-selected="false" data-tab="gallery" role="tab">Gallery</button>
-<button aria-selected="false" data-tab="changelog" role="tab"><span class="lang-en">Changelog</span><span class="lang-de">Änderungsprotokoll</span></button>
-<button aria-selected="false" data-tab="versions" role="tab">Versions</button>
+<button aria-selected="false" data-tab="releases" role="tab"><span class="lang-en">Release log</span><span class="lang-de">Versionsverlauf</span></button>
 </nav>
 <div class="tabpanels">
 <div class="active prose" id="dp-jetpack-description" role="tabpanel">
@@ -1133,18 +1259,37 @@ window.addEventListener('load', function() {
 <div class="step"><div></div><div>Optional: run <code>/function jetpack:setup</code> to see config options.</div></div>
 </div>
 </div>
-<div id="dp-jetpack-versions" role="tabpanel">
-<table class="versions-table">
-<thead><tr><th>Release</th><th>Minecraft</th><th>Date</th><th>File</th></tr></thead>
-<tbody>
-<tr><td>v1.0.3</td><td>1.21.8</td><td>2025‑09‑10</td><td><a data-download-file="jetpack-datapack-1.21.8.zip" data-track-download="jetpack-datapack" download="" href="downloads/jetpack-datapack-1.21.8.zip"><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></a><div class="version-file-note">Balance tweaks, Fuel HUD polish und Nether-Portale gefixt.</div></td></tr>
-<tr><td>v1.0.2</td><td>1.21.4</td><td>2025‑07‑22</td><td><a data-download-file="jetpack-datapack-1.21.8.zip" data-track-download="jetpack-datapack" download="" href="downloads/jetpack-datapack-1.21.8.zip"><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></a><div class="version-file-note">Initialer Release für 1.21.4 mit Survival-Rezepten.</div></td></tr>
-</tbody>
-</table>
-</div>
-<div class="prose" id="dp-jetpack-changelog" role="tabpanel">
-<p><strong>v1.0.3</strong> – Balance tweaks, better fuel UI, bugfix for nether portals.</p>
-<p><strong>v1.0.2</strong> – Initial public release for 1.21.4.</p>
+<div id="dp-jetpack-releases" role="tabpanel">
+<ol class="release-log">
+<li class="release-log-entry">
+  <div class="release-log-header">
+    <div class="release-version">v1.0.3</div>
+    <div class="release-meta">
+      <span class="release-mc">Minecraft 1.21.8</span>
+      <span class="release-date">2025‑09‑10</span>
+    </div>
+  </div>
+  <div class="release-log-notes">Balance tweaks, Fuel HUD polish und Nether-Portale gefixt.</div>
+  <div class="release-log-download">
+    <a class="btn primary dl" data-download-file="jetpack-datapack-1.21.8.zip" data-track-download="jetpack-datapack" download href="downloads/jetpack-datapack-1.21.8.zip"><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></a>
+    <span class="release-file-note">jetpack-datapack-1.21.8.zip</span>
+  </div>
+</li>
+<li class="release-log-entry">
+  <div class="release-log-header">
+    <div class="release-version">v1.0.2</div>
+    <div class="release-meta">
+      <span class="release-mc">Minecraft 1.21.4</span>
+      <span class="release-date">2025‑07‑22</span>
+    </div>
+  </div>
+  <div class="release-log-notes">Initialer Release für 1.21.4 mit Survival-Rezepten.</div>
+  <div class="release-log-download">
+    <a class="btn primary dl" data-download-file="jetpack-datapack-1.21.4.zip" data-track-download="jetpack-datapack" download href="downloads/jetpack-datapack-1.21.4.zip"><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></a>
+    <span class="release-file-note">jetpack-datapack-1.21.4.zip</span>
+  </div>
+</li>
+</ol>
 </div>
 <div id="dp-jetpack-gallery" role="tabpanel">
 <div class="gallery">
@@ -1157,7 +1302,7 @@ window.addEventListener('load', function() {
 </section>
 </div>
 </div>
-</div><div aria-hidden="true" aria-labelledby="pr-spool-holder-title" class="modal" data-project-id="pickaxe-desk-print" id="pr-spool-holder" role="dialog"><div class="modal-backdrop" data-close="pr-spool-holder"></div><div class="modal-content" role="document"><button aria-label="Close" class="modal-close" data-close="pr-spool-holder">×</button><header class="modal-hero"><div class="title" id="pr-spool-holder-title">Minecraft Pickaxe</div><div class="muted">Simple, sturdy filament spool holder designed for easy printing and assembly.</div><div class="badges"><span class="badge">Print-ready</span><span class="badge">STL included</span><span class="badge">No supports</span><span class="badge">0.2 mm layer</span></div><div class="hero-actions"><a class="btn primary dl" href="downloads/pickaxe-desk-model.zip" download="" data-download-file="pickaxe-desk-model.zip" data-track-download="pickaxe-desk-print"><svg aria-hidden="true" focusable="false" height="18" viewbox="0 0 24 24" width="18"><path d="M12 3v10m0 0l4-4m-4 4l-4-4M5 21h14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg><span><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></span></a></div><div class="stats"><div class="stat"><div class="label">Version</div><div class="value">v1.0.3</div></div><div class="stat"><div class="label">Last updated</div><div class="value">Sep 2025</div></div><div class="stat"><div class="label"><span class="lang-en">Downloads</span><span class="lang-de">Downloads</span></div><div class="value" data-download-count="pickaxe-desk-print">—</div></div><div class="stat"><div class="label">Size</div><div class="value">—</div></div></div></header><div class="modal-body"><aside class="sidebar"><div class="info-card"><h4>Project info</h4><ul class="info-list"><li><span class="k">Print time</span><span>≈ 4–5 h</span></li><li><span class="k">Material</span><span>PLA or PETG</span></li><li><span class="k">Nozzle</span><span>0.4 mm</span></li><li><span class="k">Layer height</span><span>0.20 mm (0.28 quick)</span></li><li><span class="k">Perimeters</span><span>3–4</span></li><li><span class="k">Infill</span><span>15–25% (Gyroid/Cubic)</span></li><li><span class="k">Supports</span><span>None</span></li><li><span class="k">Bed adhesion</span><span>Brim optional (PETG)</span></li><li><span class="k"><span class="lang-en">License</span><span class="lang-de">Lizenz</span></span><a href="#license">MIT • CC BY-NC-SA</a></li></ul></div><div class="info-card"><h4>Tags</h4><div class="info-tags"><span class="chip">STL</span><span class="chip">No supports</span><span class="chip">0.2 mm</span><span class="chip">Hardware: M8</span></div></div></aside><section class="content"><nav aria-label="3D Print Tabs" class="tabs" role="tablist"><button aria-selected="true" class="active" data-tab="description" role="tab">Description</button><button aria-selected="false" class="" data-tab="gallery" role="tab">Gallery</button><button aria-selected="false" class="" data-tab="settings" role="tab">Print Settings</button><button aria-selected="false" data-tab="bom" role="tab">BOM</button><button aria-selected="false" data-tab="files" role="tab">Files</button><button aria-selected="false" data-tab="changelog" role="tab"><span class="lang-en">Changelog</span><span class="lang-de">Änderungsprotokoll</span></button></nav><div class="tabpanels"><div class="active prose" id="pr-spool-holder-description" role="tabpanel"><div style="max-width: 60ch; margin: 0 auto;"><p>A clean, display-friendly take on the classic Minecraft pickaxe. Designed for easy printing and quick assembly.</p><ul><li>Two parts: handle and head – align with a keyed joint.</li><li>Support-free on most FDM printers; recommended 0.2 mm layer height.</li><li>Best in PLA or PETG; a quick color swap gives the iconic look.</li><li>Optional: a dab of CA glue for a permanent fit.</li></ul><p>Print time ~2–4 hours depending on nozzle and layer settings. Scale up to use as a wall prop or down for a desk trinket.</p></div></div><div id="pr-spool-holder-gallery" role="tabpanel"><img alt="Spool holder render" src="assets/img/logo.jpg" style="max-width:100%;height:auto;border-radius:12px;"/><p class="muted">Placeholder render — replace with real photos when ready.</p><div class="gallery"><img alt="Minecraft Pickaxe – Front view" loading="lazy" src="assets/img/logo.jpg"/><img alt="Minecraft Pickaxe – Angle view" loading="lazy" src="assets/img/logo.jpg"/><img alt="Minecraft Pickaxe – Assembly detail" loading="lazy" src="assets/img/logo.jpg"/></div></div><div id="pr-spool-holder-settings" role="tabpanel"><ul class="info-list"><li><div class="k">Material</div><div class="v">PLA or PETG</div></li><li><div class="k">Nozzle</div><div class="v">0.4 mm</div></li><li><div class="k">Layer Height</div><div class="v">0.2 mm (0.28 mm draft OK)</div></li><li><div class="k">Perimeters</div><div class="v">3–4</div></li><li><div class="k">Infill</div><div class="v">15–25% (Gyroid/Cubic)</div></li><li><div class="k">Supports</div><div class="v">None</div></li><li><div class="k">Bed Adhesion</div><div class="v">Brim optional (PETG)</div></li></ul></div><div id="pr-spool-holder-bom" role="tabpanel"><ul class="info-list"><li><div class="k">M8 rod/bolt</div><div class="v">1× ~220–260 mm length</div></li><li><div class="k">M8 nuts</div><div class="v">2×</div></li><li><div class="k">M8 washers</div><div class="v">2×</div></li><li><div class="k">Rubber feet</div><div class="v">4× (optional)</div></li><li><div class="k">608 bearings</div><div class="v">2× (optional, upgrade)</div></li></ul><p class="muted">Dimensions can be adjusted to your printer or spool width.</p></div><div id="pr-spool-holder-files" role="tabpanel"><div class="prose"><ul><li>Spool_Holder_v1.0.stl — ~1.2 MB</li><li>Spool_Holder_Source.step — ~0.8 MB</li></ul></div></div><div id="pr-spool-holder-changelog" role="tabpanel"><ol class="steps"><li><strong>v1.0.1 — 2025-10-28</strong><ul><li>Tweaked tolerances for easier assembly</li><li>Optional bearing upgrade documented</li><li>Minor geometry cleanup</li></ul></li><li><strong>v1.0.0 — 2025-10-20</strong><ul><li>Initial release</li><li>No-support printable design</li></ul></li></ol></div></div></section></div></div></div>
+</div><div aria-hidden="true" aria-labelledby="pr-spool-holder-title" class="modal" data-project-id="pickaxe-desk-print" id="pr-spool-holder" role="dialog"><div class="modal-backdrop" data-close="pr-spool-holder"></div><div class="modal-content" role="document"><button aria-label="Close" class="modal-close" data-close="pr-spool-holder">×</button><header class="modal-hero"><div class="title" id="pr-spool-holder-title">Minecraft Pickaxe</div><div class="muted">Simple, sturdy filament spool holder designed for easy printing and assembly.</div><div class="badges"><span class="badge">Print-ready</span><span class="badge">STL included</span><span class="badge">No supports</span><span class="badge">0.2 mm layer</span></div><div class="hero-actions"><a class="btn primary dl" href="downloads/pickaxe-desk-model.zip" download="" data-download-file="pickaxe-desk-model.zip" data-track-download="pickaxe-desk-print"><svg aria-hidden="true" focusable="false" height="18" viewbox="0 0 24 24" width="18"><path d="M12 3v10m0 0l4-4m-4 4l-4-4M5 21h14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg><span><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></span></a></div><div class="stats"><div class="stat"><div class="label">Version</div><div class="value">v1.0.3</div></div><div class="stat"><div class="label">Last updated</div><div class="value">Sep 2025</div></div><div class="stat"><div class="label"><span class="lang-en">Downloads</span><span class="lang-de">Downloads</span></div><div class="value" data-download-count="pickaxe-desk-print">—</div></div><div class="stat"><div class="label">Size</div><div class="value">—</div></div></div></header><div class="modal-body"><aside class="sidebar"><div class="info-card"><h4>Project info</h4><ul class="info-list"><li><span class="k">Print time</span><span>≈ 4–5 h</span></li><li><span class="k">Material</span><span>PLA or PETG</span></li><li><span class="k">Nozzle</span><span>0.4 mm</span></li><li><span class="k">Layer height</span><span>0.20 mm (0.28 quick)</span></li><li><span class="k">Perimeters</span><span>3–4</span></li><li><span class="k">Infill</span><span>15–25% (Gyroid/Cubic)</span></li><li><span class="k">Supports</span><span>None</span></li><li><span class="k">Bed adhesion</span><span>Brim optional (PETG)</span></li><li><span class="k"><span class="lang-en">License</span><span class="lang-de">Lizenz</span></span><a href="#license">MIT • CC BY-NC-SA</a></li></ul></div><div class="info-card"><h4>Tags</h4><div class="info-tags"><span class="chip">STL</span><span class="chip">No supports</span><span class="chip">0.2 mm</span><span class="chip">Hardware: M8</span></div></div></aside><section class="content"><nav aria-label="3D Print Tabs" class="tabs" role="tablist"><button aria-selected="true" class="active" data-tab="description" role="tab">Description</button><button aria-selected="false" class="" data-tab="gallery" role="tab">Gallery</button><button aria-selected="false" class="" data-tab="settings" role="tab">Print Settings</button><button aria-selected="false" data-tab="bom" role="tab">BOM</button><button aria-selected="false" data-tab="files" role="tab">Files</button><button aria-selected="false" data-tab="releases" role="tab"><span class="lang-en">Release log</span><span class="lang-de">Versionsverlauf</span></button></nav><div class="tabpanels"><div class="active prose" id="pr-spool-holder-description" role="tabpanel"><div style="max-width: 60ch; margin: 0 auto;"><p>A clean, display-friendly take on the classic Minecraft pickaxe. Designed for easy printing and quick assembly.</p><ul><li>Two parts: handle and head – align with a keyed joint.</li><li>Support-free on most FDM printers; recommended 0.2 mm layer height.</li><li>Best in PLA or PETG; a quick color swap gives the iconic look.</li><li>Optional: a dab of CA glue for a permanent fit.</li></ul><p>Print time ~2–4 hours depending on nozzle and layer settings. Scale up to use as a wall prop or down for a desk trinket.</p></div></div><div id="pr-spool-holder-gallery" role="tabpanel"><img alt="Spool holder render" src="assets/img/logo.jpg" style="max-width:100%;height:auto;border-radius:12px;"/><p class="muted">Placeholder render — replace with real photos when ready.</p><div class="gallery"><img alt="Minecraft Pickaxe – Front view" loading="lazy" src="assets/img/logo.jpg"/><img alt="Minecraft Pickaxe – Angle view" loading="lazy" src="assets/img/logo.jpg"/><img alt="Minecraft Pickaxe – Assembly detail" loading="lazy" src="assets/img/logo.jpg"/></div></div><div id="pr-spool-holder-settings" role="tabpanel"><ul class="info-list"><li><div class="k">Material</div><div class="v">PLA or PETG</div></li><li><div class="k">Nozzle</div><div class="v">0.4 mm</div></li><li><div class="k">Layer Height</div><div class="v">0.2 mm (0.28 mm draft OK)</div></li><li><div class="k">Perimeters</div><div class="v">3–4</div></li><li><div class="k">Infill</div><div class="v">15–25% (Gyroid/Cubic)</div></li><li><div class="k">Supports</div><div class="v">None</div></li><li><div class="k">Bed Adhesion</div><div class="v">Brim optional (PETG)</div></li></ul></div><div id="pr-spool-holder-bom" role="tabpanel"><ul class="info-list"><li><div class="k">M8 rod/bolt</div><div class="v">1× ~220–260 mm length</div></li><li><div class="k">M8 nuts</div><div class="v">2×</div></li><li><div class="k">M8 washers</div><div class="v">2×</div></li><li><div class="k">Rubber feet</div><div class="v">4× (optional)</div></li><li><div class="k">608 bearings</div><div class="v">2× (optional, upgrade)</div></li></ul><p class="muted">Dimensions can be adjusted to your printer or spool width.</p></div><div id="pr-spool-holder-files" role="tabpanel"><div class="prose"><ul><li>Spool_Holder_v1.0.stl — ~1.2 MB</li><li>Spool_Holder_Source.step — ~0.8 MB</li></ul></div></div><div id="pr-spool-holder-releases" role="tabpanel"><ol class="release-log"><li class="release-log-entry"><div class="release-log-header"><div class="release-version">v1.0.1</div><div class="release-meta"><span class="release-date">2025‑10‑28</span></div></div><div class="release-log-notes">Tweaked tolerances for easier assembly, documented the optional bearing upgrade and cleaned up the model.</div><div class="release-log-download"><a class="btn primary dl" data-download-file="pickaxe-desk-print-v1.0.1.zip" download href="downloads/pickaxe-desk-print-v1.0.1.zip"><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></a><span class="release-file-note">pickaxe-desk-print-v1.0.1.zip</span></div></li><li class="release-log-entry"><div class="release-log-header"><div class="release-version">v1.0.0</div><div class="release-meta"><span class="release-date">2025‑10‑20</span></div></div><div class="release-log-notes">Initial release with a no-support printable design.</div><div class="release-log-download"><a class="btn primary dl" data-download-file="pickaxe-desk-print-v1.0.0.zip" download href="downloads/pickaxe-desk-print-v1.0.0.zip"><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></a><span class="release-file-note">pickaxe-desk-print-v1.0.0.zip</span></div></li></ol></div></div></section></div></div></div>
 <script>
 (function(){
   const wrap = document.getElementById('datapacks');

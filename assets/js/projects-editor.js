@@ -946,7 +946,6 @@
   const modalBodyInput = document.getElementById('pe-modal-body');
   const modalDescriptionList = document.getElementById('pe-modal-description-list');
   const modalVersionsList = document.getElementById('pe-modal-versions-list');
-  const modalChangelogList = document.getElementById('pe-modal-changelog-list');
   const modalGalleryList = document.getElementById('pe-modal-gallery-list');
   const versionChainListEl = document.querySelector('#pe-version-chain .editor-version-chain-list');
   const downloadInput = document.getElementById('pe-download');
@@ -1819,9 +1818,9 @@
     const badgesHtml = (typeof project.modalBadges === 'string' && project.modalBadges.trim())
       ? project.modalBadges.trim()
       : buildAutoBadgesHtml(safeType, project.status, project.mcVersion, project.tags, project.category);
-    const heroActionsHtml = (typeof project.modalHeroActions === 'string' && project.modalHeroActions.trim())
+    let heroActionsHtml = (typeof project.modalHeroActions === 'string' && project.modalHeroActions.trim())
       ? project.modalHeroActions.trim()
-      : buildAutoHeroActionsHtml(project.downloadFile, fallbackId);
+      : '';
     let bodyHtml = (typeof project.modalBody === 'string' && project.modalBody.trim())
       ? project.modalBody
       : '';
@@ -1835,18 +1834,26 @@
         description: project.shortDescription ? [project.shortDescription] : [],
         steps: [],
         versions: [],
-        changelog: [],
         gallery: [],
       };
       bodyHtml = buildModalBodyHtml(modalId, fallbackBody, fallbackId);
     }
+    const parsedBody = parseModalBodyContent(bodyHtml || '');
+    const latestParsedVersion = parsedBody && Array.isArray(parsedBody.versions) && parsedBody.versions.length
+      ? parsedBody.versions[0]
+      : null;
+    const derivedDownload = project.downloadFile
+      || (latestParsedVersion ? (latestParsedVersion.url || latestParsedVersion.downloadFile || '') : '');
+    if (!heroActionsHtml) {
+      heroActionsHtml = buildAutoHeroActionsHtml(derivedDownload, fallbackId);
+    }
     const statsHtml = (typeof project.modalStats === 'string' && project.modalStats.trim())
       ? project.modalStats.trim()
       : buildAutoStatsHtml({
-          latestVersion: '',
+          latestVersion: latestParsedVersion ? latestParsedVersion.release : '',
           updatedAt: project.updatedAt || project.createdAt || new Date().toISOString(),
           projectId: fallbackId,
-          downloadUrl: project.downloadFile || '',
+          downloadUrl: derivedDownload,
         });
     const modal = document.createElement('div');
     modal.className = 'modal';
@@ -2403,7 +2410,6 @@
       description: [],
       steps: [],
       versions: [],
-      changelog: [],
       gallery: [],
     };
   }
@@ -2698,8 +2704,31 @@
       });
     }
 
+    const releaseEntries = wrapper.querySelectorAll('.release-log .release-log-entry');
+    if (releaseEntries.length) {
+      releaseEntries.forEach((entry) => {
+        const release = readInlineText(entry.querySelector('.release-version'));
+        const minecraft = readInlineText(entry.querySelector('.release-mc'));
+        const date = readInlineText(entry.querySelector('.release-date'));
+        const notes = readInlineText(entry.querySelector('.release-log-notes'));
+        const link = entry.querySelector('a');
+        const labelEnNode = link ? link.querySelector('.lang-en') : null;
+        const labelDeNode = link ? link.querySelector('.lang-de') : null;
+        const labelEn = labelEnNode ? labelEnNode.textContent.trim() : '';
+        const labelDe = labelDeNode ? labelDeNode.textContent.trim() : '';
+        const label = (!labelEn && !labelDe && link) ? link.textContent.trim() : '';
+        const url = link ? link.getAttribute('href') || '' : '';
+        const downloadFile = link ? link.getAttribute('data-download-file') || '' : '';
+        const trackId = link ? link.getAttribute('data-track-download') || '' : '';
+        if (!(release || minecraft || date || url || downloadFile || notes)) return;
+        data.versions.push({ release, minecraft, date, url, labelEn, labelDe, label, downloadFile, trackId, notes });
+      });
+    }
+
+    const legacyChangelog = [];
+
     const versionsPanel = wrapper.querySelector('[role="tabpanel"][id$="-versions"]');
-    if (versionsPanel) {
+    if (!data.versions.length && versionsPanel) {
       const rows = versionsPanel.querySelectorAll('tbody tr');
       rows.forEach((tr) => {
         const cells = tr.querySelectorAll('td');
@@ -2736,8 +2765,25 @@
         let text = readInlineText(clone);
         text = text.replace(/^[-–—]\s*/, '').trim();
         if (title || text) {
-          data.changelog.push({ title, details: text });
+          legacyChangelog.push({ title, details: text });
         }
+      });
+    }
+
+    if (!data.versions.length && legacyChangelog.length) {
+      legacyChangelog.forEach((entry) => {
+        data.versions.push({
+          release: entry.title || '',
+          minecraft: '',
+          date: '',
+          url: '',
+          labelEn: '',
+          labelDe: '',
+          label: '',
+          downloadFile: '',
+          trackId: '',
+          notes: entry.details || '',
+        });
       });
     }
 
@@ -2800,16 +2846,20 @@
       .filter(Boolean)
       .join('');
 
-    const versionsRows = (bodyData.versions || [])
+    const releaseLogItems = (bodyData.versions || [])
       .map((entry) => {
-        if (!entry || !(entry.release || entry.minecraft || entry.date || entry.url || entry.notes)) return '';
+        if (!entry || !(entry.release || entry.notes || entry.url || entry.downloadFile)) return '';
         const release = escapeHtml(entry.release || '');
-        const minecraft = escapeHtml(entry.minecraft || '');
-        const date = escapeHtml(entry.date || '');
-        let linkHtml = '';
-        if (entry.url) {
-          const href = escapeAttr(entry.url);
-          const downloadFile = entry.downloadFile ? escapeAttr(entry.downloadFile) : '';
+        const mcLabel = entry.minecraft ? `<span class="release-mc">${escapeHtml(entry.minecraft)}</span>` : '';
+        const dateLabel = entry.date ? `<span class="release-date">${escapeHtml(entry.date)}</span>` : '';
+        const meta = (mcLabel || dateLabel) ? `<div class="release-meta">${mcLabel}${dateLabel}</div>` : '';
+        const notes = entry.notes ? `<div class="release-log-notes">${formatInline(entry.notes)}</div>` : '';
+        const downloadFileValue = entry.downloadFile ? String(entry.downloadFile) : '';
+        const hrefSource = entry.url || downloadFileValue || '';
+        let downloadHtml = '';
+        if (hrefSource) {
+          const href = escapeAttr(hrefSource);
+          const downloadFile = downloadFileValue ? escapeAttr(downloadFileValue) : '';
           const trackId = entry.trackId ? escapeAttr(entry.trackId) : (trackFallback ? escapeAttr(trackFallback) : '');
           const labelEn = entry.labelEn ? escapeHtml(entry.labelEn) : '';
           const labelDe = entry.labelDe ? escapeHtml(entry.labelDe) : '';
@@ -2825,25 +2875,10 @@
           const downloadAttr = downloadFile ? ' download' : '';
           const downloadData = downloadFile ? ` data-download-file="${downloadFile}"` : '';
           const trackAttr = trackId ? ` data-track-download="${trackId}"` : '';
-          linkHtml = `<a href="${href}"${downloadAttr}${downloadData}${trackAttr}>${labelHtml}</a>`;
-        } else {
-          linkHtml = escapeHtml(entry.label || '');
+          const fileNote = downloadFileValue ? `<span class="release-file-note">${escapeHtml(downloadFileValue)}</span>` : '';
+          downloadHtml = `<div class="release-log-download"><a class="btn primary dl" href="${href}"${downloadAttr}${downloadData}${trackAttr}>${labelHtml}</a>${fileNote}</div>`;
         }
-        const notes = entry.notes ? `<div class="version-file-note">${formatInline(entry.notes)}</div>` : '';
-        return `<tr><td>${release}</td><td>${minecraft}</td><td>${date}</td><td>${linkHtml}${notes}</td></tr>`;
-      })
-      .filter(Boolean)
-      .join('');
-
-    const changelogHtml = (bodyData.changelog || [])
-      .map((entry) => {
-        if (!entry || !(entry.title || entry.details)) return '';
-        const title = entry.title ? `<strong>${escapeHtml(entry.title)}</strong>` : '';
-        const details = entry.details ? formatInline(entry.details) : '';
-        if (title && details) {
-          return `<p>${title} – ${details}</p>`;
-        }
-        return `<p>${title || details}</p>`;
+        return `<li class="release-log-entry"><div class="release-log-header"><div class="release-version">${release}</div>${meta}</div>${notes}${downloadHtml}</li>`;
       })
       .filter(Boolean)
       .join('');
@@ -2866,11 +2901,8 @@
     if (galleryHtml) {
       navButtons.push(`<button aria-selected="false" data-tab="gallery" role="tab"><span class="lang-en">Gallery</span><span class="lang-de">Galerie</span></button>`);
     }
-    if (changelogHtml) {
-      navButtons.push(`<button aria-selected="false" data-tab="changelog" role="tab"><span class="lang-en">Changelog</span><span class="lang-de">Änderungsprotokoll</span></button>`);
-    }
-    if (versionsRows) {
-      navButtons.push(`<button aria-selected="false" data-tab="versions" role="tab"><span class="lang-en">Versions</span><span class="lang-de">Versionen</span></button>`);
+    if (releaseLogItems) {
+      navButtons.push(`<button aria-selected="false" data-tab="releases" role="tab"><span class="lang-en">Release log</span><span class="lang-de">Versionsverlauf</span></button>`);
     }
 
     const navHtml = `<nav aria-label="Modal Tabs" class="tabs" role="tablist">${navButtons.join('')}</nav>`;
@@ -2880,17 +2912,14 @@
     if (stepsHtml) {
       panels.push(`<div class="prose" id="${safeId}-installation" role="tabpanel"><div class="steps">${stepsHtml}</div></div>`);
     }
-    if (versionsRows) {
-      panels.push(`<div id="${safeId}-versions" role="tabpanel"><table class="versions-table"><thead><tr><th>Release</th><th>Minecraft</th><th>Date</th><th>File</th></tr></thead><tbody>${versionsRows}</tbody></table></div>`);
-    }
-    if (changelogHtml) {
-      panels.push(`<div class="prose" id="${safeId}-changelog" role="tabpanel">${changelogHtml}</div>`);
+    if (releaseLogItems) {
+      panels.push(`<div id="${safeId}-releases" role="tabpanel"><ol class="release-log">${releaseLogItems}</ol></div>`);
     }
     if (galleryHtml) {
       panels.push(`<div id="${safeId}-gallery" role="tabpanel"><div class="gallery">${galleryHtml}</div></div>`);
     }
 
-    const hasContent = (infoCardHtml || tagsCardHtml || descriptionHtml || stepsHtml || versionsRows || changelogHtml || galleryHtml);
+    const hasContent = (infoCardHtml || tagsCardHtml || descriptionHtml || stepsHtml || releaseLogItems || galleryHtml);
     if (!hasContent) {
       return '';
     }
@@ -3034,17 +3063,47 @@
   function addVersionRow(data = {}) {
     if (!modalVersionsList) return;
     const row = document.createElement('div');
-    row.className = 'editor-repeat-row';
+    row.className = 'editor-repeat-row editor-version-row';
     row.innerHTML = `
-      <input type="text" data-field="version-release" placeholder="Release">
-      <input type="text" data-field="version-mc" placeholder="Minecraft">
-      <input type="text" data-field="version-date" placeholder="Datum">
-      <input type="text" data-field="version-url" placeholder="Download-URL">
-      <input type="text" data-field="version-label-en" placeholder="Download-Text (EN)">
-      <input type="text" data-field="version-label-de" placeholder="Download-Text (DE)">
-      <input type="text" data-field="version-file" placeholder="Download-Dateiname (optional)">
-      <input type="text" data-field="version-track" placeholder="Tracking-ID (optional)">
-      <textarea class="editor-version-notes" data-field="version-notes" placeholder="Kurzbeschreibung / Changelog"></textarea>
+      <div class="editor-version-grid">
+        <label>Version
+          <input type="text" data-field="version-release" placeholder="v1.0.0">
+        </label>
+        <label>Minecraft / Setup
+          <input type="text" data-field="version-mc" placeholder="1.21.x oder PLA 0.2mm">
+        </label>
+        <label>Datum
+          <input type="text" data-field="version-date" placeholder="2025-09-10">
+        </label>
+      </div>
+      <div class="editor-version-downloads">
+        <div>
+          <label>Download-Datei (Upload)</label>
+          <input type="text" data-field="version-file" placeholder="downloads/mein-projekt.zip">
+          <small>Wähle eine ZIP/STL-Datei oder gib einen Pfad ein.</small>
+        </div>
+        <div>
+          <label>Externe URL / Mirror</label>
+          <input type="text" data-field="version-url" placeholder="https://...">
+          <small>Optional – überschreibt die lokale Datei.</small>
+        </div>
+        <div>
+          <label>Download-Text (EN)</label>
+          <input type="text" data-field="version-label-en" placeholder="Download">
+        </div>
+        <div>
+          <label>Download-Text (DE)</label>
+          <input type="text" data-field="version-label-de" placeholder="Herunterladen">
+        </div>
+        <div>
+          <label>Tracking-ID</label>
+          <input type="text" data-field="version-track" placeholder="z. B. jetpack-datapack">
+        </div>
+      </div>
+      <div>
+        <label class="editor-version-notes-label">Änderungen / Highlights</label>
+        <textarea class="editor-version-notes" data-field="version-notes" placeholder="Kurzbeschreibung der Version"></textarea>
+      </div>
       <button type="button" class="editor-repeat-remove" title="Entfernen">×</button>
     `;
     const releaseInput = row.querySelector('[data-field="version-release"]');
@@ -3126,40 +3185,6 @@
     return issues;
   }
 
-  function addChangelogRow(data = {}) {
-    if (!modalChangelogList) return;
-    const row = document.createElement('div');
-    row.className = 'editor-repeat-row';
-    row.innerHTML = `
-      <input type="text" data-field="changelog-title" placeholder="Titel / Version">
-      <textarea data-field="changelog-details" placeholder="Änderungen"></textarea>
-      <button type="button" class="editor-repeat-remove" title="Entfernen">×</button>
-    `;
-    row.querySelector('[data-field="changelog-title"]').value = data.title || '';
-    row.querySelector('[data-field="changelog-details"]').value = data.details || '';
-    row.querySelector('.editor-repeat-remove').addEventListener('click', () => makeRemoveHandler(modalChangelogList, addChangelogRow)(row));
-    modalChangelogList.appendChild(row);
-  }
-
-  function setChangelogRows(items) {
-    if (!modalChangelogList) return;
-    clearContainer(modalChangelogList);
-    const list = Array.isArray(items) && items.length ? items : [{}];
-    list.forEach((item) => addChangelogRow(item));
-  }
-
-  function collectChangelogRows() {
-    if (!modalChangelogList) return [];
-    return Array.from(modalChangelogList.querySelectorAll('.editor-repeat-row'))
-      .map((row) => {
-        const title = (row.querySelector('[data-field="changelog-title"]') || {}).value || '';
-        const details = (row.querySelector('[data-field="changelog-details"]') || {}).value || '';
-        if (!(title.trim() || details.trim())) return null;
-        return { title: title.trim(), details: details.trim() };
-      })
-      .filter(Boolean);
-  }
-
   function addGalleryRow(data = {}) {
     if (!modalGalleryList) return;
     const row = document.createElement('div');
@@ -3205,7 +3230,6 @@
   function resetModalUi() {
     setDescriptionRows([]);
     setVersionRows([]);
-    setChangelogRows([]);
     setGalleryRows([]);
     if (modalBodyInput) modalBodyInput.value = '';
   }
@@ -3214,7 +3238,6 @@
     const bodyData = data || createEmptyModalBody();
     setDescriptionRows(bodyData.description || []);
     setVersionRows(bodyData.versions || []);
-    setChangelogRows(bodyData.changelog || []);
     setGalleryRows(bodyData.gallery || []);
   }
 
@@ -3232,7 +3255,6 @@
       description: pitch ? [pitch] : [],
       steps: [],
       versions: [],
-      changelog: [],
       gallery: [],
     };
   }
@@ -3267,9 +3289,6 @@
       if (Array.isArray(parsed.versions) && parsed.versions.length) {
         data.versions = parsed.versions;
       }
-      if (Array.isArray(parsed.changelog) && parsed.changelog.length) {
-        data.changelog = parsed.changelog;
-      }
       if (Array.isArray(parsed.gallery) && parsed.gallery.length) {
         data.gallery = parsed.gallery;
       }
@@ -3282,7 +3301,6 @@
     return {
       description: collectDescriptionRows(),
       versions: collectVersionRows(),
-      changelog: collectChangelogRows(),
       gallery: collectGalleryRows(),
     };
   }
@@ -3297,6 +3315,11 @@
     const status = ctx.status || '';
     const mcVersion = ctx.mcVersion || '';
     const downloadFile = (ctx.downloadFile || '').trim();
+    const latestVersionEntry = Array.isArray(bodyData.versions) && bodyData.versions.length
+      ? bodyData.versions[0]
+      : null;
+    const derivedDownload = downloadFile
+      || (latestVersionEntry ? (latestVersionEntry.url || latestVersionEntry.downloadFile || '') : '');
     const shortDescription = typeof ctx.shortDescription === 'string'
       ? ctx.shortDescription.trim()
       : (shortInput ? (shortInput.value || '').trim() : '');
@@ -3318,20 +3341,17 @@
       if (Array.isArray(contentData.versions) && contentData.versions.length) {
         bodyData.versions = contentData.versions;
       }
-      if (Array.isArray(contentData.changelog) && contentData.changelog.length) {
-        bodyData.changelog = contentData.changelog;
-      }
       if (Array.isArray(contentData.gallery) && contentData.gallery.length) {
         bodyData.gallery = contentData.gallery;
       }
     }
     const badgesHtml = buildAutoBadgesHtml(safeType, status, mcVersion, tags, category);
-    const actionsHtml = buildAutoHeroActionsHtml(downloadFile, fallbackId);
+    const actionsHtml = buildAutoHeroActionsHtml(derivedDownload, fallbackId);
     const statsHtml = buildAutoStatsHtml({
-      latestVersion: bodyData.versions && bodyData.versions.length ? bodyData.versions[0].release : '',
+      latestVersion: latestVersionEntry ? latestVersionEntry.release : '',
       updatedAt: new Date().toISOString(),
       projectId: fallbackId,
-      downloadUrl: downloadFile,
+      downloadUrl: derivedDownload,
     });
     const bodyHtml = buildModalBodyHtml(modalId, bodyData, fallbackId);
     if (modalBodyInput) modalBodyInput.value = bodyHtml;
@@ -3470,6 +3490,15 @@
     const { modalId, modal } = getModalRef(project);
     if (!modalId || !modal) return;
     const defaults = modalDefaults.get(modalId) || { hero: '', body: '', badges: '', heroActions: '', stats: '' };
+    const rawBodyHtml = typeof project.modalBody === 'string' ? project.modalBody : '';
+    const customBodyHtml = rawBodyHtml && rawBodyHtml.trim() ? rawBodyHtml : '';
+    const effectiveBodyHtml = customBodyHtml || defaults.body || '';
+    const parsedBody = parseModalBodyContent(effectiveBodyHtml || '');
+    const latestVersionFromBody = parsedBody && Array.isArray(parsedBody.versions) && parsedBody.versions.length
+      ? parsedBody.versions[0]
+      : null;
+    const fallbackDownloadPath = (project.downloadFile || '').trim()
+      || (latestVersionFromBody ? (latestVersionFromBody.url || latestVersionFromBody.downloadFile || '') : '');
 
     const heroEl = modal.querySelector('.modal-hero .muted');
     if (heroEl) {
@@ -3496,15 +3525,12 @@
       actionsEl.innerHTML = actionsHtml;
       actionsEl.hidden = !actionsHtml.trim();
 
-      if (!customActions) {
-        const downloadPath = (project.downloadFile || '').trim();
-        if (downloadPath) {
-          const fileId = downloadPath.split('/').pop() || downloadPath;
-          actionsEl.querySelectorAll('[data-download-file]').forEach((link) => {
-            link.setAttribute('href', downloadPath);
-            link.setAttribute('data-download-file', fileId);
-          });
-        }
+      if (!customActions && fallbackDownloadPath) {
+        const fileId = fallbackDownloadPath.split('/').pop() || fallbackDownloadPath;
+        actionsEl.querySelectorAll('[data-download-file]').forEach((link) => {
+          link.setAttribute('href', fallbackDownloadPath);
+          link.setAttribute('data-download-file', fileId);
+        });
       }
     }
 
@@ -3519,8 +3545,8 @@
     const bodyEl = modal.querySelector('.modal-body');
     let bodyApplied = false;
     if (bodyEl) {
-      if (typeof project.modalBody === 'string' && project.modalBody.trim()) {
-        bodyEl.innerHTML = project.modalBody;
+      if (customBodyHtml) {
+        bodyEl.innerHTML = customBodyHtml;
         bodyApplied = true;
       } else if (defaults.body) {
         bodyEl.innerHTML = defaults.body;
@@ -3839,7 +3865,6 @@
     const addHandlers = {
       description: () => addDescriptionRow({}),
       version: () => addVersionRow({}),
-      changelog: () => addChangelogRow({}),
       gallery: () => addGalleryRow({}),
     };
     editorForm.querySelectorAll('.editor-repeat-add').forEach((btn) => {
