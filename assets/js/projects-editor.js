@@ -1011,7 +1011,6 @@
   const modalBodyInput = document.getElementById('pe-modal-body');
   const modalDescriptionList = document.getElementById('pe-modal-description-list');
   const modalVersionsList = document.getElementById('pe-modal-versions-list');
-  const modalChangelogList = document.getElementById('pe-modal-changelog-list');
   const modalGalleryList = document.getElementById('pe-modal-gallery-list');
   const versionChainListEl = document.querySelector('#pe-version-chain .editor-version-chain-list');
   const downloadInput = document.getElementById('pe-download');
@@ -1900,7 +1899,6 @@
         description: project.shortDescription ? [project.shortDescription] : [],
         steps: [],
         versions: [],
-        changelog: [],
         gallery: [],
       };
       bodyHtml = buildModalBodyHtml(modalId, fallbackBody, fallbackId);
@@ -2468,7 +2466,6 @@
       description: [],
       steps: [],
       versions: [],
-      changelog: [],
       gallery: [],
     };
   }
@@ -2801,7 +2798,7 @@
         let text = readInlineText(clone);
         text = text.replace(/^[-–—]\s*/, '').trim();
         if (title || text) {
-          data.changelog.push({ title, details: text });
+          data.versions.push({ release: title, minecraft: '', date: '', url: '', label: '', notes: text });
         }
       });
     }
@@ -2867,7 +2864,7 @@
       .join('');
 
     const versionsRows = (bodyData.versions || [])
-      .map((entry) => {
+      .map((entry, index) => {
         if (!entry || !(entry.release || entry.minecraft || entry.date || entry.url || entry.notes)) return '';
         const release = escapeHtml(entry.release || '');
         const minecraft = escapeHtml(entry.minecraft || '');
@@ -2892,25 +2889,19 @@
           const downloadAttr = downloadFile ? ' download' : '';
           const downloadData = downloadFile ? ` data-download-file="${downloadFile}"` : '';
           const trackAttr = trackId ? ` data-track-download="${trackId}"` : '';
-          linkHtml = `<a href="${href}"${downloadAttr}${downloadData}${trackAttr}>${labelHtml}</a>`;
-        } else {
-          linkHtml = escapeHtml(entry.label || '');
+          linkHtml = `<a class="btn ghost" href="${href}"${downloadAttr}${downloadData}${trackAttr}>${labelHtml}</a>`;
+        } else if (entry.label) {
+          linkHtml = `<span class="version-file-note">${escapeHtml(entry.label)}</span>`;
         }
-        const notes = entry.notes ? `<div class="version-file-note">${formatInline(entry.notes)}</div>` : '';
-        return `<tr><td>${release}</td><td>${minecraft}</td><td>${date}</td><td>${linkHtml}${notes}</td></tr>`;
-      })
-      .filter(Boolean)
-      .join('');
-
-    const changelogHtml = (bodyData.changelog || [])
-      .map((entry) => {
-        if (!entry || !(entry.title || entry.details)) return '';
-        const title = entry.title ? `<strong>${escapeHtml(entry.title)}</strong>` : '';
-        const details = entry.details ? formatInline(entry.details) : '';
-        if (title && details) {
-          return `<p>${title} – ${details}</p>`;
-        }
-        return `<p>${title || details}</p>`;
+        const metaParts = [];
+        if (date) metaParts.push(date);
+        if (minecraft) metaParts.push(`Minecraft ${minecraft}`);
+        const meta = metaParts.length ? `<div class="version-entry-meta">${metaParts.join(' • ')}</div>` : '';
+        const notes = entry.notes ? `<p class="version-entry-notes">${formatInline(entry.notes)}</p>` : '';
+        const fileNote = (!entry.notes && entry.details) ? `<p class="version-entry-notes">${formatInline(entry.details)}</p>` : '';
+        const isHead = index === 0 ? ' head' : '';
+        const actions = linkHtml ? `<div class="version-entry-actions">${linkHtml}</div>` : '';
+        return `<article class="version-entry${isHead}"><div class="version-entry-header"><div><div class="version-entry-title">${release}</div>${meta}</div>${actions}</div>${notes || fileNote}</article>`;
       })
       .filter(Boolean)
       .join('');
@@ -2934,11 +2925,8 @@
     if (galleryHtml) {
       navButtons.push(`<button aria-selected="false" data-tab="gallery" role="tab"><span class="lang-en">Gallery</span><span class="lang-de">Galerie</span></button>`);
     }
-    if (changelogHtml) {
-      navButtons.push(`<button aria-selected="false" data-tab="changelog" role="tab"><span class="lang-en">Changelog</span><span class="lang-de">Änderungsprotokoll</span></button>`);
-    }
     if (versionsRows) {
-      navButtons.push(`<button aria-selected="false" data-tab="versions" role="tab"><span class="lang-en">Versions</span><span class="lang-de">Versionen</span></button>`);
+      navButtons.push(`<button aria-selected="false" data-tab="versions" role="tab"><span class="lang-en">Versions &amp; Changelog</span><span class="lang-de">Versionen &amp; Changelog</span></button>`);
     }
 
     const navHtml = `<nav aria-label="Modal Tabs" class="tabs" role="tablist">${navButtons.join('')}</nav>`;
@@ -2949,16 +2937,13 @@
       panels.push(`<div class="prose" id="${safeId}-installation" role="tabpanel"><div class="steps">${stepsHtml}</div></div>`);
     }
     if (versionsRows) {
-      panels.push(`<div id="${safeId}-versions" role="tabpanel"><table class="versions-table"><thead><tr><th>Release</th><th>Minecraft</th><th>Date</th><th>File</th></tr></thead><tbody>${versionsRows}</tbody></table></div>`);
-    }
-    if (changelogHtml) {
-      panels.push(`<div class="prose" id="${safeId}-changelog" role="tabpanel">${changelogHtml}</div>`);
+      panels.push(`<div id="${safeId}-versions" role="tabpanel"><div class="version-timeline">${versionsRows}</div></div>`);
     }
     if (galleryHtml) {
       panels.push(`<div id="${safeId}-gallery" role="tabpanel"><div class="gallery">${galleryHtml}</div></div>`);
     }
 
-    const hasContent = (infoCardHtml || tagsCardHtml || descriptionHtml || stepsHtml || versionsRows || changelogHtml || galleryHtml);
+    const hasContent = (infoCardHtml || tagsCardHtml || descriptionHtml || stepsHtml || versionsRows || galleryHtml);
     if (!hasContent) {
       return '';
     }
@@ -3104,13 +3089,13 @@
     const row = document.createElement('div');
     row.className = 'editor-repeat-row';
     row.innerHTML = `
-      <input type="text" data-field="version-release" placeholder="Release">
-      <input type="text" data-field="version-mc" placeholder="Minecraft">
-      <input type="text" data-field="version-date" placeholder="Datum">
-      <input type="text" data-field="version-url" placeholder="Download-URL">
+      <input type="text" data-field="version-release" placeholder="Release (z. B. v1.2)">
+      <input type="text" data-field="version-mc" placeholder="Minecraft / Setup">
+      <input type="text" data-field="version-date" placeholder="Datum (YYYY-MM-DD)">
+      <input type="text" data-field="version-url" placeholder="Externe Download-URL (optional)">
       <input type="text" data-field="version-label-en" placeholder="Download-Text (EN)">
       <input type="text" data-field="version-label-de" placeholder="Download-Text (DE)">
-      <input type="text" data-field="version-file" placeholder="Download-Dateiname (optional)">
+      <input type="text" data-field="version-file" placeholder="downloads/mein-pack.zip">
       <input type="text" data-field="version-track" placeholder="Tracking-ID (optional)">
       <textarea class="editor-version-notes" data-field="version-notes" placeholder="Kurzbeschreibung / Changelog"></textarea>
       <button type="button" class="editor-repeat-remove" title="Entfernen">×</button>
@@ -3133,7 +3118,7 @@
       versionFileInput.setAttribute('data-file-prefix', 'downloads/');
       versionFileInput.setAttribute('data-file-accept', '.zip,.mcpack,.mcaddon,.rar,.stl,.obj,.gcode,.3mf,.zip');
       versionFileInput.setAttribute('data-file-button', 'Datei auswählen');
-      versionFileInput.setAttribute('data-file-helper', 'Download-Datei auswählen oder Pfad einfügen.');
+      versionFileInput.setAttribute('data-file-helper', 'ZIP/STL auswählen oder Pfad einfügen – ältere Downloads bleiben erhalten.');
     }
     enhanceFilePickerTargets(row);
     modalVersionsList.appendChild(row);
@@ -3194,40 +3179,6 @@
     return issues;
   }
 
-  function addChangelogRow(data = {}) {
-    if (!modalChangelogList) return;
-    const row = document.createElement('div');
-    row.className = 'editor-repeat-row';
-    row.innerHTML = `
-      <input type="text" data-field="changelog-title" placeholder="Titel / Version">
-      <textarea data-field="changelog-details" placeholder="Änderungen"></textarea>
-      <button type="button" class="editor-repeat-remove" title="Entfernen">×</button>
-    `;
-    row.querySelector('[data-field="changelog-title"]').value = data.title || '';
-    row.querySelector('[data-field="changelog-details"]').value = data.details || '';
-    row.querySelector('.editor-repeat-remove').addEventListener('click', () => makeRemoveHandler(modalChangelogList, addChangelogRow)(row));
-    modalChangelogList.appendChild(row);
-  }
-
-  function setChangelogRows(items) {
-    if (!modalChangelogList) return;
-    clearContainer(modalChangelogList);
-    const list = Array.isArray(items) && items.length ? items : [{}];
-    list.forEach((item) => addChangelogRow(item));
-  }
-
-  function collectChangelogRows() {
-    if (!modalChangelogList) return [];
-    return Array.from(modalChangelogList.querySelectorAll('.editor-repeat-row'))
-      .map((row) => {
-        const title = (row.querySelector('[data-field="changelog-title"]') || {}).value || '';
-        const details = (row.querySelector('[data-field="changelog-details"]') || {}).value || '';
-        if (!(title.trim() || details.trim())) return null;
-        return { title: title.trim(), details: details.trim() };
-      })
-      .filter(Boolean);
-  }
-
   function addGalleryRow(data = {}) {
     if (!modalGalleryList) return;
     const row = document.createElement('div');
@@ -3273,7 +3224,6 @@
   function resetModalUi() {
     setDescriptionRows([]);
     setVersionRows([]);
-    setChangelogRows([]);
     setGalleryRows([]);
     if (modalBodyInput) modalBodyInput.value = '';
   }
@@ -3282,7 +3232,6 @@
     const bodyData = data || createEmptyModalBody();
     setDescriptionRows(bodyData.description || []);
     setVersionRows(bodyData.versions || []);
-    setChangelogRows(bodyData.changelog || []);
     setGalleryRows(bodyData.gallery || []);
   }
 
@@ -3300,7 +3249,6 @@
       description: pitch ? [pitch] : [],
       steps: [],
       versions: [],
-      changelog: [],
       gallery: [],
     };
   }
@@ -3335,9 +3283,6 @@
       if (Array.isArray(parsed.versions) && parsed.versions.length) {
         data.versions = parsed.versions;
       }
-      if (Array.isArray(parsed.changelog) && parsed.changelog.length) {
-        data.changelog = parsed.changelog;
-      }
       if (Array.isArray(parsed.gallery) && parsed.gallery.length) {
         data.gallery = parsed.gallery;
       }
@@ -3350,7 +3295,6 @@
     return {
       description: collectDescriptionRows(),
       versions: collectVersionRows(),
-      changelog: collectChangelogRows(),
       gallery: collectGalleryRows(),
     };
   }
@@ -3385,9 +3329,6 @@
       }
       if (Array.isArray(contentData.versions) && contentData.versions.length) {
         bodyData.versions = contentData.versions;
-      }
-      if (Array.isArray(contentData.changelog) && contentData.changelog.length) {
-        bodyData.changelog = contentData.changelog;
       }
       if (Array.isArray(contentData.gallery) && contentData.gallery.length) {
         bodyData.gallery = contentData.gallery;
@@ -3907,7 +3848,6 @@
     const addHandlers = {
       description: () => addDescriptionRow({}),
       version: () => addVersionRow({}),
-      changelog: () => addChangelogRow({}),
       gallery: () => addGalleryRow({}),
     };
     editorForm.querySelectorAll('.editor-repeat-add').forEach((btn) => {
