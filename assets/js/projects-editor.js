@@ -51,16 +51,11 @@
   const LOCAL_PROJECTS_STORAGE_KEY = 'mirl.editor.projects.v1';
   const LOCAL_LABEL_HISTORY_KEY = 'mirl.editor.labels.v1';
   const LOCAL_UPLOAD_METADATA_KEY = 'mirl.editor.uploads.meta.v1';
-  const LOCAL_UPLOAD_DB_NAME = 'mirl.editor.uploads.db';
-  const LOCAL_UPLOAD_DB_VERSION = 1;
-  const LOCAL_UPLOAD_DB_STORE = 'files';
   const LOCAL_UPLOAD_MAX_ITEMS = 60;
   let localSessionCache = undefined;
   let localProjectsStore = null;
   let labelHistoryCache = null;
   let uploadMetaCache = null;
-  let uploadDbPromise = null;
-  const uploadPreviewUrlCache = new Map();
   const fileLibrarySlots = [];
   const chipFieldControllers = Object.create(null);
   let projectsById = Object.create(null);
@@ -167,101 +162,6 @@
     } catch (err) {}
   }
 
-  let uploadDbInstance = null;
-
-  function supportsIndexedDb() {
-    return typeof indexedDB !== 'undefined' && typeof indexedDB.open === 'function';
-  }
-
-  function openUploadDb() {
-    if (!supportsIndexedDb()) {
-      return Promise.resolve(null);
-    }
-    if (uploadDbInstance) {
-      return Promise.resolve(uploadDbInstance);
-    }
-    if (uploadDbPromise) {
-      return uploadDbPromise;
-    }
-    uploadDbPromise = new Promise((resolve) => {
-      try {
-        const request = indexedDB.open(LOCAL_UPLOAD_DB_NAME, LOCAL_UPLOAD_DB_VERSION);
-        request.onerror = () => resolve(null);
-        request.onupgradeneeded = (event) => {
-          const db = event.target && event.target.result;
-          if (db && !db.objectStoreNames.contains(LOCAL_UPLOAD_DB_STORE)) {
-            db.createObjectStore(LOCAL_UPLOAD_DB_STORE, { keyPath: 'id' });
-          }
-        };
-        request.onsuccess = () => {
-          uploadDbInstance = request.result;
-          if (uploadDbInstance) {
-            uploadDbInstance.onclose = () => {
-              uploadDbInstance = null;
-              uploadDbPromise = null;
-            };
-          }
-          resolve(uploadDbInstance);
-        };
-      } catch (err) {
-        resolve(null);
-      }
-    });
-    return uploadDbPromise;
-  }
-
-  async function storeUploadBlob(id, file) {
-    const db = await openUploadDb();
-    if (!db) return false;
-    return new Promise((resolve) => {
-      try {
-        const tx = db.transaction(LOCAL_UPLOAD_DB_STORE, 'readwrite');
-        tx.oncomplete = () => resolve(true);
-        tx.onerror = () => resolve(false);
-        const store = tx.objectStore(LOCAL_UPLOAD_DB_STORE);
-        store.put({ id, blob: file });
-      } catch (err) {
-        resolve(false);
-      }
-    });
-  }
-
-  async function deleteUploadBlob(id) {
-    if (!id) return false;
-    const db = await openUploadDb();
-    if (!db) return false;
-    return new Promise((resolve) => {
-      try {
-        const tx = db.transaction(LOCAL_UPLOAD_DB_STORE, 'readwrite');
-        tx.oncomplete = () => resolve(true);
-        tx.onerror = () => resolve(false);
-        const store = tx.objectStore(LOCAL_UPLOAD_DB_STORE);
-        store.delete(id);
-      } catch (err) {
-        resolve(false);
-      }
-    });
-  }
-
-  async function loadUploadBlob(id) {
-    if (!id) return null;
-    const db = await openUploadDb();
-    if (!db) return null;
-    return new Promise((resolve) => {
-      try {
-        const tx = db.transaction(LOCAL_UPLOAD_DB_STORE, 'readonly');
-        const store = tx.objectStore(LOCAL_UPLOAD_DB_STORE);
-        const request = store.get(id);
-        request.onsuccess = () => {
-          const value = request.result;
-          resolve(value && value.blob ? value.blob : null);
-        };
-        request.onerror = () => resolve(null);
-      } catch (err) {
-        resolve(null);
-      }
-    });
-  }
 
   function readUploadMeta() {
     if (uploadMetaCache) {
@@ -291,33 +191,16 @@
     } catch (err) {}
   }
 
-  function revokeUploadPreview(id) {
-    if (!id) return;
-    const url = uploadPreviewUrlCache.get(id);
-    if (url && typeof URL !== 'undefined' && typeof URL.revokeObjectURL === 'function') {
-      try { URL.revokeObjectURL(url); } catch (err) {}
-    }
-    uploadPreviewUrlCache.delete(id);
-  }
-
   function persistUploadMeta(record) {
     if (!record) return [];
     const list = readUploadMeta().slice();
     const existingIndex = list.findIndex((item) => item && (item.path === record.path || item.id === record.id));
     if (existingIndex >= 0) {
-      const removed = list.splice(existingIndex, 1)[0];
-      if (removed && removed.id && removed.id !== record.id) {
-        deleteUploadBlob(removed.id);
-        revokeUploadPreview(removed.id);
-      }
+      list.splice(existingIndex, 1);
     }
     list.unshift(record);
     while (list.length > LOCAL_UPLOAD_MAX_ITEMS) {
-      const removed = list.pop();
-      if (removed && removed.id) {
-        deleteUploadBlob(removed.id);
-        revokeUploadPreview(removed.id);
-      }
+      list.pop();
     }
     writeUploadMeta(list);
     return list;
@@ -353,29 +236,6 @@
     return fallback || 'application/octet-stream';
   }
 
-  function base64ToBlob(data, type) {
-    try {
-      const binary = typeof atob === 'function' ? atob(data) : null;
-      if (!binary) return null;
-      const len = binary.length;
-      const bytes = new Uint8Array(len);
-      for (let i = 0; i < len; i += 1) {
-        bytes[i] = binary.charCodeAt(i);
-      }
-      return new Blob([bytes], { type: type || 'application/octet-stream' });
-    } catch (err) {
-      return null;
-    }
-  }
-
-  async function getUploadBlobData(upload) {
-    if (!upload) return null;
-    if (upload.inlineData) {
-      return base64ToBlob(upload.inlineData, upload.type || 'application/octet-stream');
-    }
-    return loadUploadBlob(upload.id);
-  }
-
   function formatUploadTimestamp(value) {
     if (!value) return '';
     try {
@@ -391,6 +251,29 @@
     } catch (err) {
       return '';
     }
+  }
+
+  function isImageUpload(upload) {
+    const type = upload && typeof upload.type === 'string' ? upload.type : '';
+    if (type) {
+      return type.indexOf('image/') === 0;
+    }
+    const filename = upload && upload.filename ? upload.filename : upload && upload.path ? upload.path : '';
+    const lower = String(filename || '').toLowerCase();
+    return ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'].some((ext) => lower.endsWith(ext));
+  }
+
+  function loadUploadPreview(upload, thumb) {
+    if (!upload || !thumb) return;
+    if (!isImageUpload(upload) || !upload.path) {
+      thumb.textContent = extractExtension(upload.filename || upload.path);
+      return;
+    }
+    const img = document.createElement('img');
+    img.alt = '';
+    img.src = upload.path;
+    thumb.textContent = '';
+    thumb.appendChild(img);
   }
 
   function extractExtension(filename) {
@@ -712,6 +595,11 @@
       return { authenticated: false };
     }
 
+    if (path === '/editor/uploads') {
+      requireLocalAuth(options.headers || {});
+      throw createHttpError(501, 'Uploads werden nur über SyncUploads unterstützt.');
+    }
+
     if (path === '/editor/projects') {
       if (method === 'GET') {
         const data = await loadLocalProjects();
@@ -831,7 +719,9 @@
     return sanitiseApiBase('http://localhost:3001');
   }
 
-  const API_BASE = computeApiBase();
+  const API_BASE_RAW = computeApiBase();
+  const FORCE_LOCAL_EDITOR_API = API_BASE_RAW === 'local';
+  const API_BASE = FORCE_LOCAL_EDITOR_API ? '' : API_BASE_RAW;
   const API_SAME_ORIGIN = API_BASE === '';
 
   function isTruthyFlag(value) {
@@ -1594,7 +1484,9 @@
     }
     opts.headers = headers;
     opts.credentials = API_SAME_ORIGIN ? 'include' : 'omit';
-    if (typeof path === 'string' && path.startsWith('/editor/')) {
+    const isEditorEndpoint = typeof path === 'string' && path.startsWith('/editor/');
+    const useLocalEditorApi = isEditorEndpoint && (FORCE_LOCAL_EDITOR_API || !editingSupported);
+    if (useLocalEditorApi) {
       return handleLocalEditorRequest(path, opts);
     }
     const url = API_BASE ? API_BASE + path : path;
@@ -2076,62 +1968,6 @@
     }
   }
 
-  async function exportUploadRecord(upload) {
-    if (!upload) return;
-    const blob = await getUploadBlobData(upload);
-    if (!blob) {
-      alert('Datei konnte nicht geladen werden.');
-      return;
-    }
-    if (typeof URL === 'undefined' || typeof document === 'undefined') {
-      alert('Export wird von diesem Browser nicht unterstützt.');
-      return;
-    }
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = upload.filename || 'upload.bin';
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    setTimeout(() => {
-      if (link.parentNode) link.parentNode.removeChild(link);
-      try { URL.revokeObjectURL(url); } catch (err) {}
-    }, 50);
-  }
-
-  async function loadUploadPreview(upload, thumb) {
-    if (!upload || !thumb) return;
-    if (!upload.type || upload.type.indexOf('image/') !== 0) {
-      thumb.textContent = extractExtension(upload.filename);
-      return;
-    }
-    const cacheKey = upload.id;
-    if (cacheKey && uploadPreviewUrlCache.has(cacheKey)) {
-      const url = uploadPreviewUrlCache.get(cacheKey);
-      const img = document.createElement('img');
-      img.alt = '';
-      img.src = url;
-      thumb.textContent = '';
-      thumb.appendChild(img);
-      return;
-    }
-    const blob = await getUploadBlobData(upload);
-    if (!blob || typeof URL === 'undefined') {
-      thumb.textContent = extractExtension(upload.filename);
-      return;
-    }
-    const objectUrl = URL.createObjectURL(blob);
-    if (cacheKey) {
-      uploadPreviewUrlCache.set(cacheKey, objectUrl);
-    }
-    const img = document.createElement('img');
-    img.alt = '';
-    img.src = objectUrl;
-    thumb.textContent = '';
-    thumb.appendChild(img);
-  }
-
   function renderFileLibrary(slot) {
     if (!slot || !slot.grid || (typeof slot.grid.isConnected !== 'undefined' && !slot.grid.isConnected)) {
       return;
@@ -2195,16 +2031,17 @@
         event.stopPropagation();
         applyUploadSelection(upload, slot);
       });
-      const exportBtn = document.createElement('button');
-      exportBtn.type = 'button';
-      exportBtn.className = 'editor-media-btn secondary';
-      exportBtn.textContent = 'Export';
-      exportBtn.addEventListener('click', (event) => {
+      const openLink = document.createElement('a');
+      openLink.className = 'editor-media-btn secondary';
+      openLink.textContent = 'Öffnen';
+      openLink.href = upload.path || '#';
+      openLink.target = '_blank';
+      openLink.rel = 'noopener';
+      openLink.addEventListener('click', (event) => {
         event.stopPropagation();
-        exportUploadRecord(upload);
       });
       actions.appendChild(useBtn);
-      actions.appendChild(exportBtn);
+      actions.appendChild(openLink);
       card.appendChild(actions);
 
       slot.grid.appendChild(card);
@@ -2220,39 +2057,43 @@
     const filename = typeof opts.filename === 'string' && opts.filename.trim()
       ? opts.filename.trim()
       : sanitizeFilename(file.name);
-    const record = {
-      id: 'upload-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
+    const fallbackPath = prefix ? prefix + filename : filename;
+    const contentType = file.type || guessContentType(filename, file.type);
+    const base64 = await readFileAsBase64(file);
+    if (!base64) {
+      throw new Error('file_read_failed');
+    }
+    const payload = {
       prefix,
       filename,
-      path: prefix ? prefix + filename : filename,
-      type: file.type || guessContentType(filename, file.type),
-      size: file.size || 0,
-      uploadedAt: new Date().toISOString(),
-      inlineData: '',
+      contentType,
+      data: base64,
     };
-    let stored = false;
+    let response;
     try {
-      stored = await storeUploadBlob(record.id, file);
+      response = await api('/editor/uploads', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        retryAttempts: 1,
+      });
     } catch (err) {
-      stored = false;
+      throw err;
     }
-    if (!stored) {
-      try {
-        record.inlineData = await readFileAsBase64(file);
-        stored = !!record.inlineData;
-      } catch (err) {
-        stored = false;
-      }
-    }
-    if (!stored) {
+    if (!response || !response.path) {
       throw new Error('upload_unavailable');
     }
-    if (!record.inlineData) {
-      delete record.inlineData;
-    }
+    const record = {
+      id: response.path,
+      prefix,
+      filename,
+      path: response.path || fallbackPath,
+      type: response.contentType || contentType,
+      size: Number.isFinite(response.size) ? response.size : file.size || 0,
+      uploadedAt: new Date().toISOString(),
+    };
     persistUploadMeta(record);
     refreshFileLibraries(prefix);
-    return { path: record.path, size: record.size, type: record.type, local: true };
+    return { path: record.path, size: record.size, type: record.type };
   }
 
   function enhanceFilePickerTargets(root) {
