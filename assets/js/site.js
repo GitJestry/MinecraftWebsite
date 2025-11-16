@@ -5,6 +5,85 @@
   const LS_LANG = 'mirl.lang';
   const LS_ALLOW = 'mirl.consent.allowlist';
 
+  function sanitiseDownloadEndpoint(value) {
+    if (value == null) return '';
+    const trimmed = String(value).trim();
+    if (!trimmed || trimmed.toLowerCase() === 'same-origin') {
+      return '';
+    }
+    return trimmed;
+  }
+
+  function sanitiseDownloadCountsValue(value) {
+    if (value == null) return null;
+    const trimmed = String(value).trim();
+    if (!trimmed) {
+      return null;
+    }
+    const lowered = trimmed.toLowerCase();
+    if (lowered === 'none' || lowered === 'disabled') {
+      return false;
+    }
+    return trimmed;
+  }
+
+  function readHtmlConfigAttribute(attribute) {
+    if (typeof document === 'undefined') {
+      return '';
+    }
+    const html = document.documentElement;
+    if (!html) {
+      return '';
+    }
+    const value = html.getAttribute(attribute);
+    return value ? value.trim() : '';
+  }
+
+  function readMetaConfig(name) {
+    if (typeof document === 'undefined') {
+      return '';
+    }
+    const meta = document.querySelector(`meta[name="${name}"]`);
+    if (!meta) {
+      return '';
+    }
+    const value = meta.getAttribute('content');
+    return value ? value.trim() : '';
+  }
+
+  function resolveDownloadAnalyticsEndpoint() {
+    const sources = [
+      typeof window !== 'undefined' ? window.MIRL_DOWNLOADS_ENDPOINT : '',
+      readHtmlConfigAttribute('data-download-analytics'),
+      readMetaConfig('download-analytics'),
+    ];
+    for (const source of sources) {
+      const normalised = sanitiseDownloadEndpoint(source);
+      if (normalised) {
+        return normalised;
+      }
+    }
+    return '/analytics/downloads';
+  }
+
+  function resolveDownloadCountsUrl() {
+    const sources = [
+      typeof window !== 'undefined' ? window.MIRL_DOWNLOAD_COUNTS_URL : '',
+      readHtmlConfigAttribute('data-download-counts'),
+      readMetaConfig('download-counts-url'),
+    ];
+    for (const source of sources) {
+      const normalised = sanitiseDownloadCountsValue(source);
+      if (normalised === false) {
+        return null;
+      }
+      if (typeof normalised === 'string' && normalised) {
+        return normalised;
+      }
+    }
+    return 'assets/data/download-counts.json';
+  }
+
   function sanitiseEditorApiBase(value) {
     if (value == null) return '';
     const trimmed = String(value).trim();
@@ -405,8 +484,8 @@
   // Expose for debugging
   window.__MIRL = { setLang, getLang };
 
-  const DOWNLOAD_ENDPOINT = '/analytics/downloads';
-  const STATIC_COUNTS_URL = 'assets/data/download-counts.json';
+  const DOWNLOAD_ENDPOINT = resolveDownloadAnalyticsEndpoint();
+  const STATIC_COUNTS_URL = resolveDownloadCountsUrl();
   const downloadRegistry = new Map();
   const trackedProjectIds = new Set();
   let downloadCountsCache = {};
@@ -470,6 +549,9 @@
   }
 
   async function loadDownloadFallbacks() {
+    if (!STATIC_COUNTS_URL) {
+      return {};
+    }
     try {
       const res = await fetch(STATIC_COUNTS_URL, { cache: 'no-store' });
       if (!res.ok) throw new Error('Failed to load fallback counts');
@@ -486,8 +568,9 @@
   function fetchDownloadCounts(ids) {
     const cleanIds = Array.from(new Set(ids.filter(Boolean))).map((id) => id.trim()).filter(Boolean);
     if (!cleanIds.length) return Promise.resolve({});
-    const query = encodeURIComponent(cleanIds.join(','));
-    return fetch(`${DOWNLOAD_ENDPOINT}?ids=${query}`, { cache: 'no-store' })
+    const joined = cleanIds.join(',');
+    const url = buildDownloadCountsUrl(joined);
+    return fetch(url, { cache: 'no-store' })
       .then((response) => {
         if (!response.ok) {
           throw new Error('download_stats_unavailable');
@@ -495,6 +578,23 @@
         return response.json();
       })
       .then((payload) => payload?.counts || {});
+  }
+
+  function buildDownloadCountsUrl(idsValue) {
+    const fallback = `${DOWNLOAD_ENDPOINT}${DOWNLOAD_ENDPOINT.includes('?') ? '&' : '?'}ids=${encodeURIComponent(idsValue)}`;
+    if (typeof URL !== 'function') {
+      return fallback;
+    }
+    try {
+      const base = (typeof window !== 'undefined' && window.location && window.location.href)
+        ? window.location.href
+        : undefined;
+      const endpointUrl = base ? new URL(DOWNLOAD_ENDPOINT, base) : new URL(DOWNLOAD_ENDPOINT);
+      endpointUrl.searchParams.set('ids', idsValue);
+      return endpointUrl.toString();
+    } catch (err) {
+      return fallback;
+    }
   }
 
   function applyCounts(counts) {
