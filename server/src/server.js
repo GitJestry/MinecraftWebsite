@@ -13,6 +13,7 @@ import {
 } from '@simplewebauthn/server';
 import { totp } from 'otplib';
 import DownloadStore from './download-store.js';
+import { getHashedClientIp } from './request-utils.js';
 
 const {
   NODE_ENV,
@@ -518,6 +519,7 @@ app.post('/analytics/downloads', downloadRecordLimiter, async (req, res) => {
     const result = await downloadStore.record(projectId, {
       fileId,
       path: downloadPath,
+      clientHash: getHashedClientIp(req),
     });
 
     return res.status(202).json({ count: result.count });
