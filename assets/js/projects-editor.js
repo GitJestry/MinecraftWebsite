@@ -49,8 +49,15 @@
   const LOCAL_EDITOR_TOKEN = 'local-editor-token';
   const LOCAL_SESSION_STORAGE_KEY = 'mirl.editor.session.v1';
   const LOCAL_PROJECTS_STORAGE_KEY = 'mirl.editor.projects.v1';
+  const LOCAL_UPLOADS_STORAGE_KEY = 'mirl.editor.uploads.v1';
   let localSessionCache = undefined;
   let localProjectsStore = null;
+  let localUploadsStore = null;
+  const LOCAL_UPLOAD_TARGETS = [
+    { prefix: 'assets/img/' },
+    { prefix: 'downloads/' },
+  ];
+  const MAX_LOCAL_UPLOAD_BYTES = 8 * 1024 * 1024;
 
   function getCryptoSubtle() {
     if (typeof globalThis !== 'undefined' && globalThis.crypto && globalThis.crypto.subtle) {
@@ -177,6 +184,68 @@
     return project ? JSON.parse(JSON.stringify(project)) : project;
   }
 
+  function normaliseUploadPrefix(value) {
+    if (!value) return '';
+    const trimmed = String(value).trim().replace(/\\/g, '/');
+    const withoutLeading = trimmed.replace(/^\/+/, '');
+    const withoutTrailing = withoutLeading.replace(/\/+$/, '');
+    if (!withoutTrailing) return '';
+    return withoutTrailing + '/';
+  }
+
+  function sanitiseUploadSegment(value) {
+    return String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9._-]+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  function resolveLocalUploadDestination(prefix) {
+    const normalized = normaliseUploadPrefix(prefix);
+    if (!normalized) return null;
+    const target = LOCAL_UPLOAD_TARGETS.find((entry) => normalized.startsWith(entry.prefix));
+    if (!target) return null;
+    const remainder = normalized.slice(target.prefix.length);
+    const segments = remainder
+      .split('/')
+      .map((segment) => sanitiseUploadSegment(segment))
+      .filter(Boolean);
+    const subPath = segments.length ? `${segments.join('/')}/` : '';
+    return { publicPrefix: target.prefix + subPath };
+  }
+
+  function normaliseBase64Payload(payload) {
+    if (typeof payload !== 'string') {
+      return '';
+    }
+    const sanitized = payload.trim().replace(/\s+/g, '');
+    if (!sanitized) {
+      return '';
+    }
+    if (/[^0-9a-zA-Z+/=]/.test(sanitized)) {
+      return '';
+    }
+    if (sanitized.length % 4 === 1) {
+      return '';
+    }
+    return sanitized;
+  }
+
+  function estimateBase64Size(base64Payload) {
+    if (!base64Payload) {
+      return 0;
+    }
+    let padding = 0;
+    if (base64Payload.endsWith('==')) {
+      padding = 2;
+    } else if (base64Payload.endsWith('=')) {
+      padding = 1;
+    }
+    return Math.max(0, Math.floor((base64Payload.length * 3) / 4) - padding);
+  }
+
   function normaliseTags(value) {
     if (Array.isArray(value)) {
       return value.map((tag) => String(tag || '').trim()).filter(Boolean);
@@ -233,6 +302,67 @@
     localProjectsStore = Array.isArray(staticData) ? staticData.map((item) => normaliseProjectRecord(item)) : [];
     persistLocalProjects();
     return localProjectsStore;
+  }
+
+  function persistLocalUploads() {
+    if (typeof localStorage === 'undefined') {
+      return;
+    }
+    try {
+      if (!localUploadsStore || !Array.isArray(localUploadsStore)) {
+        localStorage.removeItem(LOCAL_UPLOADS_STORAGE_KEY);
+      } else {
+        localStorage.setItem(LOCAL_UPLOADS_STORAGE_KEY, JSON.stringify(localUploadsStore));
+      }
+    } catch (err) {}
+  }
+
+  function normaliseUploadMetadata(entry) {
+    if (!entry || typeof entry !== 'object') {
+      return null;
+    }
+    return {
+      id: typeof entry.id === 'string' && entry.id ? entry.id : `upload-${Date.now()}`,
+      path: typeof entry.path === 'string' ? entry.path : '',
+      size: Number.isFinite(entry.size) ? entry.size : 0,
+      contentType: typeof entry.contentType === 'string' ? entry.contentType : '',
+      filename: typeof entry.filename === 'string' ? entry.filename : '',
+      prefix: typeof entry.prefix === 'string' ? entry.prefix : '',
+      storedAt: typeof entry.storedAt === 'string' ? entry.storedAt : new Date().toISOString(),
+    };
+  }
+
+  function loadLocalUploads() {
+    if (localUploadsStore && Array.isArray(localUploadsStore)) {
+      return localUploadsStore;
+    }
+    let stored = null;
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const raw = localStorage.getItem(LOCAL_UPLOADS_STORAGE_KEY);
+        stored = raw ? JSON.parse(raw) : null;
+      } catch (err) {
+        stored = null;
+      }
+    }
+    if (Array.isArray(stored)) {
+      localUploadsStore = stored
+        .map((entry) => normaliseUploadMetadata(entry))
+        .filter((entry) => entry && entry.path);
+    } else {
+      localUploadsStore = [];
+    }
+    persistLocalUploads();
+    return localUploadsStore;
+  }
+
+  function recordLocalUpload(metadata) {
+    if (!metadata) {
+      return;
+    }
+    const store = loadLocalUploads();
+    store.push(metadata);
+    persistLocalUploads();
   }
 
   function updateLocalProject(updated) {
@@ -384,6 +514,52 @@
         return { success: true };
       }
       throw createHttpError(405, 'Methode nicht erlaubt.');
+    }
+
+    if (path === '/editor/uploads') {
+      requireLocalAuth(options.headers || {});
+      if (method !== 'POST') {
+        throw createHttpError(405, 'Methode nicht erlaubt.');
+      }
+      const payload = parseJsonBody(options.body);
+      const destination = resolveLocalUploadDestination(payload.prefix || payload.target || '');
+      if (!destination) {
+        throw createHttpError(400, 'Ungültiger Upload-Pfad.');
+      }
+      const filename = sanitizeFilename(payload.filename || payload.name || 'upload.bin');
+      const contentType = typeof payload.contentType === 'string' ? payload.contentType : '';
+      if (
+        destination.publicPrefix.startsWith('assets/img/') &&
+        contentType &&
+        !contentType.toLowerCase().startsWith('image/')
+      ) {
+        throw createHttpError(400, 'Ungültiger Dateityp.');
+      }
+      const base64Payload = normaliseBase64Payload(payload.data || payload.base64 || '');
+      if (!base64Payload) {
+        throw createHttpError(400, 'Ungültige Datei.');
+      }
+      const size = estimateBase64Size(base64Payload);
+      if (size <= 0) {
+        throw createHttpError(400, 'Ungültige Datei.');
+      }
+      if (size > MAX_LOCAL_UPLOAD_BYTES) {
+        throw createHttpError(413, 'Datei zu groß.');
+      }
+      const storedAt = new Date().toISOString();
+      const response = {
+        path: destination.publicPrefix + filename,
+        size,
+        contentType,
+        storedAt,
+      };
+      recordLocalUpload({
+        ...response,
+        id: `upload-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        filename,
+        prefix: destination.publicPrefix,
+      });
+      return response;
     }
 
     throw createHttpError(404, 'Pfad nicht gefunden.');
@@ -1389,6 +1565,39 @@
     });
   }
 
+  function updateFilePickerStatus(statusEl, state, text, title) {
+    if (!statusEl) {
+      return;
+    }
+    statusEl.textContent = text;
+    statusEl.title = title || '';
+    if (state) {
+      statusEl.setAttribute('data-state', state);
+    } else {
+      statusEl.removeAttribute('data-state');
+    }
+  }
+
+  function describeUploadError(err) {
+    if (!err) {
+      return 'Unbekannter Fehler.';
+    }
+    const status = typeof err.status === 'number' ? err.status : null;
+    if (status === 401) {
+      return 'Anmeldung erforderlich.';
+    }
+    if (status === 413) {
+      return 'Datei ist zu groß.';
+    }
+    if (status === 400) {
+      return 'Ungültige Datei oder Ziel.';
+    }
+    if (typeof err.message === 'string' && err.message && err.message !== 'upload_failed') {
+      return err.message;
+    }
+    return 'Upload fehlgeschlagen.';
+  }
+
   async function uploadEditorAsset(file, options) {
     if (!file) {
       throw new Error('missing_file');
@@ -1443,7 +1652,7 @@
 
       const status = document.createElement('span');
       status.className = 'editor-file-selected';
-      status.textContent = helper || 'Kein Upload ausgewählt.';
+      updateFilePickerStatus(status, 'idle', helper || 'Kein Upload ausgewählt.', helper || '');
 
       const fileInput = document.createElement('input');
       fileInput.type = 'file';
@@ -1454,14 +1663,13 @@
       fileInput.addEventListener('change', async () => {
         const file = fileInput.files && fileInput.files[0];
         if (!file) {
-          status.textContent = helper || 'Kein Upload ausgewählt.';
+          updateFilePickerStatus(status, 'idle', helper || 'Kein Upload ausgewählt.', helper || '');
           input.value = '';
           return;
         }
         const sanitized = sanitizeFilename(file.name);
         const fallbackPath = prefix ? prefix + sanitized : sanitized;
-        status.textContent = 'Upload läuft …';
-        status.title = file.name;
+        updateFilePickerStatus(status, 'uploading', 'Upload läuft …', file.name);
         trigger.disabled = true;
         try {
           const result = await uploadEditorAsset(file, { prefix, filename: sanitized });
@@ -1473,12 +1681,12 @@
           } catch (err) {}
           const sizeSource = (result && Number.isFinite(result.size)) ? result.size : file.size;
           const sizeLabel = formatFileSize(sizeSource);
-          status.textContent = sizeLabel ? `${sanitized} (${sizeLabel})` : sanitized;
-          status.title = file.name;
+          const successLabel = sizeLabel ? `${finalPath} (${sizeLabel})` : finalPath;
+          updateFilePickerStatus(status, 'success', 'Upload erfolgreich: ' + successLabel, finalPath);
         } catch (err) {
           console.warn('Upload fehlgeschlagen:', err);
-          status.textContent = 'Upload fehlgeschlagen';
-          status.title = (err && err.message) || 'Upload fehlgeschlagen';
+          const message = describeUploadError(err);
+          updateFilePickerStatus(status, 'error', 'Upload fehlgeschlagen: ' + message, message);
           input.value = '';
         } finally {
           trigger.disabled = false;
