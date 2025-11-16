@@ -405,13 +405,12 @@
   // Expose for debugging
   window.__MIRL = { setLang, getLang };
 
-  const DL_LS_KEY = 'mirl.download.tracked.v1';
-  const DL_COUNTS_KEY = 'mirl.download.counts.v1';
-  const DL_THROTTLE_MS = 4 * 60 * 60 * 1000; // 4 hours per download/file combo
+  const DOWNLOAD_ENDPOINT = '/analytics/downloads';
+  const STATIC_COUNTS_URL = 'assets/data/download-counts.json';
   const downloadRegistry = new Map();
-  let downloadStoreCache = undefined;
-  let downloadCountsCache = undefined;
-  let downloadFallbacks = {};
+  const trackedProjectIds = new Set();
+  let downloadCountsCache = {};
+  let refreshTimeout = null;
 
   function safeNumber(value) {
     const num = Number(value);
@@ -429,106 +428,26 @@
     }
   }
 
-  function readDownloadStore() {
-    if (downloadStoreCache !== undefined) return downloadStoreCache;
-    try {
-      const raw = localStorage.getItem(DL_LS_KEY);
-      downloadStoreCache = raw ? JSON.parse(raw) : {};
-    } catch (err) {
-      downloadStoreCache = null;
-    }
-    return downloadStoreCache;
-  }
-
-  function writeDownloadStore(store) {
-    downloadStoreCache = store;
-    if (store === null) return;
-    try {
-      localStorage.setItem(DL_LS_KEY, JSON.stringify(store));
-    } catch (err) {
-      downloadStoreCache = null;
-    }
-  }
-
-  function shouldRecordDownload(projectId, fileId) {
-    const store = readDownloadStore();
-    if (store === null) return true;
-    const key = `${projectId}::${fileId || ''}`;
-    const now = Date.now();
-    const last = Number(store[key]) || 0;
-    if (now - last < DL_THROTTLE_MS) return false;
-    store[key] = now;
-    writeDownloadStore(store);
-    return true;
-  }
-
-  function readDownloadCounts() {
-    if (downloadCountsCache !== undefined) return downloadCountsCache;
-    try {
-      const raw = localStorage.getItem(DL_COUNTS_KEY);
-      downloadCountsCache = raw ? JSON.parse(raw) : {};
-    } catch (err) {
-      downloadCountsCache = {};
-    }
-    return downloadCountsCache;
-  }
-
-  function writeDownloadCounts(counts) {
-    downloadCountsCache = counts || {};
-    try {
-      if (!counts || Object.keys(counts).length === 0) {
-        localStorage.removeItem(DL_COUNTS_KEY);
-      } else {
-        localStorage.setItem(DL_COUNTS_KEY, JSON.stringify(downloadCountsCache));
-      }
-    } catch (err) {}
-  }
-
-  function getStoredDownloadCount(projectId, fallbackValue) {
-    const counts = readDownloadCounts();
-    if (!counts || typeof counts !== 'object') {
-      return Number.isFinite(fallbackValue) ? fallbackValue : null;
-    }
-    const override = safeNumber(counts[projectId]);
-    if (Number.isFinite(override)) {
-      return override;
-    }
-    return Number.isFinite(fallbackValue) ? fallbackValue : null;
-  }
-
-  function ensureStoredCount(projectId, fallbackValue) {
-    const value = getStoredDownloadCount(projectId, fallbackValue);
-    updateDownloadDisplay(projectId, value);
-    return value;
-  }
-
-  function incrementStoredCount(projectId) {
-    const counts = { ...(readDownloadCounts() || {}) };
-    const fallback = safeNumber(downloadFallbacks?.[projectId]);
-    const current = safeNumber(counts[projectId]);
-    const base = Number.isFinite(current)
-      ? current
-      : Number.isFinite(fallback)
-        ? fallback
-        : 0;
-    const next = base + 1;
-    counts[projectId] = next;
-    writeDownloadCounts(counts);
-    updateDownloadDisplay(projectId, next);
-    return next;
+  function markTrackedProject(projectId) {
+    if (!projectId) return;
+    trackedProjectIds.add(String(projectId));
   }
 
   function registerDownloadElement(projectId, el, fallbackValue) {
     if (!projectId) return;
     const key = String(projectId);
+    markTrackedProject(key);
     let entry = downloadRegistry.get(key);
     if (!entry) {
       entry = { elements: new Set(), value: Number.isFinite(fallbackValue) ? fallbackValue : null };
       downloadRegistry.set(key, entry);
     }
     if (el) entry.elements.add(el);
-    if (Number.isFinite(fallbackValue)) {
-      entry.value = Number.isFinite(entry.value) ? entry.value : fallbackValue;
+    const knownValue = safeNumber(downloadCountsCache[key]);
+    if (Number.isFinite(knownValue)) {
+      entry.value = knownValue;
+    } else if (Number.isFinite(fallbackValue) && !Number.isFinite(entry.value)) {
+      entry.value = fallbackValue;
     }
     updateDownloadDisplay(key, entry.value);
   }
@@ -552,7 +471,7 @@
 
   async function loadDownloadFallbacks() {
     try {
-      const res = await fetch('assets/data/download-counts.json', { cache: 'no-store' });
+      const res = await fetch(STATIC_COUNTS_URL, { cache: 'no-store' });
       if (!res.ok) throw new Error('Failed to load fallback counts');
       const data = await res.json();
       if (data && typeof data === 'object' && data.counts) {
@@ -564,19 +483,118 @@
     return {};
   }
 
-  function handleDownloadEvent(projectId, fileId) {
+  function fetchDownloadCounts(ids) {
+    const cleanIds = Array.from(new Set(ids.filter(Boolean))).map((id) => id.trim()).filter(Boolean);
+    if (!cleanIds.length) return Promise.resolve({});
+    const query = encodeURIComponent(cleanIds.join(','));
+    return fetch(`${DOWNLOAD_ENDPOINT}?ids=${query}`, { cache: 'no-store' })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('download_stats_unavailable');
+        }
+        return response.json();
+      })
+      .then((payload) => payload?.counts || {});
+  }
+
+  function applyCounts(counts) {
+    downloadCountsCache = counts || {};
+    Object.keys(downloadCountsCache).forEach((projectId) => {
+      const value = safeNumber(downloadCountsCache[projectId]);
+      if (Number.isFinite(value)) {
+        updateDownloadDisplay(projectId, value);
+      }
+    });
+  }
+
+  function scheduleDownloadCountRefresh() {
+    if (refreshTimeout) return;
+    refreshTimeout = setTimeout(() => {
+      refreshTimeout = null;
+      refreshDownloadCounts().catch((err) => {
+        console.warn('[downloads] Scheduled refresh failed:', err);
+      });
+    }, 1000);
+  }
+
+  function refreshDownloadCounts() {
+    const ids = Array.from(trackedProjectIds);
+    if (!ids.length) return Promise.resolve();
+    return fetchDownloadCounts(ids)
+      .then((counts) => {
+        if (counts && typeof counts === 'object') {
+          applyCounts(counts);
+        }
+      });
+  }
+
+  function toPayload(link, projectId) {
+    const payload = { projectId };
+    if (!link) {
+      return payload;
+    }
+    const fileId = (link.getAttribute('data-download-file') || '').trim();
+    const href = (link.getAttribute('href') || '').trim();
+    if (fileId) {
+      payload.fileId = fileId;
+    }
+    if (href) {
+      payload.path = href;
+    }
+    return payload;
+  }
+
+  function recordDownload(link, projectId) {
+    if (!projectId) return;
+    const payload = toPayload(link, projectId);
+    const body = JSON.stringify(payload);
+    try {
+      if (navigator.sendBeacon) {
+        const blob = new Blob([body], { type: 'application/json' });
+        const ok = navigator.sendBeacon(DOWNLOAD_ENDPOINT, blob);
+        if (ok) {
+          scheduleDownloadCountRefresh();
+          return;
+        }
+      }
+    } catch (err) {}
+    fetch(DOWNLOAD_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+      keepalive: true,
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('download_record_failed');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        const count = Number(data?.count);
+        if (Number.isFinite(count)) {
+          downloadCountsCache[projectId] = count;
+          updateDownloadDisplay(projectId, count);
+        } else {
+          scheduleDownloadCountRefresh();
+        }
+      })
+      .catch((err) => {
+        console.warn('[downloads] Failed to record download:', err);
+      });
+  }
+
+  function handleDownloadEvent(projectId, link) {
     if (!projectId) return;
     registerDownloadElement(projectId);
-    if (!shouldRecordDownload(projectId, fileId)) return;
-    incrementStoredCount(projectId);
+    recordDownload(link, projectId);
   }
 
   function attachDownloadListeners(links) {
     links.forEach(link => {
       link.addEventListener('click', () => {
         const projectId = link.getAttribute('data-track-download');
-        const fileId = link.getAttribute('data-download-file') || link.getAttribute('href') || '';
-        handleDownloadEvent(projectId, fileId);
+        handleDownloadEvent(projectId, link);
       });
     });
   }
@@ -590,15 +608,15 @@
 
     (async () => {
       const fallbackCounts = await loadDownloadFallbacks();
-      downloadFallbacks = fallbackCounts || {};
       countElements.forEach(el => {
         const projectId = el.getAttribute('data-download-count');
         const fallback = safeNumber(fallbackCounts?.[projectId]);
         registerDownloadElement(projectId, el, fallback);
       });
-      Array.from(downloadRegistry.keys()).forEach((id) => {
-        const fallback = safeNumber(fallbackCounts?.[id]);
-        ensureStoredCount(id, fallback);
+      refreshDownloadCounts().catch(() => {
+        if (fallbackCounts && typeof fallbackCounts === 'object') {
+          applyCounts(fallbackCounts);
+        }
       });
     })();
   }
