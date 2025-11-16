@@ -49,8 +49,14 @@
   const LOCAL_EDITOR_TOKEN = 'local-editor-token';
   const LOCAL_SESSION_STORAGE_KEY = 'mirl.editor.session.v1';
   const LOCAL_PROJECTS_STORAGE_KEY = 'mirl.editor.projects.v1';
+  const LOCAL_LABEL_HISTORY_KEY = 'mirl.editor.labels.v1';
   let localSessionCache = undefined;
   let localProjectsStore = null;
+  let labelHistoryCache = null;
+  const chipFieldControllers = Object.create(null);
+  const labelCollator = (typeof Intl !== 'undefined' && typeof Intl.Collator === 'function')
+    ? new Intl.Collator('de', { sensitivity: 'base' })
+    : null;
 
   function getCryptoSubtle() {
     if (typeof globalThis !== 'undefined' && globalThis.crypto && globalThis.crypto.subtle) {
@@ -196,6 +202,149 @@
     record.type = normaliseType(record.type);
     record.tags = normaliseTags(record.tags);
     return record;
+  }
+
+  function normaliseLabelValue(value) {
+    if (typeof value === 'string') {
+      return value.trim().toLowerCase();
+    }
+    if (value === null || value === undefined) {
+      return '';
+    }
+    return String(value).trim().toLowerCase();
+  }
+
+  function createEmptyLabelHistory() {
+    return { categories: [], tags: [] };
+  }
+
+  function readLabelHistory() {
+    if (labelHistoryCache) {
+      return labelHistoryCache;
+    }
+    let history = createEmptyLabelHistory();
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const raw = localStorage.getItem(LOCAL_LABEL_HISTORY_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          history = Object.assign(createEmptyLabelHistory(), parsed);
+        }
+      } catch (err) {
+        history = createEmptyLabelHistory();
+      }
+    }
+    labelHistoryCache = history;
+    return labelHistoryCache;
+  }
+
+  function persistLabelHistory(next) {
+    const target = next || labelHistoryCache || createEmptyLabelHistory();
+    labelHistoryCache = target;
+    if (typeof localStorage === 'undefined') {
+      return;
+    }
+    try {
+      localStorage.setItem(LOCAL_LABEL_HISTORY_KEY, JSON.stringify(target));
+    } catch (err) {}
+  }
+
+  function getLabelHistoryKey(kind) {
+    return kind === 'category' ? 'categories' : 'tags';
+  }
+
+  function getLabelHistoryList(kind) {
+    const history = readLabelHistory();
+    const key = getLabelHistoryKey(kind);
+    const list = Array.isArray(history[key]) ? history[key] : [];
+    return list.slice();
+  }
+
+  function addLabelToHistory(kind, value) {
+    const clean = typeof value === 'string' ? value.trim() : '';
+    if (!clean) {
+      return false;
+    }
+    const key = getLabelHistoryKey(kind);
+    const history = readLabelHistory();
+    if (!Array.isArray(history[key])) {
+      history[key] = [];
+    }
+    const normalised = normaliseLabelValue(clean);
+    if (!normalised) {
+      return false;
+    }
+    const exists = history[key].some((entry) => normaliseLabelValue(entry) === normalised);
+    if (exists) {
+      return false;
+    }
+    history[key].push(clean);
+    persistLabelHistory(history);
+    return true;
+  }
+
+  function buildLabelSuggestions(kind) {
+    const suggestions = [];
+    const seen = new Set();
+    const pushValue = (value) => {
+      if (!value || typeof value !== 'string') {
+        return;
+      }
+      const trimmed = value.trim();
+      if (!trimmed) {
+        return;
+      }
+      const normalised = normaliseLabelValue(trimmed);
+      if (!normalised || seen.has(normalised)) {
+        return;
+      }
+      seen.add(normalised);
+      suggestions.push(trimmed);
+    };
+
+    Object.keys(projectsById || {}).forEach((projectId) => {
+      const project = projectsById[projectId];
+      if (!project) {
+        return;
+      }
+      if (kind === 'category') {
+        if (project.category) {
+          pushValue(project.category);
+        }
+        return;
+      }
+      const tags = Array.isArray(project.tags)
+        ? project.tags
+        : normaliseTags(project.tags);
+      tags.forEach(pushValue);
+    });
+
+    getLabelHistoryList(kind).forEach(pushValue);
+
+    if (labelCollator) {
+      suggestions.sort(labelCollator.compare);
+    } else {
+      suggestions.sort((a, b) => a.localeCompare(b));
+    }
+    return suggestions;
+  }
+
+  function getChipFieldController(kind) {
+    if (!chipFieldControllers) {
+      return null;
+    }
+    return chipFieldControllers[kind] || null;
+  }
+
+  function refreshLabelSuggestions(kind) {
+    const kinds = kind ? [kind] : ['category', 'tags'];
+    kinds.forEach((key) => {
+      const controller = getChipFieldController(key);
+      if (!controller) {
+        return;
+      }
+      controller.renderSuggestions(buildLabelSuggestions(key));
+    });
   }
 
   function persistLocalProjects() {
@@ -545,6 +694,12 @@
   const statusInput = document.getElementById('pe-status');
   const categoryInput = document.getElementById('pe-category');
   const tagsInput = document.getElementById('pe-tags');
+  const categorySelectedEl = document.getElementById('pe-category-selected');
+  const categorySuggestionsEl = document.getElementById('pe-category-suggestions');
+  const categoryAddBtn = document.getElementById('pe-category-add');
+  const tagsSelectedEl = document.getElementById('pe-tags-selected');
+  const tagsSuggestionsEl = document.getElementById('pe-tags-suggestions');
+  const tagsAddBtn = document.getElementById('pe-tags-add');
   const shortInput = document.getElementById('pe-short');
   const modalHeroInput = document.getElementById('pe-modal-hero');
   const modalBodyInput = document.getElementById('pe-modal-body');
@@ -660,18 +815,26 @@
 
   function focusFirstInvalidField(input) {
     if (!input) return;
+    let target = input;
+    if (input.type === 'hidden') {
+      const field = input.closest ? input.closest('.field') : null;
+      const focusable = field ? field.querySelector('[data-chip-focus]') : null;
+      if (focusable) {
+        target = focusable;
+      }
+    }
     try {
-      if (typeof input.focus === 'function') {
-        input.focus({ preventScroll: false });
+      if (target && typeof target.focus === 'function') {
+        target.focus({ preventScroll: false });
       }
     } catch (err) {
-      try { input.focus(); } catch (err2) {}
+      try { if (target && typeof target.focus === 'function') target.focus(); } catch (err2) {}
     }
-    if (typeof input.scrollIntoView === 'function') {
+    if (target && typeof target.scrollIntoView === 'function') {
       try {
-        input.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+        target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
       } catch (err) {
-        input.scrollIntoView(true);
+        target.scrollIntoView(true);
       }
     }
   }
@@ -694,6 +857,275 @@
     const result = validateRequiredFields();
     updateValidationSummary(result.missing);
   }
+
+  function createChipField(options) {
+    const opts = Object.assign({
+      multi: false,
+      emptyLabel: 'Keine Auswahl',
+      emptySuggestionsLabel: 'Keine Vorschläge vorhanden.',
+      removeLabel: '„%s“ entfernen',
+    }, options || {});
+    const state = { values: [] };
+    const input = opts.input || null;
+    const selectedHost = opts.selected || null;
+    const suggestionsHost = opts.suggestions || null;
+
+    function cloneValues() {
+      return state.values.slice();
+    }
+
+    function syncInput() {
+      if (!input) {
+        return;
+      }
+      if (opts.multi) {
+        input.value = state.values.join(', ');
+      } else {
+        input.value = state.values[0] || '';
+      }
+    }
+
+    function applyRemovalLabel(btn, value) {
+      const label = (opts.removeLabel || '„%s“ entfernen').replace('%s', value);
+      btn.title = label;
+      btn.setAttribute('aria-label', label);
+    }
+
+    function renderSelected() {
+      if (!selectedHost) {
+        return;
+      }
+      selectedHost.innerHTML = '';
+      if (!state.values.length) {
+        const empty = document.createElement('span');
+        empty.className = 'chip-input-empty';
+        empty.textContent = opts.emptyLabel;
+        selectedHost.appendChild(empty);
+        return;
+      }
+      state.values.forEach((value) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'chip-option';
+        btn.setAttribute('data-removable', 'true');
+        btn.textContent = value;
+        applyRemovalLabel(btn, value);
+        btn.addEventListener('click', () => {
+          removeValue(value);
+        });
+        selectedHost.appendChild(btn);
+      });
+    }
+
+    function updateSuggestionState() {
+      if (!suggestionsHost) {
+        return;
+      }
+      const buttons = suggestionsHost.querySelectorAll('button[data-chip-value]');
+      buttons.forEach((btn) => {
+        const value = btn.getAttribute('data-chip-value') || '';
+        const normalised = normaliseLabelValue(value);
+        const active = state.values.some((entry) => normaliseLabelValue(entry) === normalised);
+        btn.classList.toggle('is-selected', active);
+        btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+    }
+
+    function commit(nextValues) {
+      state.values = nextValues;
+      syncInput();
+      renderSelected();
+      updateSuggestionState();
+      if (input) {
+        handleRequiredFieldInput({ currentTarget: input });
+      }
+    }
+
+    function normaliseList(values) {
+      const arr = [];
+      const source = Array.isArray(values)
+        ? values
+        : (values && typeof values === 'string')
+          ? [values]
+          : [];
+      source.forEach((value) => {
+        const trimmed = typeof value === 'string' ? value.trim() : '';
+        if (!trimmed) {
+          return;
+        }
+        const normalised = normaliseLabelValue(trimmed);
+        if (!normalised) {
+          return;
+        }
+        if (!opts.multi) {
+          if (!arr.length) {
+            arr.push(trimmed);
+          }
+          return;
+        }
+        const exists = arr.some((entry) => normaliseLabelValue(entry) === normalised);
+        if (!exists) {
+          arr.push(trimmed);
+        }
+      });
+      return arr;
+    }
+
+    function setValues(values) {
+      commit(normaliseList(values));
+    }
+
+    function addValue(value) {
+      const trimmed = typeof value === 'string' ? value.trim() : '';
+      if (!trimmed) {
+        return;
+      }
+      if (opts.multi) {
+        const normalised = normaliseLabelValue(trimmed);
+        const exists = state.values.some((entry) => normaliseLabelValue(entry) === normalised);
+        if (exists) {
+          return;
+        }
+        commit(state.values.concat(trimmed));
+        return;
+      }
+      commit(trimmed ? [trimmed] : []);
+    }
+
+    function removeValue(value) {
+      const normalised = normaliseLabelValue(value);
+      const next = state.values.filter((entry) => normaliseLabelValue(entry) !== normalised);
+      commit(next);
+    }
+
+    function toggleValue(value) {
+      if (!opts.multi) {
+        addValue(value);
+        return;
+      }
+      const normalised = normaliseLabelValue(value);
+      const exists = state.values.some((entry) => normaliseLabelValue(entry) === normalised);
+      if (exists) {
+        removeValue(value);
+      } else {
+        addValue(value);
+      }
+    }
+
+    function renderSuggestions(values) {
+      if (!suggestionsHost) {
+        return;
+      }
+      suggestionsHost.innerHTML = '';
+      const list = Array.isArray(values) ? values : [];
+      if (!list.length) {
+        const empty = document.createElement('span');
+        empty.className = 'chip-input-empty';
+        empty.textContent = opts.emptySuggestionsLabel;
+        suggestionsHost.appendChild(empty);
+        return;
+      }
+      list.forEach((value) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'chip-option';
+        btn.textContent = value;
+        btn.setAttribute('data-chip-value', value);
+        btn.addEventListener('click', () => {
+          toggleValue(value);
+        });
+        suggestionsHost.appendChild(btn);
+      });
+      updateSuggestionState();
+    }
+
+    renderSelected();
+
+    return {
+      setValues,
+      addValue,
+      removeValue,
+      toggleValue,
+      getValues: cloneValues,
+      renderSuggestions,
+    };
+  }
+
+  function promptForLabel(kind) {
+    const promptLabel = kind === 'category'
+      ? 'Neue Kategorie eingeben:'
+      : 'Neuen Tag eingeben:';
+    if (typeof prompt !== 'function') {
+      if (typeof alert === 'function') {
+        alert('Eingabedialog nicht verfügbar.');
+      }
+      return '';
+    }
+    const value = prompt(promptLabel, '') || '';
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return '';
+    }
+    addLabelToHistory(kind, trimmed);
+    refreshLabelSuggestions(kind);
+    return trimmed;
+  }
+
+  function handleChipAdd(kind) {
+    const value = promptForLabel(kind);
+    if (!value) {
+      return;
+    }
+    const controller = getChipFieldController(kind);
+    if (controller) {
+      controller.addValue(value);
+    } else if (kind === 'category' && categoryInput) {
+      categoryInput.value = value;
+      handleRequiredFieldInput({ currentTarget: categoryInput });
+    } else if (kind === 'tags' && tagsInput) {
+      const existing = normaliseTags(tagsInput.value || '');
+      const hasValue = existing.some((entry) => normaliseLabelValue(entry) === normaliseLabelValue(value));
+      if (!hasValue) {
+        existing.push(value);
+      }
+      tagsInput.value = existing.join(', ');
+      handleRequiredFieldInput({ currentTarget: tagsInput });
+    }
+  }
+
+  if (categoryInput && categorySelectedEl && categorySuggestionsEl) {
+    chipFieldControllers.category = createChipField({
+      input: categoryInput,
+      selected: categorySelectedEl,
+      suggestions: categorySuggestionsEl,
+      emptyLabel: 'Keine Kategorie ausgewählt.',
+      emptySuggestionsLabel: 'Noch keine Kategorien verfügbar.',
+      removeLabel: 'Kategorie „%s“ entfernen',
+    });
+    chipFieldControllers.category.setValues((categoryInput.value || '').trim() ? [categoryInput.value.trim()] : []);
+  }
+
+  if (tagsInput && tagsSelectedEl && tagsSuggestionsEl) {
+    chipFieldControllers.tags = createChipField({
+      input: tagsInput,
+      selected: tagsSelectedEl,
+      suggestions: tagsSuggestionsEl,
+      multi: true,
+      emptyLabel: 'Noch keine Tags ausgewählt.',
+      emptySuggestionsLabel: 'Noch keine Tags verfügbar.',
+      removeLabel: 'Tag „%s“ entfernen',
+    });
+    chipFieldControllers.tags.setValues(normaliseTags(tagsInput.value || ''));
+  }
+
+  if (categoryAddBtn) {
+    categoryAddBtn.addEventListener('click', () => handleChipAdd('category'));
+  }
+  if (tagsAddBtn) {
+    tagsAddBtn.addEventListener('click', () => handleChipAdd('tags'));
+  }
+
+  refreshLabelSuggestions();
 
   function beginLogin(options) {
     if (!loginBtn) return;
@@ -2570,6 +3002,7 @@
     if (prGrid) prGrid.appendChild(createAddCard('printing'));
 
     updateCounts();
+    refreshLabelSuggestions();
     try {
       const evt = typeof CustomEvent === 'function'
         ? new CustomEvent('projects:cards-refreshed')
@@ -2614,9 +3047,19 @@
     titleInput.value = project.title || '';
     mcVersionInput.value = project.mcVersion || '';
     statusInput.value = project.status || 'released';
-    categoryInput.value = project.category || '';
-    const tags = Array.isArray(project.tags) ? project.tags.join(', ') : (project.tags || '');
-    tagsInput.value = tags;
+    const categoryController = getChipFieldController('category');
+    if (categoryController) {
+      categoryController.setValues(project.category ? [project.category] : []);
+    } else {
+      categoryInput.value = project.category || '';
+    }
+    const tagsController = getChipFieldController('tags');
+    if (tagsController) {
+      tagsController.setValues(normaliseTags(project.tags));
+    } else {
+      const tags = Array.isArray(project.tags) ? project.tags.join(', ') : (project.tags || '');
+      tagsInput.value = tags;
+    }
     shortInput.value = project.shortDescription || '';
     if (modalHeroInput) {
       if (typeof project.modalHero === 'string') {
@@ -2636,9 +3079,14 @@
     const title = (titleInput.value || '').trim();
     const mcVersion = (mcVersionInput.value || '').trim();
     const status = (statusInput.value || '').trim();
-    const category = (categoryInput.value || '').trim();
-    const tagsRaw = (tagsInput.value || '').trim();
-    const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
+    const categoryController = getChipFieldController('category');
+    const tagsController = getChipFieldController('tags');
+    const category = categoryController
+      ? (categoryController.getValues()[0] || '')
+      : (categoryInput.value || '').trim();
+    const tags = tagsController
+      ? tagsController.getValues()
+      : normaliseTags(tagsInput.value || '');
     const shortDescription = (shortInput.value || '').trim();
     const modalHero = modalHeroInput ? (modalHeroInput.value || '').trim() : '';
     const downloadFile = (downloadInput.value || '').trim();
@@ -2673,8 +3121,16 @@
     titleInput.value = '';
     mcVersionInput.value = '';
     statusInput.value = 'released';
-    categoryInput.value = '';
-    tagsInput.value = '';
+    if (getChipFieldController('category')) {
+      getChipFieldController('category').setValues([]);
+    } else {
+      categoryInput.value = '';
+    }
+    if (getChipFieldController('tags')) {
+      getChipFieldController('tags').setValues([]);
+    } else {
+      tagsInput.value = '';
+    }
     shortInput.value = '';
     if (modalHeroInput) modalHeroInput.value = '';
     resetModalUi();

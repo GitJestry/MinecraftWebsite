@@ -989,12 +989,38 @@ dialog[open] .content {
           </div>
           <div class="field">
             <label for="pe-category">Kategorie</label>
-            <input id="pe-category" maxlength="80" name="category" placeholder="z. B. movement" type="text"/>
+            <div class="chip-input" data-chip-kind="category">
+              <input id="pe-category" maxlength="80" name="category" type="hidden"/>
+              <div class="chip-input-group">
+                <p class="chip-input-subtitle">Ausgewählt</p>
+                <div aria-live="polite" class="chip-input-selected" data-chip-focus tabindex="0" id="pe-category-selected" role="group" aria-label="Ausgewählte Kategorie"></div>
+              </div>
+              <div class="chip-input-group">
+                <p class="chip-input-subtitle">Vorschläge</p>
+                <div class="chip-input-suggestions" id="pe-category-suggestions" aria-label="Kategorien"></div>
+              </div>
+              <div class="chip-input-toolbar">
+                <button class="chip-input-add" id="pe-category-add" type="button">Neue Kategorie</button>
+              </div>
+            </div>
             <p class="hint">Für die Filterung – z. B. movement, utility, display.</p>
           </div>
           <div class="field">
             <label for="pe-tags">Tags</label>
-            <input id="pe-tags" maxlength="160" name="tags" placeholder="Kommagetrennt, z. B. Survival, Utility" type="text"/>
+            <div class="chip-input chip-input--multi" data-chip-kind="tags">
+              <input id="pe-tags" maxlength="160" name="tags" type="hidden"/>
+              <div class="chip-input-group">
+                <p class="chip-input-subtitle">Ausgewählt</p>
+                <div aria-live="polite" class="chip-input-selected" data-chip-focus tabindex="0" id="pe-tags-selected" role="group" aria-label="Ausgewählte Tags"></div>
+              </div>
+              <div class="chip-input-group">
+                <p class="chip-input-subtitle">Vorschläge</p>
+                <div class="chip-input-suggestions" id="pe-tags-suggestions" aria-label="Tag-Vorschläge"></div>
+              </div>
+              <div class="chip-input-toolbar">
+                <button class="chip-input-add" id="pe-tags-add" type="button">Neuen Tag</button>
+              </div>
+            </div>
           </div>
           <div class="field field--full">
             <label data-label-datapack="Kurzbeschreibung" data-label-printing="Kurzbeschreibung" for="pe-short">Kurzbeschreibung</label>
