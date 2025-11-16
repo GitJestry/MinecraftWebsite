@@ -251,10 +251,6 @@ html:not(.editor-mode-on) .editor-add-card {
   box-shadow: 0 0 0 1px rgba(220,38,38,0.16);
 }
 
-#pe-modal-hero {
-  min-height: 90px;
-}
-
 .editor-section {
   border-top: 1px solid rgba(148,163,184,0.35);
   padding-top: 0.65rem;
@@ -1003,46 +999,7 @@ dialog[open] .content {
         </div>
       </section>
 
-      <section class="editor-shell" id="pe-shell-hero">
-        <div class="editor-shell-head">
-          <div>
-            <p class="editor-shell-eyebrow">Highlight</p>
-            <h3 class="editor-section-title">Modal-Header &amp; Schnellinfos</h3>
-          </div>
-          <p class="editor-shell-desc">Introtext plus Badges, Call-to-Actions und kleine Stats für das Popup.</p>
-        </div>
-        <div class="editor-shell-grid two">
-          <div class="field field--full">
-            <label for="pe-modal-hero">Modal-Einleitung</label>
-            <textarea id="pe-modal-hero" maxlength="320" name="modalHero" placeholder="Kurzer Untertitel im Modal"></textarea>
-            <p class="hint">Text unter dem Titel im Popup. Leer lassen, um die Kurzbeschreibung zu verwenden.</p>
-          </div>
-        </div>
-        <div class="editor-shell-grid three">
-          <div class="editor-subcard">
-            <p class="editor-subcard-title">Modal-Badges</p>
-            <p class="editor-subcard-hint">Kurze Badges unter dem Titel (optional mit Status-Punkt).</p>
-            <div class="editor-repeat" id="pe-modal-badges-list"></div>
-            <button class="editor-repeat-add" data-add="badge" type="button">+ Badge hinzufügen</button>
-          </div>
-          <div class="editor-subcard">
-            <p class="editor-subcard-title">Modal-Aktionen</p>
-            <p class="editor-subcard-hint">Buttons im Header, z. B. Download oder externe Links.</p>
-            <div class="editor-repeat" id="pe-modal-actions-list"></div>
-            <button class="editor-repeat-add" data-add="action" type="button">+ Aktion hinzufügen</button>
-          </div>
-          <div class="editor-subcard">
-            <p class="editor-subcard-title">Modal-Statistiken</p>
-            <p class="editor-subcard-hint">Wertekacheln wie Version, Größe oder Druckdauer.</p>
-            <div class="editor-repeat" id="pe-modal-stats-list"></div>
-            <button class="editor-repeat-add" data-add="stat" type="button">+ Statistik hinzufügen</button>
-          </div>
-        </div>
-      </section>
       <textarea aria-hidden="true" hidden id="pe-modal-body" name="modalBody"></textarea>
-      <textarea aria-hidden="true" hidden id="pe-modal-badges" name="modalBadges"></textarea>
-      <textarea aria-hidden="true" hidden id="pe-modal-actions" name="modalHeroActions"></textarea>
-      <textarea aria-hidden="true" hidden id="pe-modal-stats" name="modalStats"></textarea>
       <section class="editor-shell" id="pe-shell-content">
         <div class="editor-shell-head">
           <div>

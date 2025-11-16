@@ -209,11 +209,32 @@ function decodeBase64Payload(payload) {
   }
 }
 
+function ensureModalFields(target, source) {
+  const project = target || {};
+  const input = source || {};
+  const fields = ['modalHero', 'modalBody', 'modalBadges', 'modalHeroActions', 'modalStats'];
+  fields.forEach((field) => {
+    if (typeof input[field] === 'string') {
+      project[field] = input[field];
+    } else if (typeof project[field] !== 'string') {
+      project[field] = '';
+    }
+  });
+  return project;
+}
+
+function withModalDefaults(project) {
+  if (!project || typeof project !== 'object') {
+    return project;
+  }
+  return ensureModalFields({ ...project });
+}
+
 // List all projects
 app.get('/editor/projects', async (req, res, next) => {
   try {
     const projects = await readProjects();
-    return res.json(projects);
+    return res.json(projects.map((project) => withModalDefaults(project)));
   } catch (err) {
     return next(err);
   }
@@ -227,7 +248,7 @@ app.get('/editor/projects/:id', requireAuth, async (req, res, next) => {
     if (!project) {
       return res.status(404).json({ error: 'not_found' });
     }
-    return res.json(project);
+    return res.json(withModalDefaults(project));
   } catch (err) {
     return next(err);
   }
@@ -248,16 +269,12 @@ app.post('/editor/projects', requireAuth, async (req, res, next) => {
       }
     }
     const now = new Date().toISOString();
-    const project = {
+    const project = ensureModalFields({
       id,
       title: body.title || 'Untitled project',
       type: body.type || 'datapack',
       shortDescription: body.shortDescription || '',
-      modalHero: typeof body.modalHero === 'string' ? body.modalHero : '',
       modalBody: typeof body.modalBody === 'string' ? body.modalBody : '',
-      modalBadges: typeof body.modalBadges === 'string' ? body.modalBadges : '',
-      modalHeroActions: typeof body.modalHeroActions === 'string' ? body.modalHeroActions : '',
-      modalStats: typeof body.modalStats === 'string' ? body.modalStats : '',
       mcVersion: body.mcVersion || '',
       status: body.status || 'planned',
       category: body.category || '',
@@ -270,10 +287,10 @@ app.post('/editor/projects', requireAuth, async (req, res, next) => {
       image: body.image || '',
       createdAt: now,
       updatedAt: now,
-    };
+    }, body);
     projects.push(project);
     await writeProjects(projects);
-    return res.status(201).json(project);
+    return res.status(201).json(withModalDefaults(project));
   } catch (err) {
     return next(err);
   }
@@ -324,7 +341,7 @@ app.put('/editor/projects/:id', requireAuth, async (req, res, next) => {
       return res.status(404).json({ error: 'not_found' });
     }
     const existing = projects[idx];
-    const updated = {
+    const updated = ensureModalFields({
       ...existing,
       ...body,
       id: existing.id,
@@ -333,16 +350,11 @@ app.put('/editor/projects/:id', requireAuth, async (req, res, next) => {
         : typeof body.tags === 'string'
         ? body.tags.split(',').map((t) => t.trim()).filter(Boolean)
         : existing.tags,
-      modalHero: typeof body.modalHero === 'string' ? body.modalHero : (existing.modalHero || ''),
-      modalBody: typeof body.modalBody === 'string' ? body.modalBody : (existing.modalBody || ''),
-      modalBadges: typeof body.modalBadges === 'string' ? body.modalBadges : (existing.modalBadges || ''),
-      modalHeroActions: typeof body.modalHeroActions === 'string' ? body.modalHeroActions : (existing.modalHeroActions || ''),
-      modalStats: typeof body.modalStats === 'string' ? body.modalStats : (existing.modalStats || ''),
       updatedAt: new Date().toISOString(),
-    };
+    }, body);
     projects[idx] = updated;
     await writeProjects(projects);
-    return res.json(updated);
+    return res.json(withModalDefaults(updated));
   } catch (err) {
     return next(err);
   }
