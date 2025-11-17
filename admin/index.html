@@ -8,5 +8,34 @@
   <body>
     <!-- Decap CMS UI -->
     <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+    <script>
+      if (window.netlifyIdentity) {
+        function hasInviteToken() {
+          if (typeof window === 'undefined' || !window.location) return false;
+          var hash = window.location.hash || '';
+          return /invite_toke[nr]=/i.test(hash);
+        }
+
+        function ensureInviteSignup() {
+          if (!window.netlifyIdentity) return;
+          if (!hasInviteToken()) return;
+          window.netlifyIdentity.open('signup');
+        }
+
+        window.netlifyIdentity.on('init', function(user) {
+          if (!user) {
+            ensureInviteSignup();
+            window.netlifyIdentity.on('login', function() {
+              document.location.href = '/admin/';
+            });
+            window.addEventListener('hashchange', ensureInviteSignup, { passive: true });
+            window.netlifyIdentity.on('close', ensureInviteSignup);
+          }
+        });
+
+        window.netlifyIdentity.init();
+      }
+    </script>
   </body>
 </html>

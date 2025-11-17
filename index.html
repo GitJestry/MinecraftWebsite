@@ -110,16 +110,18 @@ main p, main li, .content p, .content li, .main-content p, .main-content li, art
       window.netlifyIdentity.open('signup');
     }
 
-    window.netlifyIdentity.on("init", function(user) {
+    window.netlifyIdentity.on('init', function(user) {
       if (!user) {
         ensureInviteSignup();
-        window.netlifyIdentity.on("login", function() {
-          document.location.href = "/admin/";
+        window.netlifyIdentity.on('login', function() {
+          document.location.href = '/admin/';
         });
         window.addEventListener('hashchange', ensureInviteSignup, { passive: true });
-        window.netlifyIdentity.on("close", ensureInviteSignup);
+        window.netlifyIdentity.on('close', ensureInviteSignup);
       }
     });
+
+    // Always initialize after listeners to ensure invite flows are caught
     window.netlifyIdentity.init();
   }
 </script>
