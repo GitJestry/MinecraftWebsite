@@ -1,0 +1,51 @@
+backend:
+  name: git-gateway
+  branch: main
+
+media_folder: "assets/uploads"
+public_folder: "/assets/uploads"
+
+site_url: "https://DEINE-SITE-URL-ODER-NETLIFY-URL"
+display_url: "https://DEINE-SITE-URL-ODER-NETLIFY-URL"
+
+collections:
+  - name: "projects"
+    label: "Projekte"
+    label_singular: "Projekt"
+    file: "assets/data/projects.json"
+    format: "json"
+    fields:
+      - label: "Projekte"
+        name: "projects"
+        widget: "list"
+        summary: "{{title}} ({{type}})"
+        label_singular: "Projekt"
+        fields:
+          - { label: "ID (slug)", name: "id", widget: "string" }
+          - { label: "Titel", name: "title", widget: "string" }
+          - { label: "Typ", name: "type", widget: "select", options: ["datapack", "printing"], default: "datapack" }
+          - { label: "Kurzbeschreibung", name: "shortDescription", widget: "text" }
+          - { label: "Minecraft-Version", name: "mcVersion", widget: "string", required: false }
+          - { label: "Status", name: "status", widget: "select", options: ["released", "draft"], default: "released" }
+          - { label: "Kategorie", name: "category", widget: "string", required: false }
+          - { label: "Tags", name: "tags", widget: "list", required: false }
+
+          - label: "Download-Datei (ZIP)"
+            name: "downloadFile"
+            widget: "file"
+            media_folder: "downloads"
+            public_folder: "/downloads"
+
+          - label: "Cover-Bild"
+            name: "image"
+            widget: "image"
+            required: false
+
+          - { label: "Modal Hero HTML", name: "modalHero", widget: "text", required: false }
+          - { label: "Modal Body HTML", name: "modalBody", widget: "text", required: false }
+          - { label: "Modal Badges HTML", name: "modalBadges", widget: "text", required: false }
+          - { label: "Modal Hero Actions HTML", name: "modalHeroActions", widget: "text", required: false }
+          - { label: "Modal Stats HTML", name: "modalStats", widget: "text", required: false }
+
+          - { label: "Angelegt", name: "createdAt", widget: "datetime", required: false }
+          - { label: "Zuletzt geändert", name: "updatedAt", widget: "datetime", required: false }
