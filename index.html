@@ -93,5 +93,31 @@ main p, main li, .content p, .content li, .main-content p, .main-content li, art
 </script>
 <script src="assets/js/site.js"></script>
 </div>
+
+<!-- Netlify Identity für Einladungen -->
+<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+<script>
+  if (window.netlifyIdentity) {
+    window.netlifyIdentity.on("init", (user) => {
+      const hash = window.location.hash || "";
+      const hasToken =
+        hash.includes("invite_token=") || hash.includes("recovery_token=");
+
+      // Wenn ein Invite-/Reset-Token in der URL ist: Login-Dialog öffnen
+      if (!user && hasToken) {
+        window.netlifyIdentity.open("login");
+      }
+    });
+
+    // Nach Login ins CMS weiterleiten
+    window.netlifyIdentity.on("login", () => {
+      document.location.href = "/admin/";
+    });
+
+    // Wichtig: Identity initialisieren, damit das Token ausgewertet wird
+    window.netlifyIdentity.init();
+  }
+</script>
+
 </body>
 </html>
