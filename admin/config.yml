@@ -9,43 +9,61 @@ site_url: "https://taupe-halva-161af5.netlify.app"
 display_url: "https://taupe-halva-161af5.netlify.app"
 
 collections:
-  - name: "projects"
-    label: "Projekte"
-    label_singular: "Projekt"
-    file: "assets/data/projects.json"
-    format: "json"
-    fields:
-      - label: "Projekte"
-        name: "projects"
-        widget: "list"
-        summary: "{{title}} ({{type}})"
-        label_singular: "Projekt"
+  - name: "data"
+    label: "Daten"
+    files:
+      - name: "projects"
+        label: "Projekte"
+        file: "assets/data/projects.json"
+        format: "json"
         fields:
-          - { label: "ID (slug)", name: "id", widget: "string" }
-          - { label: "Titel", name: "title", widget: "string" }
-          - { label: "Typ", name: "type", widget: "select", options: ["datapack", "printing"], default: "datapack" }
-          - { label: "Kurzbeschreibung", name: "shortDescription", widget: "text" }
-          - { label: "Minecraft-Version", name: "mcVersion", widget: "string", required: false }
-          - { label: "Status", name: "status", widget: "select", options: ["released", "draft"], default: "released" }
-          - { label: "Kategorie", name: "category", widget: "string", required: false }
-          - { label: "Tags", name: "tags", widget: "list", required: false }
+          - label: "Projekte"
+            name: "projects"
+            widget: "list"
+            label_singular: "Projekt"
+            summary: "{{fields.title}} ({{fields.type}})"
+            fields:
+              - { label: "ID (slug)", name: "id", widget: "string" }
+              - { label: "Titel", name: "title", widget: "string" }
 
-          - label: "Download-Datei (ZIP)"
-            name: "downloadFile"
-            widget: "file"
-            media_folder: "downloads"
-            public_folder: "/downloads"
+              - label: "Typ"
+                name: "type"
+                widget: "select"
+                options:
+                  - { label: "Datapack", value: "datapack" }
+                  - { label: "3D-Druck", value: "printing" }
+                default: "datapack"
 
-          - label: "Cover-Bild"
-            name: "image"
-            widget: "image"
-            required: false
+              - { label: "Kurzbeschreibung", name: "shortDescription", widget: "text" }
+              - { label: "Minecraft-Version", name: "mcVersion", widget: "string", required: false }
 
-          - { label: "Modal Hero HTML", name: "modalHero", widget: "text", required: false }
-          - { label: "Modal Body HTML", name: "modalBody", widget: "text", required: false }
-          - { label: "Modal Badges HTML", name: "modalBadges", widget: "text", required: false }
-          - { label: "Modal Hero Actions HTML", name: "modalHeroActions", widget: "text", required: false }
-          - { label: "Modal Stats HTML", name: "modalStats", widget: "text", required: false }
+              - label: "Status"
+                name: "status"
+                widget: "select"
+                options:
+                  - { label: "Released", value: "released" }
+                  - { label: "Draft", value: "draft" }
+                default: "released"
 
-          - { label: "Angelegt", name: "createdAt", widget: "datetime", required: false }
-          - { label: "Zuletzt geändert", name: "updatedAt", widget: "datetime", required: false }
+              - { label: "Kategorie", name: "category", widget: "string", required: false }
+              - { label: "Tags", name: "tags", widget: "list", required: false }
+
+              - label: "Download-Datei (ZIP)"
+                name: "downloadFile"
+                widget: "file"
+                media_folder: "downloads"
+                public_folder: "/downloads"
+
+              - label: "Cover-Bild"
+                name: "image"
+                widget: "image"
+                required: false
+
+              - { label: "Modal Hero HTML", name: "modalHero", widget: "text", required: false }
+              - { label: "Modal Body HTML", name: "modalBody", widget: "text", required: false }
+              - { label: "Modal Badges HTML", name: "modalBadges", widget: "text", required: false }
+              - { label: "Modal Hero Actions HTML", name: "modalHeroActions", widget: "text", required: false }
+              - { label: "Modal Stats HTML", name: "modalStats", widget: "text", required: false }
+
+              - { label: "Angelegt", name: "createdAt", widget: "datetime", required: false }
+              - { label: "Zuletzt geändert", name: "updatedAt", widget: "datetime", required: false }
