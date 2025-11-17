@@ -860,11 +860,17 @@
       identity.on('init', (user) => {
         const hash = window.location && window.location.hash ? window.location.hash : '';
         const hasToken = hash.includes('invite_token=') || hash.includes('recovery_token=');
+        const pathname = window.location && window.location.pathname ? window.location.pathname : '';
+        const onAdminPage = pathname.startsWith('/admin');
+
+        if (hasToken && window.location && !onAdminPage) {
+          const targetHash = hash.startsWith('#') ? hash : `#${hash}`;
+          window.location.href = `/admin/${targetHash}`;
+          return;
+        }
+
         if (!user && hasToken) {
           identity.open('login');
-        } else if (hasToken && window.location && window.location.pathname !== '/admin/') {
-          // If the widget is already authenticated, honour invite links by jumping to the CMS
-          window.location.href = '/admin/';
         }
       });
 
