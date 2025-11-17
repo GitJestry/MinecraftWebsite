@@ -93,30 +93,20 @@ main p, main li, .content p, .content li, .main-content p, .main-content li, art
 </script>
 <script src="assets/js/site.js"></script>
 </div>
+
 <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 <script>
   if (window.netlifyIdentity) {
-    var hash = window.location.hash || "";
-    var invited =
-      hash.indexOf("invite_token=") !== -1 ||
-      hash.indexOf("recovery_token=") !== -1;
-
-    // Wenn die Seite mit Invite-/Reset-Link geöffnet wurde, Login-Dialog anzeigen
     window.netlifyIdentity.on("init", function(user) {
-      if (!user && invited) {
-        window.netlifyIdentity.open("login");
+      if (!user) {
+        window.netlifyIdentity.on("login", function() {
+          document.location.href = "/admin/";
+        });
       }
     });
-
-    // Nur wenn wir aus einem Invite kommen, nach Login automatisch ins CMS
-    window.netlifyIdentity.on("login", function() {
-      if (invited) {
-        document.location.href = "/admin/";
-      }
-    });
-
     window.netlifyIdentity.init();
   }
 </script>
+
 </body>
 </html>
