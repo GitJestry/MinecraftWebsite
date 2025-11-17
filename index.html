@@ -97,8 +97,14 @@ main p, main li, .content p, .content li, .main-content p, .main-content li, art
 <script>
   if (window.netlifyIdentity) {
     window.netlifyIdentity.on("init", function(user) {
-      // Wenn der User sich gerade registriert/angemeldet hat,
-      // nach /admin weiterleiten
+      var hash = window.location.hash || "";
+
+      // Wenn ein Invite- oder Reset-Token in der URL ist, Widget explizit öffnen
+      if (!user && (hash.indexOf("invite_token=") !== -1 || hash.indexOf("recovery_token=") !== -1)) {
+        window.netlifyIdentity.open("login");
+      }
+
+      // Nach erfolgreichem Login ins CMS weiterleiten
       if (!user) {
         window.netlifyIdentity.on("login", function() {
           document.location.href = "/admin/";
@@ -110,6 +116,5 @@ main p, main li, .content p, .content li, .main-content p, .main-content li, art
     window.netlifyIdentity.init();
   }
 </script>
-
 </body>
 </html>
