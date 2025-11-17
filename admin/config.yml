@@ -5,8 +5,8 @@ backend:
 media_folder: "assets/uploads"
 public_folder: "/assets/uploads"
 
-site_url: "https://DEINE-SITE-URL-ODER-NETLIFY-URL"
-display_url: "https://DEINE-SITE-URL-ODER-NETLIFY-URL"
+site_url: "https://taupe-halva-161af5.netlify.app"
+display_url: "https://taupe-halva-161af5.netlify.app"
 
 collections:
   - name: "projects"
