@@ -470,6 +470,25 @@
     return header.replace(/^Bearer\s+/i, '').trim();
   }
 
+  function getCsrfToken() {
+    if (typeof document === 'undefined') return '';
+    try {
+      const meta = document.querySelector('meta[name="csrf-token"], meta[name="csrf"]');
+      if (meta) {
+        const value = meta.getAttribute('content');
+        if (value) return value;
+      }
+      if (document.documentElement) {
+        const attr = document.documentElement.getAttribute('data-csrf-token')
+          || document.documentElement.getAttribute('data-csrf');
+        if (attr) {
+          return attr;
+        }
+      }
+    } catch (err) {}
+    return '';
+  }
+
   function createHttpError(status, message) {
     const error = new Error(message || 'Request failed');
     error.status = status;
@@ -2297,28 +2316,104 @@
       uploadedAt: new Date().toISOString(),
       inlineData: '',
     };
-    let stored = false;
-    try {
-      stored = await storeUploadBlob(record.id, file);
-    } catch (err) {
-      stored = false;
-    }
-    if (!stored) {
+
+    const uploadUrl = API_BASE ? API_BASE + '/editor/uploads' : '/editor/uploads';
+
+    async function cacheUploadLocally(strict) {
+      let stored = false;
       try {
-        record.inlineData = await readFileAsBase64(file);
-        stored = !!record.inlineData;
+        stored = await storeUploadBlob(record.id, file);
       } catch (err) {
         stored = false;
       }
+      if (!stored) {
+        try {
+          record.inlineData = await readFileAsBase64(file);
+          stored = !!record.inlineData;
+        } catch (err) {
+          stored = false;
+        }
+      }
+      if (!stored && strict) {
+        throw new Error('upload_unavailable');
+      }
+      if (!record.inlineData) {
+        delete record.inlineData;
+      }
+      persistUploadMeta(record);
+      refreshFileLibraries(prefix);
+      return stored;
     }
-    if (!stored) {
-      throw new Error('upload_unavailable');
+
+    async function uploadToServer() {
+      if (!uploadUrl) return null;
+      const headers = { Accept: 'application/json' };
+      if (token) {
+        headers.Authorization = 'Bearer ' + token;
+      }
+      const csrfToken = getCsrfToken();
+      if (csrfToken) {
+        headers['X-CSRF-Token'] = csrfToken;
+      }
+      let body = null;
+      let contentHeaders = headers;
+      if (typeof FormData !== 'undefined') {
+        const formData = new FormData();
+        formData.append('file', file, filename);
+        formData.append('filename', filename);
+        formData.append('prefix', prefix);
+        formData.append('contentType', record.type);
+        body = formData;
+      } else {
+        contentHeaders = { ...headers, 'Content-Type': 'application/json' };
+        const base64 = await readFileAsBase64(file);
+        body = JSON.stringify({
+          filename,
+          prefix,
+          contentType: record.type,
+          data: base64,
+        });
+      }
+      const res = await fetch(uploadUrl, {
+        method: 'POST',
+        headers: contentHeaders,
+        body,
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        const err = new Error('upload_failed_' + res.status);
+        err.status = res.status;
+        throw err;
+      }
+      const text = await res.text();
+      let data = null;
+      try { data = text ? JSON.parse(text) : null; } catch (err) { data = null; }
+      if (data && data.path) {
+        return {
+          path: data.path,
+          size: Number.isFinite(data.size) ? data.size : record.size,
+          type: data.contentType || data.type || record.type,
+        };
+      }
+      return null;
     }
-    if (!record.inlineData) {
-      delete record.inlineData;
+
+    let remoteResult = null;
+    try {
+      remoteResult = await uploadToServer();
+    } catch (err) {
+      remoteResult = null;
     }
-    persistUploadMeta(record);
-    refreshFileLibraries(prefix);
+
+    if (remoteResult && remoteResult.path) {
+      record.path = remoteResult.path;
+      record.size = remoteResult.size;
+      record.type = remoteResult.type;
+      try { await cacheUploadLocally(false); } catch (err) {}
+      return { path: record.path, size: record.size, type: record.type, local: false };
+    }
+
+    await cacheUploadLocally(true);
     return { path: record.path, size: record.size, type: record.type, local: true };
   }
 
@@ -2410,7 +2505,7 @@
       empty.textContent = 'Noch keine Uploads gespeichert.';
       const note = document.createElement('p');
       note.className = 'editor-file-library-note';
-      note.textContent = 'Uploads werden lokal gespeichert – exportiere Dateien und füge sie deinem Repository hinzu.';
+      note.textContent = 'Uploads werden auf dem Server gespeichert; bei Netzwerkproblemen werden sie lokal zwischengespeichert.';
       library.appendChild(head);
       library.appendChild(grid);
       library.appendChild(empty);
