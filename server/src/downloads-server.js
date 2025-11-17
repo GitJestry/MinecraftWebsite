@@ -1,15 +1,31 @@
 import 'dotenv/config';
 import express from 'express';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import DownloadStore from './download-store.js';
 import { getHashedClientIp } from './request-utils.js';
+import { isMultipartFormData, parseMultipartFormData, sanitizeUploadFilename } from './upload-utils.js';
 
 const {
   NODE_ENV = 'production',
   APP_ORIGIN,
   PORT = 4000,
 } = process.env;
+
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB
+const ALLOWED_EXTENSIONS = new Set(['.zip', '.mcfunction', '.stl', '.png']);
+const ALLOWED_MIME_TYPES = new Set([
+  'application/zip',
+  'application/x-zip-compressed',
+  'text/plain',
+  'model/stl',
+  'image/png',
+]);
+
+const uploadsDirectory = fileURLToPath(new URL('../uploads/', import.meta.url));
 
 const app = express();
 app.disable('x-powered-by');
@@ -66,10 +82,57 @@ const downloadRecordLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+const uploadBodyParser = express.raw({
+  limit: MAX_UPLOAD_BYTES + 64 * 1024,
+  type: (req) => isMultipartFormData(req.headers['content-type'] || ''),
+});
+
+await fs.mkdir(uploadsDirectory, { recursive: true });
 await downloadStore.init();
 
 app.get('/healthz', (req, res) => {
   return res.json({ status: 'ok' });
+});
+
+app.post('/api/upload', uploadBodyParser, async (req, res) => {
+  if (!isMultipartFormData(req.headers['content-type'] || '')) {
+    return res.status(400).json({ error: 'invalid_content_type' });
+  }
+
+  const parsed = parseMultipartFormData(req.body, req.headers['content-type'] || '');
+  if (!parsed) {
+    return res.status(400).json({ error: 'invalid_form_data' });
+  }
+  const filePart = parsed?.files.find((part) => part.fieldName === 'file') || parsed?.files[0];
+
+  if (!filePart || !filePart.data) {
+    return res.status(400).json({ error: 'file_required' });
+  }
+
+  if (filePart.data.length > MAX_UPLOAD_BYTES) {
+    return res.status(413).json({ error: 'file_too_large' });
+  }
+
+  const extension = path.extname(filePart.filename || '').toLowerCase();
+  const contentType = (filePart.contentType || '').toLowerCase();
+  const hasAllowedExtension = ALLOWED_EXTENSIONS.has(extension);
+  const hasAllowedMime = ALLOWED_MIME_TYPES.has(contentType);
+  const isAllowed = hasAllowedExtension || hasAllowedMime;
+
+  if (!isAllowed) {
+    return res.status(400).json({ error: 'invalid_type' });
+  }
+
+  const safeName = sanitizeUploadFilename(filePart.filename || 'upload');
+  const timestampedName = `${Date.now()}-${safeName}`;
+  const targetUrl = new URL(timestampedName, new URL(`file://${uploadsDirectory}/`));
+
+  await fs.writeFile(targetUrl, filePart.data);
+
+  const baseUrl = (APP_ORIGIN || `${req.protocol}://${req.get('host') || ''}`).replace(/\/$/, '');
+  const downloadUrl = `${baseUrl}/downloads/uploads/${timestampedName}`;
+
+  return res.status(201).json({ status: 'ok', filename: timestampedName, url: downloadUrl });
 });
 
 // GET /analytics/downloads?ids=jetpack-datapack
@@ -155,6 +218,9 @@ app.post('/analytics/downloads', downloadRecordLimiter, async (req, res) => {
 });
 
 app.use((err, req, res, next) => {
+  if (err?.type === 'entity.too.large') {
+    return res.status(413).json({ error: 'file_too_large' });
+  }
   console.error(err);
   return res.status(500).json({ error: 'internal_error' });
 });
