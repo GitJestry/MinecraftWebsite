@@ -92,5 +92,24 @@ main p, main li, .content p, .content li, .main-content p, .main-content li, art
 })();
 </script>
 <script src="assets/js/site.js"></script>
-</div></body>
+</div>
+<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+<script>
+  if (window.netlifyIdentity) {
+    window.netlifyIdentity.on("init", function(user) {
+      // Wenn der User sich gerade registriert/angemeldet hat,
+      // nach /admin weiterleiten
+      if (!user) {
+        window.netlifyIdentity.on("login", function() {
+          document.location.href = "/admin/";
+        });
+      }
+    });
+
+    // Widget initialisieren (wichtig für Invite-Links)
+    window.netlifyIdentity.init();
+  }
+</script>
+
+</body>
 </html>
