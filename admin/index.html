@@ -11,26 +11,49 @@
     <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
     <script>
       if (window.netlifyIdentity) {
-        function hasInviteToken() {
-          if (typeof window === 'undefined' || !window.location) return false;
+        var inviteHandled = false;
+
+        function getInviteToken() {
+          if (typeof window === 'undefined' || !window.location) return null;
           var hash = window.location.hash || '';
-          return /invite_toke[nr]=/i.test(hash);
+          var match = hash.match(/invite_token=([^&]+)/i);
+          return match ? decodeURIComponent(match[1]) : null;
         }
 
-        function ensureInviteSignup() {
-          if (!window.netlifyIdentity) return;
-          if (!hasInviteToken()) return;
-          window.netlifyIdentity.open('signup');
+        function acceptInviteIfPresent() {
+          if (!window.netlifyIdentity || inviteHandled) return;
+          var token = getInviteToken();
+          if (!token) return;
+
+          var accept = window.netlifyIdentity.acceptInvite;
+          if (!accept && window.netlifyIdentity.gotrue && window.netlifyIdentity.gotrue.acceptInvite) {
+            accept = window.netlifyIdentity.gotrue.acceptInvite.bind(window.netlifyIdentity.gotrue);
+          }
+          if (!accept) return;
+
+          inviteHandled = true;
+          accept(token)
+            .then(function() {
+              document.location.href = '/admin/';
+            })
+            .catch(function(error) {
+              inviteHandled = false;
+              if (typeof console !== 'undefined' && console && console.error) {
+                console.error('Failed to accept invite', error);
+              }
+              if (typeof alert === 'function') {
+                alert('Could not accept invite. Please try again or contact support.');
+              }
+            });
         }
 
         window.netlifyIdentity.on('init', function(user) {
           if (!user) {
-            ensureInviteSignup();
+            acceptInviteIfPresent();
             window.netlifyIdentity.on('login', function() {
               document.location.href = '/admin/';
             });
-            window.addEventListener('hashchange', ensureInviteSignup, { passive: true });
-            window.netlifyIdentity.on('close', ensureInviteSignup);
+            window.addEventListener('hashchange', acceptInviteIfPresent, { passive: true });
           }
         });
 
