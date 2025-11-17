@@ -834,4 +834,49 @@
     initDownloadSizes();
   });
 
+  // Expose Netlify Identity on all pages so invite/recovery links work regardless of entry path
+  (function initNetlifyIdentity() {
+    if (typeof document === 'undefined' || typeof window === 'undefined') return;
+
+    const existingScript = document.querySelector('script[data-netlify-identity-widget]');
+    if (!existingScript) {
+      const script = document.createElement('script');
+      script.src = 'https://identity.netlify.com/v1/netlify-identity-widget.js';
+      script.async = true;
+      script.setAttribute('data-netlify-identity-widget', 'true');
+      script.onload = setupIdentity;
+      document.head.appendChild(script);
+    } else if (window.netlifyIdentity) {
+      setupIdentity();
+    } else {
+      existingScript.addEventListener('load', setupIdentity, { once: true });
+    }
+
+    function setupIdentity() {
+      const identity = window.netlifyIdentity;
+      if (!identity || identity._mirlBound) return;
+      identity._mirlBound = true;
+
+      identity.on('init', (user) => {
+        const hash = window.location && window.location.hash ? window.location.hash : '';
+        const hasToken = hash.includes('invite_token=') || hash.includes('recovery_token=');
+        if (!user && hasToken) {
+          identity.open('login');
+        } else if (hasToken && window.location && window.location.pathname !== '/admin/') {
+          // If the widget is already authenticated, honour invite links by jumping to the CMS
+          window.location.href = '/admin/';
+        }
+      });
+
+      identity.on('login', () => {
+        const target = '/admin/';
+        if (window.location && window.location.pathname !== target) {
+          window.location.href = target;
+        }
+      });
+
+      identity.init();
+    }
+  })();
+
 })();
