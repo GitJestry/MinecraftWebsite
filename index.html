@@ -2,20 +2,61 @@
 
 <html lang="en" data-editor-api="same-origin" data-download-analytics="/analytics/downloads" data-download-counts="assets/data/download-counts.json">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>Minecraft In Real Life</title>
-<meta content="Minecraft In Real Life — fan-made site. Not affiliated with Mojang/Microsoft." name="description"/>
-<link href="assets/css/style.css" rel="stylesheet"/>
-<style>
-/* PRIVACY_IMPRINT_MAIN_TEXT_NORMAL */
-main p, main li, .content p, .content li, .main-content p, .main-content li, article p, article li {
-  font-weight: 400 !important;
-  font-style: normal !important;
-  text-transform: none !important;
-}
-</style>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <title>Minecraft In Real Life</title>
+  <meta content="Minecraft In Real Life — fan-made site. Not affiliated with Mojang/Microsoft." name="description"/>
+  <link href="assets/css/style.css" rel="stylesheet"/>
+  <style>
+    /* PRIVACY_IMPRINT_MAIN_TEXT_NORMAL */
+    main p, main li, .content p, .content li, .main-content p, .main-content li, article p, article li {
+      font-weight: 400 !important;
+      font-style: normal !important;
+      text-transform: none !important;
+    }
+    /* ... keep all your existing CSS rules here ... */
+  </style>
+
+  <!-- Netlify Identity token redirect:
+       If an invite/confirmation/recovery link lands on the homepage,
+       immediately forward it (with the token) to /admin. -->
+  <script>
+    (function () {
+      try {
+        var loc = window.location || {};
+        var hash = loc.hash || "";
+        var path = loc.pathname || "/";
+
+        // Only run on the real homepage to avoid redirect loops
+        var onHome = path === "/" || path === "/index.html";
+        if (!onHome) return;
+
+        // Any Netlify Identity token we care about
+        var hasIdentityToken =
+          hash.indexOf("invite_token=") !== -1 ||
+          hash.indexOf("confirmation_token=") !== -1 ||
+          hash.indexOf("recovery_token=") !== -1 ||
+          hash.indexOf("email_change_token=") !== -1;
+
+        if (!hasIdentityToken) return;
+
+        // Preserve the hash part (everything after #) and send it to /admin
+        var fullHref = loc.href || "";
+        var parts = fullHref.split("#");
+        var fragment = parts[1] || "";
+
+        // Replace instead of assign so the wrong URL isn't kept in history
+        window.location.replace("/admin/#" + fragment);
+      } catch (e) {
+        // Fail silently – never break the homepage if something goes wrong
+        if (typeof console !== "undefined" && console && console.warn) {
+          console.warn("Netlify Identity redirect failed", e);
+        }
+      }
+    })();
+  </script>
 </head>
+
 <body class="home">
 <header class="nav-min see-through" role="banner">
 <nav aria-label="Top navigation" class="container navbar">
