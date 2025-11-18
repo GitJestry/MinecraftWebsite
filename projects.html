@@ -924,35 +924,16 @@ dialog[open] .content {
 <div class="left"><div class="badge-dot"></div>
 <!-- Subcategory navigation (Modrinth-inspired, themed) -->
 </div>
-<div class="count">1 item</div>
+<div class="count">0 items</div>
 </div>
-<div class="itemgrid">
-<article aria-controls="dp-jetpack" aria-expanded="false" class="item card dp-card" data-modal-target="dp-jetpack" data-subcats="movement,utility" role="button" tabindex="0">
-<div class="thumb"><img alt="Jetpack Datapack cover" src="assets/img/logo.jpg"/></div>
-<div class="meta">
-<div class="title">Jetpack Datapack</div>
-<div class="chips"><span class="chip">1.21.8</span><span class="chip">Survival</span></div>
-<div class="quick">Lightweight jetpack for survival. Vanilla-friendly, no mods required.</div>
-</div>
-</article>
-</div>
+<div class="itemgrid"></div>
 </div>
 <div class="section-block" hidden="" id="printing" role="tabpanel">
 <div class="head">
 <div class="left"><div class="badge-dot"></div></div>
-<div class="count">1 item</div>
+<div class="count">0 items</div>
 </div>
-<div class="itemgrid">
-  <article aria-controls="pr-spool-holder" aria-expanded="false" class="item card pr-card" data-modal-target="pr-spool-holder" data-subcats="hardware,utility" role="button" tabindex="0">
-    <div class="thumb"><img alt="Minecraft Pickaxe 3D print thumbnail" loading="lazy" src="assets/img/logo.jpg"/></div>
-    <div class="meta">
-      <div class="title">Minecraft Pickaxe</div>
-      <div class="chips"><span class="chip">STL</span><span class="chip">No supports</span><span class="chip">0.2mm</span></div>
-      <div class="quick">Tool-free spool holder; two printed parts, fits most 1kg rolls.</div>
-      <div class="muted">A simple two-part Minecraft pickaxe desk model – prints support-free and snaps together.</div>
-    </div>
-  </article>
-</div>
+<div class="itemgrid"></div>
 </div>
 <div class="notice" id="license" style="margin-top:1.6rem;">
 <strong>Licensing:</strong> Code is under MIT. Original assets (icons, images, text) are under CC BY-NC-SA 4.0. No redistribution of Minecraft/Mojang assets.
@@ -1080,146 +1061,55 @@ window.addEventListener('load', function() {
   onScroll();
 })();
 </script>
-<!-- Datapack detail modal -->
-<div aria-hidden="true" aria-labelledby="dp-jetpack-title" class="modal" data-project-id="jetpack-datapack" id="dp-jetpack" role="dialog">
-<div class="modal-backdrop" data-close="dp-jetpack"></div>
-<div class="modal-content" role="document">
-<button aria-label="Close" class="modal-close" data-close="dp-jetpack">×</button>
-<header class="modal-hero">
-<div class="title" id="dp-jetpack-title">Jetpack Datapack</div>
-<div class="muted">Lightweight jetpack for survival. Vanilla-friendly, no mods required.</div>
-<div class="badges">
-<span class="badge"><span class="dot"></span> Stable</span>
-<span class="badge">Minecraft 1.21.8</span>
-<span class="badge">Single &amp; Multiplayer</span>
-<span class="badge">Survival</span>
-</div>
-<div class="hero-actions"><a class="btn primary dl" data-download-file="jetpack-datapack-1.21.8.zip" data-track-download="jetpack-datapack" download="" href="downloads/jetpack-datapack-1.21.8.zip"><svg aria-hidden="true" focusable="false" height="18" viewbox="0 0 24 24" width="18"><path d="M12 3v10m0 0l4-4m-4 4l-4-4M5 21h14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg><span><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></span></a></div><div class="stats">
-<div class="stat"><div class="label">Version</div><div class="value">v1.0.3</div></div>
-<div class="stat"><div class="label">Last updated</div><div class="value">Sep 2025</div></div>
-<div class="stat"><div class="label"><span class="lang-en">Downloads</span><span class="lang-de">Downloads</span></div><div class="value" data-download-count="jetpack-datapack">—</div></div>
-<div class="stat"><div class="label">Size</div><div class="value">—</div></div>
-</div>
-</header>
-<div class="modal-body">
-<aside class="sidebar">
-<div class="info-card">
-<h4>Project info</h4>
-<ul class="info-list">
-<li><span class="k">Game</span><span>Minecraft Java</span></li>
-<li><span class="k">Type</span><span>Datapack</span></li>
-<li><span class="k">Compat</span><span>1.21.x</span></li>
-<li><span class="k">Requires</span><span>None</span></li>
-<li><span class="k"><span class="lang-en">License</span><span class="lang-de">Lizenz</span></span><span><a href="#license">MIT • CC BY-NC-SA</a></span></li>
-</ul>
-</div>
-<div class="info-card">
-<h4>Tags</h4>
-<div class="info-tags">
-<span class="chip">Survival</span>
-<span class="chip">Lightweight</span>
-<span class="chip">Vanilla+</span>
-</div>
-</div>
-</aside>
-<section class="content">
-<nav aria-label="Jetpack Datapack Tabs" class="tabs" role="tablist">
-<button aria-selected="true" class="active" data-tab="description" role="tab">Description</button>
-<button aria-selected="false" data-tab="gallery" role="tab">Gallery</button>
-<button aria-selected="false" data-tab="versions" role="tab"><span class="lang-en">Versions &amp; Changelog</span><span class="lang-de">Versionen &amp; Changelog</span></button>
-</nav>
-<div class="tabpanels">
-<div class="active prose" id="dp-jetpack-description" role="tabpanel">
-<p>Jetpack Datapack adds a balanced flight mechanic powered by fuel crafted in survival. It’s designed to feel native to Minecraft and to work on servers without any mods.</p>
-<p><strong>Highlights:</strong> compact recipes, configurable fuel cost, and zero client-side requirements.</p>
-</div>
-<div class="prose" id="dp-jetpack-installation" role="tabpanel">
-<div class="steps">
-<div class="step"><div></div><div><strong><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></strong> the <em>.zip</em> and keep it zipped.</div></div>
-<div class="step"><div></div><div>Open your world folder and put the file into <code>world/datapacks</code>.</div></div>
-<div class="step"><div></div><div>Start or reload the world with <code>/reload</code>.</div></div>
-<div class="step"><div></div><div>Optional: run <code>/function jetpack:setup</code> to see config options.</div></div>
-</div>
-</div>
-<div id="dp-jetpack-versions" role="tabpanel">
-<div class="version-timeline">
-<article class="version-entry head">
-<div class="version-entry-header">
-<div>
-<div class="version-entry-title">v1.0.3</div>
-<div class="version-entry-meta">2025‑09‑10 • Minecraft 1.21.8</div>
-</div>
-<div class="version-entry-actions"><a class="btn ghost dl" data-download-file="jetpack-datapack-1.21.8.zip" data-track-download="jetpack-datapack" download="" href="downloads/jetpack-datapack-1.21.8.zip"><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></a></div>
-</div>
-<p class="version-entry-notes">Balance tweaks, Fuel HUD polish und Nether-Portale gefixt.</p>
-</article>
-<article class="version-entry">
-<div class="version-entry-header">
-<div>
-<div class="version-entry-title">v1.0.2</div>
-<div class="version-entry-meta">2025‑07‑22 • Minecraft 1.21.4</div>
-</div>
-<div class="version-entry-actions"><a class="btn ghost dl" data-download-file="jetpack-datapack-1.21.8.zip" data-track-download="jetpack-datapack" download="" href="downloads/jetpack-datapack-1.21.8.zip"><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></a></div>
-</div>
-<p class="version-entry-notes">Initialer Release für 1.21.4 mit Survival-Rezepten.</p>
-</article>
-</div>
-</div>
-<div id="dp-jetpack-gallery" role="tabpanel">
-<div class="gallery">
-<img alt="Jetpack showcase 1" loading="lazy" src="assets/img/logo.jpg"/>
-<img alt="Jetpack showcase 2" loading="lazy" src="assets/img/logo.jpg"/>
-<img alt="Jetpack showcase 3" loading="lazy" src="assets/img/logo.jpg"/>
-</div>
-</div>
-</div>
-</section>
-</div>
-</div>
-</div><div aria-hidden="true" aria-labelledby="pr-spool-holder-title" class="modal" data-project-id="pickaxe-desk-print" id="pr-spool-holder" role="dialog"><div class="modal-backdrop" data-close="pr-spool-holder"></div><div class="modal-content" role="document"><button aria-label="Close" class="modal-close" data-close="pr-spool-holder">×</button><header class="modal-hero"><div class="title" id="pr-spool-holder-title">Minecraft Pickaxe</div><div class="muted">Simple, sturdy filament spool holder designed for easy printing and assembly.</div><div class="badges"><span class="badge">Print-ready</span><span class="badge">STL included</span><span class="badge">No supports</span><span class="badge">0.2 mm layer</span></div><div class="hero-actions"><a class="btn primary dl" href="downloads/pickaxe-desk-model.zip" download="" data-download-file="pickaxe-desk-model.zip" data-track-download="pickaxe-desk-print"><svg aria-hidden="true" focusable="false" height="18" viewbox="0 0 24 24" width="18"><path d="M12 3v10m0 0l4-4m-4 4l-4-4M5 21h14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg><span><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></span></a></div><div class="stats"><div class="stat"><div class="label">Version</div><div class="value">v1.0.3</div></div><div class="stat"><div class="label">Last updated</div><div class="value">Sep 2025</div></div><div class="stat"><div class="label"><span class="lang-en">Downloads</span><span class="lang-de">Downloads</span></div><div class="value" data-download-count="pickaxe-desk-print">—</div></div><div class="stat"><div class="label">Size</div><div class="value">—</div></div></div></header><div class="modal-body"><aside class="sidebar"><div class="info-card"><h4>Project info</h4><ul class="info-list"><li><span class="k">Print time</span><span>≈ 4–5 h</span></li><li><span class="k">Material</span><span>PLA or PETG</span></li><li><span class="k">Nozzle</span><span>0.4 mm</span></li><li><span class="k">Layer height</span><span>0.20 mm (0.28 quick)</span></li><li><span class="k">Perimeters</span><span>3–4</span></li><li><span class="k">Infill</span><span>15–25% (Gyroid/Cubic)</span></li><li><span class="k">Supports</span><span>None</span></li><li><span class="k">Bed adhesion</span><span>Brim optional (PETG)</span></li><li><span class="k"><span class="lang-en">License</span><span class="lang-de">Lizenz</span></span><a href="#license">MIT • CC BY-NC-SA</a></li></ul></div><div class="info-card"><h4>Tags</h4><div class="info-tags"><span class="chip">STL</span><span class="chip">No supports</span><span class="chip">0.2 mm</span><span class="chip">Hardware: M8</span></div></div></aside><section class="content"><nav aria-label="3D Print Tabs" class="tabs" role="tablist"><button aria-selected="true" class="active" data-tab="description" role="tab">Description</button><button aria-selected="false" class="" data-tab="gallery" role="tab">Gallery</button><button aria-selected="false" class="" data-tab="settings" role="tab">Print Settings</button><button aria-selected="false" data-tab="bom" role="tab">BOM</button><button aria-selected="false" data-tab="files" role="tab">Files</button><button aria-selected="false" data-tab="changelog" role="tab"><span class="lang-en">Changelog</span><span class="lang-de">Änderungsprotokoll</span></button></nav><div class="tabpanels"><div class="active prose" id="pr-spool-holder-description" role="tabpanel"><div style="max-width: 60ch; margin: 0 auto;"><p>A clean, display-friendly take on the classic Minecraft pickaxe. Designed for easy printing and quick assembly.</p><ul><li>Two parts: handle and head – align with a keyed joint.</li><li>Support-free on most FDM printers; recommended 0.2 mm layer height.</li><li>Best in PLA or PETG; a quick color swap gives the iconic look.</li><li>Optional: a dab of CA glue for a permanent fit.</li></ul><p>Print time ~2–4 hours depending on nozzle and layer settings. Scale up to use as a wall prop or down for a desk trinket.</p></div></div><div id="pr-spool-holder-gallery" role="tabpanel"><img alt="Spool holder render" src="assets/img/logo.jpg" style="max-width:100%;height:auto;border-radius:12px;"/><p class="muted">Placeholder render — replace with real photos when ready.</p><div class="gallery"><img alt="Minecraft Pickaxe – Front view" loading="lazy" src="assets/img/logo.jpg"/><img alt="Minecraft Pickaxe – Angle view" loading="lazy" src="assets/img/logo.jpg"/><img alt="Minecraft Pickaxe – Assembly detail" loading="lazy" src="assets/img/logo.jpg"/></div></div><div id="pr-spool-holder-settings" role="tabpanel"><ul class="info-list"><li><div class="k">Material</div><div class="v">PLA or PETG</div></li><li><div class="k">Nozzle</div><div class="v">0.4 mm</div></li><li><div class="k">Layer Height</div><div class="v">0.2 mm (0.28 mm draft OK)</div></li><li><div class="k">Perimeters</div><div class="v">3–4</div></li><li><div class="k">Infill</div><div class="v">15–25% (Gyroid/Cubic)</div></li><li><div class="k">Supports</div><div class="v">None</div></li><li><div class="k">Bed Adhesion</div><div class="v">Brim optional (PETG)</div></li></ul></div><div id="pr-spool-holder-bom" role="tabpanel"><ul class="info-list"><li><div class="k">M8 rod/bolt</div><div class="v">1× ~220–260 mm length</div></li><li><div class="k">M8 nuts</div><div class="v">2×</div></li><li><div class="k">M8 washers</div><div class="v">2×</div></li><li><div class="k">Rubber feet</div><div class="v">4× (optional)</div></li><li><div class="k">608 bearings</div><div class="v">2× (optional, upgrade)</div></li></ul><p class="muted">Dimensions can be adjusted to your printer or spool width.</p></div><div id="pr-spool-holder-files" role="tabpanel"><div class="prose"><ul><li>Spool_Holder_v1.0.stl — ~1.2 MB</li><li>Spool_Holder_Source.step — ~0.8 MB</li></ul></div></div><div id="pr-spool-holder-changelog" role="tabpanel"><ol class="steps"><li><strong>v1.0.1 — 2025-10-28</strong><ul><li>Tweaked tolerances for easier assembly</li><li>Optional bearing upgrade documented</li><li>Minor geometry cleanup</li></ul></li><li><strong>v1.0.0 — 2025-10-20</strong><ul><li>Initial release</li><li>No-support printable design</li></ul></li></ol></div></div></section></div></div></div>
+<div id="project-modals"></div>
+
 <script>
 (function(){
-  const wrap = document.getElementById('datapacks');
-  if (!wrap) return;
-  const btns = Array.from(wrap.querySelectorAll('#dp-subcats .subcat'));
-  const explain = wrap.querySelector('#dp-explain');
-  const grid = wrap.querySelector('.itemgrid');
-  const cards = grid ? Array.from(grid.querySelectorAll('.card')) : [];
+  const dpGrid = document.querySelector('#datapacks .itemgrid');
+  if (!dpGrid) return;
+  const grid = dpGrid;
+  let cards = [];
+  let activeCat = 'all';
 
-  const EXPLAIN = {
-    all: {title:'All datapacks', text:''},
-    utility: {title:'Utility', text:'Helpful tools that add features without changing progression (e.g., backpacks, waypoints, crafting helpers).'},
-    movement: {title:'Movement', text:'Packs that add or tweak ways to move—jetpacks, grappling, dashes—fitting survival play.'},
-    qol: {title:'Quality of Life', text:'Small improvements to the vanilla loop like tweaks to UI, drops, or crafting conveniences.'},
-    combat: {title:'Combat', text:'Adds weapons, abilities, or combat tweaks while keeping vanilla balance in mind.'},
-    worldgen: {title:'Worldgen', text:'Changes terrain/biome generation or structures. Usually world creation required.'}
-  };
+  function refreshCards() {
+    cards = grid ? Array.from(grid.querySelectorAll('.card')) : [];
+  }
 
   function setExplain(cat){
+    const explain = document.querySelector('#dp-explain');
+    const EXPLAIN = {
+      all: {title:'All datapacks', text:''},
+      utility: {title:'Utility', text:'Helpful tools that add features without changing progression (e.g., backpacks, waypoints, crafting helpers).'},
+      movement: {title:'Movement', text:'Packs that add or tweak ways to move—jetpacks, grappling, dashes—fitting survival play.'},
+      qol: {title:'Quality of Life', text:'Small improvements to the vanilla loop like tweaks to UI, drops, or crafting conveniences.'},
+      combat: {title:'Combat', text:'Adds weapons, abilities, or combat tweaks while keeping vanilla balance in mind.'},
+      worldgen: {title:'Worldgen', text:'Changes terrain/biome generation or structures. Usually world creation required.'}
+    };
     const e = EXPLAIN[cat] || EXPLAIN.all;
-    if (explain){
-      explain.querySelector('.title').textContent = e.title;
-      explain.querySelector('.text').textContent = e.text;
-    }
+    if (!explain) return;
+    explain.querySelector('.title').textContent = e.title;
+    explain.querySelector('.text').textContent = e.text;
   }
 
   function filter(cat){
-    const c = (cat || 'all').toLowerCase();
-    setExplain(c);
+    activeCat = (cat || 'all').toLowerCase();
+    setExplain(activeCat);
     if (!cards.length) return;
     let shown = 0;
     cards.forEach(card => {
       const attr = (card.getAttribute('data-subcats') || '').toLowerCase();
-      const match = c === 'all' || attr.split(/[,\s]+/).includes(c);
+      const match = activeCat === 'all' || attr.split(/[\s,]+/).includes(activeCat);
       card.style.display = match ? '' : 'none';
       if (match) shown++;
     });
-    // update count
-    const count = wrap.querySelector('.count');
+    const count = document.querySelector('#datapacks .count');
     if (count) count.textContent = shown + (shown === 1 ? ' item' : ' items');
   }
 
   function activate(btn){
+    const wrap = document.getElementById('datapacks');
+    if (!wrap) return;
+    const btns = Array.from(wrap.querySelectorAll('#dp-subcats .subcat'));
     btns.forEach(b=>{
       const on = b===btn;
       b.classList.toggle('active', on);
@@ -1227,26 +1117,63 @@ window.addEventListener('load', function() {
     });
     const cat = btn.getAttribute('data-cat') || 'all';
     filter(cat);
-    // hash for deep-linking
     const url = new URL(window.location);
     url.hash = '#datapacks:' + cat;
     history.replaceState(null, '', url);
   }
 
-  btns.forEach(b => b.addEventListener('click', ()=> activate(b)));
+  document.addEventListener('click', (event) => {
+    const btn = event.target.closest('#dp-subcats .subcat');
+    if (!btn) return;
+    event.preventDefault();
+    activate(btn);
+  });
 
-  // Deep link: #datapacks:movement
+  document.addEventListener('projects:cards-refreshed', () => {
+    refreshCards();
+    filter(activeCat || 'all');
+  });
+
   let initial = 'all';
   if (location.hash && location.hash.startsWith('#datapacks:')){
     initial = location.hash.split(':')[1] || 'all';
   }
-  const initBtn = btns.find(b=> (b.getAttribute('data-cat')||'all')===initial) || btns[0];
+  refreshCards();
+  const initBtn = Array.from(document.querySelectorAll('#dp-subcats .subcat'))
+    .find(b=> (b.getAttribute('data-cat')||'all')===initial);
   if (initBtn) activate(initBtn);
 })();
 </script>
+
+
 <script>
 (function(){
   const CARD_SELECTOR = '.dp-card[data-modal-target], .pr-card[data-modal-target]';
+
+  function initModalTabs(modal) {
+    if (!modal || modal.dataset.mirlTabsBound === '1') return;
+    const tabs = Array.from(modal.querySelectorAll('.tabs [role="tab"]'));
+    const panels = Array.from(modal.querySelectorAll('.tabpanels [role="tabpanel"]'));
+    if (!tabs.length || !panels.length) return;
+
+    function setTab(name){
+      tabs.forEach(t => {
+        const on = t.getAttribute('data-tab') === name;
+        t.classList.toggle('active', on);
+        t.setAttribute('aria-selected', on ? 'true':'false');
+      });
+      panels.forEach(p => {
+        const on = p.id.endsWith(name);
+        p.classList.toggle('active', on);
+      });
+    }
+
+    tabs.forEach(t => t.addEventListener('click', () => setTab(t.getAttribute('data-tab'))));
+    const defaultTab = tabs.find(t => t.classList.contains('active')) || tabs[0];
+    const initial = defaultTab ? (defaultTab.getAttribute('data-tab') || 'description') : 'description';
+    setTab(initial);
+    modal.dataset.mirlTabsBound = '1';
+  }
 
   function ensureCardAccessibility(card) {
     const target = card.getAttribute('data-modal-target');
@@ -1352,25 +1279,16 @@ window.addEventListener('load', function() {
   document.addEventListener('projects:cards-refreshed', refreshCardAccessibility);
   refreshCardAccessibility();
 
-  document.querySelectorAll('.modal').forEach(modal => {
-    const tabs = Array.from(modal.querySelectorAll('.tabs [role="tab"]'));
-    const panels = Array.from(modal.querySelectorAll('.tabpanels [role="tabpanel"]'));
-    function setTab(name){
-      tabs.forEach(t => {
-        const on = t.getAttribute('data-tab') === name;
-        t.classList.toggle('active', on);
-        t.setAttribute('aria-selected', on ? 'true':'false');
-      });
-      panels.forEach(p => {
-        const on = p.id.endsWith(name);
-        p.classList.toggle('active', on);
-      });
-    }
-    tabs.forEach(t => t.addEventListener('click', () => setTab(t.getAttribute('data-tab'))));
-    setTab('description');
+  document.querySelectorAll('.modal').forEach(initModalTabs);
+  document.addEventListener('projects:data-loaded', (event) => {
+    const modals = (event && event.detail && Array.isArray(event.detail.modals)) ? event.detail.modals : [];
+    modals.forEach(initModalTabs);
+    refreshCardAccessibility();
   });
 })();
 </script>
+
+
 
 <script>
 (function() {
@@ -1382,7 +1300,7 @@ window.addEventListener('load', function() {
     }
   }
 
-  onReady(function initProjectDownloadInfo() {
+  function initProjectDownloadInfo() {
     const modals = Array.from(document.querySelectorAll('.modal[data-project-id]'));
     const downloadLinks = Array.from(document.querySelectorAll('[data-track-download], a[download]'));
 
@@ -1419,312 +1337,166 @@ window.addEventListener('load', function() {
         if (modal) {
           return modal;
         }
-        modal = document.createElement('div');
-        modal.id = 'download-consent-modal';
-        modal.className = 'consent-modal';
-        modal.setAttribute('aria-hidden', 'true');
+        modal = document.createElement('dialog');
+        modal.className = 'modal confirm-download';
         modal.innerHTML = `
-          <div class="consent-backdrop" data-close="true"></div>
-          <div class="consent-dialog" role="dialog" aria-modal="true" aria-labelledby="download-consent-title">
-            <div class="consent-head">
-              <div class="consent-title" id="download-consent-title">
-                <span class="lang-en">Download files?</span>
-                <span class="lang-de">Download bestätigen?</span>
-              </div>
-              <button class="consent-x" type="button" aria-label="Close">×</button>
+          <div class="modal-backdrop"></div>
+          <div class="modal-content">
+            <button aria-label="Close" class="modal-close" data-action="cancel">×</button>
+            <header class="modal-hero">
+              <div class="title lang-en">Download file?</div>
+              <div class="title lang-de">Datei herunterladen?</div>
+              <div class="muted"></div>
+            </header>
+            <div class="modal-body">
+              <p class="dl-filename"></p>
+              <p class="dl-project"></p>
             </div>
-            <div class="consent-body">
-              <p class="lang-en" id="download-consent-message-en">Download this file? The download will start immediately.</p>
-              <p class="lang-de" id="download-consent-message-de">Diese Datei herunterladen? Der Download startet sofort.</p>
-            </div>
-            <div class="consent-actions">
-              <button type="button" class="btn btn-primary" id="download-consent-confirm">
-                <span class="lang-en">Download</span>
-                <span class="lang-de">Herunterladen</span>
-              </button>
-              <button type="button" class="btn" id="download-consent-cancel">
-                <span class="lang-en">Cancel</span>
-                <span class="lang-de">Abbrechen</span>
-              </button>
-            </div>
-          </div>
-        `;
+            <footer class="modal-footer">
+              <button class="btn" data-action="cancel" type="button">Cancel</button>
+              <button class="btn primary" data-action="confirm" type="button">Download</button>
+            </footer>
+          </div>`;
         document.body.appendChild(modal);
+
+        modal.addEventListener('click', (event) => {
+          if (event.target.getAttribute('data-action') === 'cancel' || event.target.classList.contains('modal-backdrop')) {
+            event.preventDefault();
+            close();
+          }
+        });
+
+        const confirmBtn = modal.querySelector('[data-action="confirm"]');
+        const cancelBtn = modal.querySelector('[data-action="cancel"]');
+
+        if (confirmBtn) confirmBtn.addEventListener('click', () => close(true));
+        if (cancelBtn) cancelBtn.addEventListener('click', () => close(false));
+
+        modal.addEventListener('keydown', (event) => {
+          if (event.key === 'Escape') {
+            event.preventDefault();
+            close(false);
+          }
+        });
+
         applyLang();
         return modal;
       }
 
-      function closeModal() {
-        if (!modal) {
+      function open(options) {
+        const dialog = ensureModal();
+        if (!dialog) {
+          if (options && typeof options.onConfirm === 'function') {
+            options.onConfirm();
+          }
           return;
         }
-        modal.classList.remove('show');
+
+        const filenameEl = dialog.querySelector('.dl-filename');
+        const projectEl = dialog.querySelector('.dl-project');
+        const lang = getActiveLanguage();
+
+        if (filenameEl) {
+          filenameEl.textContent = options.filename || '';
+        }
+        if (projectEl) {
+          const label = lang === 'de' ? 'Projekt:' : 'Project:';
+          projectEl.textContent = options.projectTitle ? `${label} ${options.projectTitle}` : '';
+        }
+
+        focusRestoreTarget = document.activeElement;
+        dialog.setAttribute('open', '');
+        dialog.setAttribute('aria-hidden', 'false');
+
+        const confirmBtn = dialog.querySelector('[data-action="confirm"]');
+        if (confirmBtn && typeof confirmBtn.focus === 'function') {
+          confirmBtn.focus({ preventScroll: true });
+        }
+
+        pendingCancel = () => {
+          if (typeof options.onCancel === 'function') {
+            options.onCancel();
+          }
+        };
+
+        dialog.dataset.confirmCallback = typeof options.onConfirm === 'function' ? '1' : '';
+        dialog.dataset.confirmData = options.filename || '';
+        dialog.dataset.projectTitle = options.projectTitle || '';
+      }
+
+      function close(confirmed) {
+        if (!modal) return;
+        modal.removeAttribute('open');
         modal.setAttribute('aria-hidden', 'true');
-        const target = focusRestoreTarget;
-        focusRestoreTarget = null;
-        if (target && typeof target.focus === 'function') {
-          try {
-            target.focus();
-          } catch (error) {
-            // ignore focus errors
-          }
-        }
-      }
 
-      function triggerCancel() {
-        if (!modal || !modal.classList.contains('show')) {
-          pendingCancel = null;
-          focusRestoreTarget = null;
-          return;
+        if (confirmed && modal.dataset.confirmCallback === '1' && typeof modal.dataset.confirmData !== 'undefined') {
+          if (typeof modal.dataset.projectTitle === 'string') {
+            // noop for now
+          }
+        } else if (pendingCancel) {
+          pendingCancel();
         }
-        const cancelCallback = pendingCancel;
+
+        if (focusRestoreTarget && typeof focusRestoreTarget.focus === 'function') {
+          focusRestoreTarget.focus({ preventScroll: true });
+        }
         pendingCancel = null;
-        closeModal();
-        if (typeof cancelCallback === 'function') {
-          cancelCallback();
-        }
+        focusRestoreTarget = null;
       }
 
-      document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && modal && modal.classList.contains('show')) {
-          event.preventDefault();
-          triggerCancel();
-        }
-      });
-
-      return {
-        open(options = {}) {
-          const current = ensureModal();
-          const confirmBtn = current.querySelector('#download-consent-confirm');
-          const cancelBtn = current.querySelector('#download-consent-cancel');
-          const closeBtn = current.querySelector('.consent-x');
-          const backdrop = current.querySelector('.consent-backdrop');
-          const titleEn = current.querySelector('#download-consent-title .lang-en');
-          const titleDe = current.querySelector('#download-consent-title .lang-de');
-          const messageEn = current.querySelector('#download-consent-message-en');
-          const messageDe = current.querySelector('#download-consent-message-de');
-
-          const filename = (options.filename || '').trim();
-          const projectTitle = (options.projectTitle || '').trim();
-
-          let messageEnText;
-          let messageDeText;
-          if (projectTitle) {
-            messageEnText = `Download files for “${projectTitle}”? The download will start immediately.`;
-            messageDeText = `Dateien für „${projectTitle}“ herunterladen? Der Download startet sofort.`;
-          } else if (filename) {
-            messageEnText = `Download ${filename}? The download will start immediately.`;
-            messageDeText = `Datei ${filename} herunterladen? Der Download startet sofort.`;
-          } else {
-            messageEnText = 'Start download? The download will start immediately.';
-            messageDeText = 'Download starten? Der Download startet sofort.';
-          }
-
-          titleEn.textContent = 'Download files?';
-          titleDe.textContent = 'Download bestätigen?';
-          messageEn.textContent = messageEnText;
-          messageDe.textContent = messageDeText;
-
-          const confirmCallback = typeof options.onConfirm === 'function' ? options.onConfirm : null;
-          pendingCancel = typeof options.onCancel === 'function' ? options.onCancel : null;
-
-          const handleCancel = () => {
-            triggerCancel();
-          };
-
-          confirmBtn.onclick = () => {
-            const callback = confirmCallback;
-            pendingCancel = null;
-            closeModal();
-            if (typeof callback === 'function') {
-              callback();
-            }
-          };
-
-          cancelBtn.onclick = handleCancel;
-          closeBtn.onclick = handleCancel;
-          backdrop.onclick = (event) => {
-            if (event.target === backdrop || event.target.dataset.close === 'true') {
-              handleCancel();
-            }
-          };
-
-          const activeElement = document.activeElement;
-          focusRestoreTarget = activeElement && typeof activeElement.focus === 'function' ? activeElement : null;
-
-          applyLang();
-          current.classList.add('show');
-          current.setAttribute('aria-hidden', 'false');
-          setTimeout(() => {
-            try {
-              confirmBtn.focus();
-            } catch (error) {
-              // ignore focus errors
-            }
-          }, 0);
-        },
-        apply: applyLang,
-      };
+      return { open, close, applyLang };
     })();
 
-    document.addEventListener('langchange', downloadConfirm.apply);
-
     function formatBytes(bytes) {
-      if (!Number.isFinite(bytes) || bytes <= 0) {
-        return null;
+      if (!bytes && bytes !== 0) return '';
+      const units = ['B','KB','MB','GB'];
+      let size = bytes;
+      let unit = 0;
+      while (size >= 1024 && unit < units.length - 1) {
+        size /= 1024;
+        unit += 1;
       }
-      const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-      const exponent = Math.min(units.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)));
-      const value = bytes / Math.pow(1024, exponent);
-      const digits = value >= 10 || exponent === 0 ? 0 : 1;
-      return `${value.toFixed(digits)} ${units[exponent]}`.replace('.0 ', ' ');
+      return size.toFixed(1).replace(/\.0$/, '') + ' ' + units[unit];
     }
 
-    function attemptRangeRequest(url) {
-      return fetch(url, { method: 'GET', headers: { Range: 'bytes=0-0' } })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error('Range request failed');
-          }
-          if (response.body && typeof response.body.cancel === 'function') {
-            response.body.cancel();
-          }
-          const range = response.headers.get('content-range');
-          if (range) {
-            const match = range.match(/\/(\d+)$/);
-            if (match) {
-              const total = Number(match[1]);
-              return Number.isFinite(total) ? total : null;
-            }
-          }
-          const fallback = response.headers.get('content-length');
-          if (fallback) {
-            const total = Number(fallback);
-            return Number.isFinite(total) ? total : null;
-          }
-          return null;
-        })
-        .catch(() => null);
+    function fetchFileSize(url) {
+      if (!url) return Promise.resolve(null);
+      if (sizeCache.has(url)) return Promise.resolve(sizeCache.get(url));
+      return fetch(url, { method: 'HEAD' }).then((res) => {
+        const size = res.headers.get('content-length');
+        const parsed = size ? parseInt(size, 10) : null;
+        sizeCache.set(url, parsed);
+        return parsed;
+      }).catch(() => null);
     }
 
-    function fetchSize(url) {
-      const key = url.href;
-      if (sizeCache.has(key)) {
-        return sizeCache.get(key);
-      }
-
-      if (url.origin !== location.origin) {
-        const skip = Promise.resolve(null);
-        sizeCache.set(key, skip);
-        return skip;
-      }
-
-      const request = fetch(url.href, { method: 'HEAD' })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error('Request failed');
-          }
-          const headerValue = response.headers.get('content-length');
-          if (!headerValue) {
-            throw new Error('Missing content length');
-          }
-          const total = Number(headerValue);
-          return Number.isFinite(total) ? total : null;
-        })
-        .catch(() => attemptRangeRequest(url.href));
-
-      sizeCache.set(key, request);
-      return request;
+    function observeLanguageChanges() {
+      document.addEventListener('langchange', () => downloadConfirm.applyLang());
     }
 
     modals.forEach((modal) => {
-      const sizeStat = Array.from(modal.querySelectorAll('.stat')).find((stat) => {
-        const label = stat.querySelector('.label');
-        return label && label.textContent.trim().toLowerCase() === 'size';
-      });
-      if (!sizeStat) {
-        return;
-      }
-      const valueEl = sizeStat.querySelector('.value');
-      if (!valueEl) {
-        return;
-      }
+      modal.querySelectorAll('[data-download-file]').forEach((link) => {
+        const valueEl = modal.querySelector(`[data-download-count="${link.getAttribute('data-download-file')}"]`);
+        const downloadId = link.getAttribute('data-track-download');
+        const href = link.getAttribute('href');
+        const stats = [];
 
-      const fileLinks = Array.from(modal.querySelectorAll('[data-track-download], a[download]'));
-      const seen = new Set();
-      const files = fileLinks.reduce((acc, link) => {
-        const href = (link.getAttribute('href') || '').trim();
-        if (!href || seen.has(href)) {
-          return acc;
+        if (downloadId) {
+          stats.push({ label: 'Downloads', valueEl });
         }
-        seen.add(href);
-        const label = (link.getAttribute('data-download-file')
-          || link.getAttribute('download')
-          || href.split('/').filter(Boolean).pop()
-          || '').trim();
-        acc.push({ href, label });
-        return acc;
-      }, []);
 
-      if (!files.length) {
-        valueEl.textContent = '—';
-        valueEl.removeAttribute('title');
-        return;
-      }
-
-      valueEl.textContent = '…';
-      valueEl.removeAttribute('title');
-
-      const filesWithUrls = files.map((file) => {
-        try {
-          return { ...file, url: new URL(file.href, location.href) };
-        } catch (error) {
-          return null;
-        }
-      }).filter(Boolean);
-
-      if (!filesWithUrls.length) {
-        valueEl.textContent = '—';
-        valueEl.removeAttribute('title');
-        return;
-      }
-
-      Promise.all(filesWithUrls.map((file) => fetchSize(file.url)))
-        .then((sizes) => sizes.map((size, index) => ({ file: filesWithUrls[index], size })))
-        .then((entries) => entries.filter(({ size }) => Number.isFinite(size) && size > 0))
-        .then((entries) => {
-          if (!entries.length) {
-            valueEl.textContent = '—';
-            valueEl.removeAttribute('title');
-            return;
-          }
-
-          const total = entries.reduce((sum, entry) => sum + entry.size, 0);
-          const formattedTotal = formatBytes(total);
-          valueEl.textContent = formattedTotal || '—';
-
-          if (entries.length === 1) {
-            const [entry] = entries;
-            if (entry.file.label) {
-              valueEl.setAttribute('title', `${entry.file.label}: ${formatBytes(entry.size) || '—'}`);
-            } else {
-              valueEl.removeAttribute('title');
+        fetchFileSize(href)
+          .then((size) => {
+            const text = formatBytes(size) || '—';
+            link.setAttribute('data-download-size', text);
+            if (valueEl) {
+              valueEl.textContent = text;
             }
-            return;
-          }
-
-          const details = entries
-            .map(({ file, size }) => {
-              const label = file.label || file.href;
-              return `${label}: ${formatBytes(size) || '—'}`;
-            })
-            .join('\n');
-          valueEl.setAttribute('title', details);
-        })
-        .catch(() => {
-          valueEl.textContent = '—';
-          valueEl.removeAttribute('title');
-        });
+          })
+          .catch(() => {
+            if (valueEl) valueEl.textContent = '—';
+          });
+      });
     });
 
     downloadLinks.forEach((link) => {
@@ -1770,9 +1542,217 @@ window.addEventListener('load', function() {
         });
       }, { capture: true });
     });
+
+    observeLanguageChanges();
+  }
+
+  onReady(initProjectDownloadInfo);
+  document.addEventListener('projects:data-loaded', initProjectDownloadInfo);
+})();
+
+<script>
+(function(){
+  const dpGrid = document.querySelector('#datapacks .itemgrid');
+  const prGrid = document.querySelector('#printing .itemgrid');
+  const modalHost = document.getElementById('project-modals') || document.body;
+  if (!dpGrid || !prGrid || !modalHost) return;
+
+  function resolveProjectsDataUrl() {
+    try {
+      const html = document.documentElement;
+      if (html && html.getAttribute('data-projects-url')) {
+        const attr = html.getAttribute('data-projects-url');
+        return new URL(attr, document.baseURI).toString();
+      }
+      const meta = document.querySelector('meta[name="projects-data-url"]');
+      if (meta && meta.getAttribute('content')) {
+        const content = meta.getAttribute('content');
+        return new URL(content, document.baseURI).toString();
+      }
+    } catch (err) {}
+    try {
+      return new URL('assets/data/projects.json', document.baseURI).toString();
+    } catch (err) {}
+    return 'assets/data/projects.json';
+  }
+
+  function normaliseType(type) {
+    const t = String(type || 'datapack').toLowerCase();
+    return t.startsWith('print') ? 'printing' : 'datapack';
+  }
+
+  function resolveUrl(value) {
+    const raw = value == null ? '' : String(value).trim();
+    if (!raw) return '';
+    try {
+      return new URL(raw, document.baseURI).toString();
+    } catch (err) {
+      return raw;
+    }
+  }
+
+  function formatCount(count) {
+    return `${count} ${count === 1 ? 'item' : 'items'}`;
+  }
+
+  function escapeAttr(value) {
+    return String(value || '').replace(/"/g, '&quot;');
+  }
+
+  function createCard(project, modalId) {
+    const type = normaliseType(project.type);
+    const card = document.createElement('article');
+    card.className = type === 'datapack' ? 'item card dp-card' : 'item card pr-card';
+    card.dataset.projectId = project.id || modalId;
+    card.dataset.projectType = type;
+    if (project.category) card.setAttribute('data-subcats', project.category);
+    if (project.tags && Array.isArray(project.tags) && project.tags.length && !card.getAttribute('data-subcats')) {
+      card.setAttribute('data-subcats', project.tags.join(','));
+    }
+    card.dataset.modalTarget = modalId;
+    card.setAttribute('aria-controls', modalId);
+    card.setAttribute('aria-expanded', 'false');
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+
+    const chips = [];
+    if (project.mcVersion) chips.push(project.mcVersion);
+    if (project.tags && project.tags.length) chips.push(project.tags[0]);
+    if (project.status && chips.length < 2) chips.push(project.status);
+
+    card.innerHTML = `
+      <div class="thumb"><img alt="${escapeAttr(project.title || 'Project')} cover" src="${resolveUrl(project.image || 'assets/img/logo.jpg')}" loading="lazy"/></div>
+      <div class="meta">
+        <div class="title">${project.title || 'Project'}</div>
+        ${chips.length ? `<div class="chips">${chips.map(c => `<span class="chip">${c}</span>`).join('')}</div>` : ''}
+        <div class="quick">${project.shortDescription || ''}</div>
+      </div>`;
+    return card;
+  }
+
+  function createModal(project, modalId) {
+    const heroSubtitle = (typeof project.modalHero === 'string' && project.modalHero.trim()) || project.shortDescription || '';
+    const badges = [];
+    if (project.status) badges.push(`<span class="badge"><span class="dot"></span> ${project.status}</span>`);
+    if (project.mcVersion) badges.push(`<span class="badge">Minecraft ${project.mcVersion}</span>`);
+    if (Array.isArray(project.tags)) {
+      project.tags.forEach(tag => badges.push(`<span class="badge">${tag}</span>`));
+    }
+
+    const downloadUrl = project.downloadFile ? resolveUrl(project.downloadFile) : '';
+    const downloadFile = downloadUrl ? (downloadUrl.split('/').pop() || downloadUrl) : '';
+    const heroActions = downloadUrl
+      ? `<a class="btn primary dl" data-download-file="${downloadFile}" data-track-download="${project.id || modalId}" download href="${downloadUrl}"><svg aria-hidden="true" focusable="false" height="18" viewBox="0 0 24 24" width="18"><path d="M12 3v10m0 0l4-4m-4 4l-4-4M5 21h14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg><span><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></span></a>`
+      : '';
+
+    const sidebarTags = Array.isArray(project.tags) ? project.tags : [];
+    const sidebarInfo = [];
+    sidebarInfo.push(`<li><span class="k">Type</span><span>${normaliseType(project.type) === 'printing' ? '3D Print' : 'Datapack'}</span></li>`);
+    if (project.mcVersion) sidebarInfo.push(`<li><span class="k">Compat</span><span>${project.mcVersion}</span></li>`);
+    if (project.category) sidebarInfo.push(`<li><span class="k">Category</span><span>${project.category}</span></li>`);
+
+    const bodyHtml = (typeof project.modalBody === 'string' && project.modalBody.trim())
+      ? project.modalBody
+      : `<aside class="sidebar">
+          <div class="info-card">
+            <h4>Project info</h4>
+            <ul class="info-list">${sidebarInfo.join('')}</ul>
+          </div>
+          ${sidebarTags.length ? `<div class="info-card"><h4>Tags</h4><div class="info-tags">${sidebarTags.map(tag => `<span class="chip">${tag}</span>`).join('')}</div></div>` : ''}
+        </aside>
+        <section class="content">
+          <nav aria-label="${project.title || 'Project'} Tabs" class="tabs" role="tablist">
+            <button aria-selected="true" class="active" data-tab="description" role="tab">Description</button>
+          </nav>
+          <div class="tabpanels">
+            <div class="active prose" id="${modalId}-description" role="tabpanel">
+              <p>${project.shortDescription || 'Details coming soon.'}</p>
+            </div>
+          </div>
+        </section>`;
+
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = modalId;
+    modal.dataset.projectId = project.id || modalId;
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-hidden', 'true');
+    modal.setAttribute('aria-labelledby', `${modalId}-title`);
+    modal.innerHTML = `
+      <div class="modal-backdrop" data-close="${modalId}"></div>
+      <div class="modal-content" role="document">
+        <button aria-label="Close" class="modal-close" data-close="${modalId}">×</button>
+        <header class="modal-hero">
+          <div class="title" id="${modalId}-title">${project.title || 'Project'}</div>
+          <div class="muted">${heroSubtitle}</div>
+          <div class="badges">${badges.join('')}</div>
+          <div class="hero-actions">${heroActions}</div>
+          <div class="stats">
+            ${project.status ? `<div class="stat"><div class="label">Status</div><div class="value">${project.status}</div></div>` : ''}
+            ${project.updatedAt ? `<div class="stat"><div class="label">Updated</div><div class="value">${new Date(project.updatedAt).toLocaleDateString()}</div></div>` : ''}
+          </div>
+        </header>
+        <div class="modal-body">${bodyHtml}</div>
+      </div>`;
+    return modal;
+  }
+
+  async function loadProjects() {
+    const url = resolveProjectsDataUrl();
+    try {
+      const response = await fetch(url, { cache: 'no-cache' });
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const payload = await response.json();
+      if (Array.isArray(payload)) return payload;
+      if (payload && Array.isArray(payload.projects)) return payload.projects;
+    } catch (err) {
+      console.warn('Failed to load projects data', err);
+    }
+    return [];
+  }
+
+  function updateCounts(dpCount, prCount) {
+    const dpLabel = document.querySelector('#datapacks .count');
+    const prLabel = document.querySelector('#printing .count');
+    if (dpLabel) dpLabel.textContent = formatCount(dpCount);
+    if (prLabel) prLabel.textContent = formatCount(prCount);
+  }
+
+  function clearChildren(node) {
+    while (node.firstChild) node.removeChild(node.firstChild);
+  }
+
+  loadProjects().then((projects) => {
+    clearChildren(dpGrid);
+    clearChildren(prGrid);
+    clearChildren(modalHost);
+
+    let dpCount = 0;
+    let prCount = 0;
+    const createdModals = [];
+
+    projects.forEach((project, idx) => {
+      const modalId = `${normaliseType(project.type) === 'printing' ? 'pr' : 'dp'}-${project.id || idx}`;
+      const card = createCard(project, modalId);
+      const modal = createModal(project, modalId);
+      if (normaliseType(project.type) === 'printing') {
+        prGrid.appendChild(card);
+        prCount += 1;
+      } else {
+        dpGrid.appendChild(card);
+        dpCount += 1;
+      }
+      modalHost.appendChild(modal);
+      createdModals.push(modal);
+    });
+
+    updateCounts(dpCount, prCount);
+    document.dispatchEvent(new CustomEvent('projects:cards-refreshed'));
+    document.dispatchEvent(new CustomEvent('projects:data-loaded', { detail: { projects, modals: createdModals }}));
   });
 })();
 </script>
+
 </div> <script src="assets/js/projects-editor.js"></script>
 <script src="assets/js/site.js"></script>
 </body>
