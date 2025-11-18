@@ -1,49 +1,49 @@
 {
   "projects": [
     {
-      "shortDescription": "Lightweight jetpack for survival. Vanilla-friendly, no mods required.",
-      "mcVersion": "1.21.8",
-      "downloadFile": "downloads/jetpack-datapack-1.21.8.zip",
-      "modalHero": "",
-      "updatedAt": "2024-01-01T00:00:00.000Z",
-      "modalBody": "",
-      "modalStats": "",
-      "status": "released",
-      "modalHeroActions": "",
+      "id": "jetpack-datapack",
       "title": "Jetpack Datapack",
+      "type": "datapack",
+      "shortDescription": "Lightweight jetpack for survival. Vanilla-friendly, no mods required.",
+      "modalHero": "",
+      "modalBody": "",
+      "modalBadges": "",
+      "modalHeroActions": "",
+      "modalStats": "",
+      "mcVersion": "1.21.8",
+      "status": "released",
+      "category": "movement",
       "tags": [
         "Movement",
         "Utility",
         "Survival"
       ],
-      "type": "datapack",
-      "id": "jetpack-datapack",
+      "downloadFile": "downloads/jetpack-datapack-1.21.8.zip",
+      "image": "assets/img/logo.jpg",
       "createdAt": "2024-01-01T00:00:00.000Z",
-      "image": "/assets/uploads/screenshot-2025-11-17-223048.png",
-      "modalBadges": "",
-      "category": "movement"
+      "updatedAt": "2024-01-01T00:00:00.000Z"
     },
     {
-      "shortDescription": "A Minecraft pickaxe desk model that prints support-free and snaps together.",
-      "mcVersion": "",
-      "downloadFile": "downloads/pickaxe-desk-model.zip",
-      "modalHero": "",
-      "updatedAt": "2024-01-02T00:00:00.000Z",
-      "modalBody": "",
-      "modalStats": "",
-      "status": "released",
-      "modalHeroActions": "",
+      "id": "pickaxe-desk-print",
       "title": "Pickaxe Desk Model",
+      "type": "printing",
+      "shortDescription": "A Minecraft pickaxe desk model that prints support-free and snaps together.",
+      "modalHero": "",
+      "modalBody": "",
+      "modalBadges": "",
+      "modalHeroActions": "",
+      "modalStats": "",
+      "mcVersion": "",
+      "status": "released",
+      "category": "display",
       "tags": [
         "Display",
         "Desk"
       ],
-      "type": "printing",
-      "id": "pickaxe-desk-print",
-      "createdAt": "2024-01-02T00:00:00.000Z",
+      "downloadFile": "downloads/pickaxe-desk-model.zip",
       "image": "assets/img/logo.jpg",
-      "modalBadges": "",
-      "category": "display"
+      "createdAt": "2024-01-02T00:00:00.000Z",
+      "updatedAt": "2024-01-02T00:00:00.000Z"
     }
   ]
 }

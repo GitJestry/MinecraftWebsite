@@ -2,7 +2,6 @@ backend:
   name: github
   repo: GitJestry/MinecraftWebsite
   branch: main
-  # TODO: set this to the URL of your OAuth proxy (Cloudflare Worker, etc.)
   base_url: "https://decap-proxy.julian-meyfisch.workers.dev"
 
 media_folder: "assets/uploads"
