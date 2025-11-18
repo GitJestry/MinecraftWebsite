@@ -94,37 +94,7 @@ main p, main li, .content p, .content li, .main-content p, .main-content li, art
 <script src="assets/js/site.js"></script>
 </div>
 
-<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
-<script>
-  if (window.netlifyIdentity) {
-    function hasInviteToken() {
-      if (typeof window === 'undefined' || !window.location) return false;
-      var hash = window.location.hash || '';
-      return /invite_toke[nr]=/i.test(hash);
-    }
 
-    function ensureInviteSignup() {
-      if (!window.netlifyIdentity) return;
-      if (!hasInviteToken()) return;
-      // Force the signup dialog to stay open for invite flows
-      window.netlifyIdentity.open('signup');
-    }
-
-    window.netlifyIdentity.on('init', function(user) {
-      if (!user) {
-        ensureInviteSignup();
-        window.netlifyIdentity.on('login', function() {
-          document.location.href = '/admin/';
-        });
-        window.addEventListener('hashchange', ensureInviteSignup, { passive: true });
-        window.netlifyIdentity.on('close', ensureInviteSignup);
-      }
-    });
-
-    // Always initialize after listeners to ensure invite flows are caught
-    window.netlifyIdentity.init();
-  }
-</script>
 
 </body>
 </html>

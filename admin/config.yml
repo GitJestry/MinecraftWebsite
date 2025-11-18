@@ -2,12 +2,14 @@ backend:
   name: github
   repo: GitJestry/MinecraftWebsite
   branch: main
+  # TODO: set this to the URL of your OAuth proxy (Cloudflare Worker, etc.)
+  base_url: "https://YOUR-OAUTH-PROXY-URL"
 
 media_folder: "assets/uploads"
 public_folder: "/assets/uploads"
 
-site_url: "https://taupe-halva-161af5.netlify.app"
-display_url: "https://taupe-halva-161af5.netlify.app"
+site_url: "https://gitjestry.github.io/MinecraftWebsite"
+display_url: "https://gitjestry.github.io/MinecraftWebsite"
 
 collections:
   - name: "data"
