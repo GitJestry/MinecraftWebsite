@@ -1006,6 +1006,124 @@
   const dpCount = document.querySelector('#datapacks .count');
   const prCount = document.querySelector('#printing .count');
 
+  // --- Öffentliche Seite: Projekte mit Daten aus /admin (projects.json) "hydraten" ---
+  (async function hydrateProjectsFromAdmin() {
+    // Wenn wir nicht auf der Projects-Seite sind, einfach rausgehen
+    if (!dpGrid && !prGrid) {
+      return;
+    }
+
+    // Wenn loadLocalProjects aus irgendeinem Grund nicht existiert (ältere Version o.ä.)
+    if (typeof loadLocalProjects !== 'function') {
+      console.warn('loadLocalProjects() nicht verfügbar – keine Projektsynchronisation.');
+      return;
+    }
+
+    let projects;
+    try {
+      projects = await loadLocalProjects();
+    } catch (err) {
+      console.warn('Konnte Projektliste nicht aus JSON laden:', err);
+      return;
+    }
+
+    if (!Array.isArray(projects) || projects.length === 0) {
+      // Nichts zu tun, aber Counts trotzdem updaten
+      if (typeof updateCounts === 'function') {
+        updateCounts();
+      }
+      return;
+    }
+
+    function ensureCardForProject(project) {
+      const type = normaliseType(project.type);
+      const grid = type === 'datapack' ? dpGrid : prGrid;
+      if (!grid) return;
+
+      const id = (project.id || '').trim();
+      let card = null;
+
+      if (id) {
+        // 1) Karte mit data-project-id suchen
+        const cards = Array.from(grid.querySelectorAll('.card'));
+        card = cards.find((el) => (el.getAttribute('data-project-id') || '').trim() === id);
+
+        // 2) Falls nicht gefunden: über Modal-ID mappen
+        if (!card) {
+          const modalId = resolveModalId(project, type);
+          if (modalId) {
+            const cardsByModal = cards.filter((el) => (el.dataset.modalTarget || '') === modalId);
+            if (cardsByModal.length) {
+              card = cardsByModal[0];
+              card.setAttribute('data-project-id', id);
+            }
+          }
+        }
+      }
+
+      // Keine existierende Karte? Neue Karte anhand der Daten bauen
+      if (!card) {
+        renderProjectCard(project);
+        return;
+      }
+
+      // Bestehende Karte mit Daten aus /admin "auffüllen"
+      const imgEl = card.querySelector('.thumb img');
+      if (imgEl) {
+        const imgSrc =
+          resolveProjectStaticUrl(project.image || 'assets/img/logo.jpg') ||
+          imgEl.getAttribute('src') ||
+          'assets/img/logo.jpg';
+        imgEl.setAttribute('src', imgSrc);
+        if (project.title) {
+          imgEl.setAttribute('alt', project.title + ' cover');
+        }
+      }
+
+      const titleEl = card.querySelector('.meta .title');
+      if (titleEl && project.title) {
+        titleEl.textContent = project.title;
+      }
+
+      const quickEl = card.querySelector('.meta .quick');
+      if (quickEl && typeof project.shortDescription === 'string') {
+        quickEl.textContent = project.shortDescription;
+      }
+
+      const chipsEl = card.querySelector('.meta .chips');
+      if (chipsEl) {
+        const chipA = project.mcVersion || (type === 'datapack' ? '1.21.x' : '');
+        const tags = Array.isArray(project.tags) ? project.tags : [];
+        const chipB = (tags && tags.length) ? tags[0] : (project.status || '');
+
+        let chipsHtml = '';
+        if (chipA) chipsHtml += '<span class="chip">' + escapeHtml(chipA) + '</span>';
+        if (chipB) chipsHtml += '<span class="chip">' + escapeHtml(chipB) + '</span>';
+        chipsEl.innerHTML = chipsHtml;
+      }
+
+      // Card mit Editor-Tools versehen, damit du im Editor-Mode weiterarbeiten kannst
+      if (typeof attachCardEditorTools === 'function') {
+        attachCardEditorTools(card, project);
+      }
+    }
+
+    // Alle Projekte einmal durchlaufen:
+    projects.forEach((project) => {
+      // 1) Karte auflisten/aktualisieren
+      ensureCardForProject(project);
+      // 2) Modal-Inhalt mit JSON-Daten befüllen (aber Defaults behalten)
+      if (typeof applyProjectModalContent === 'function') {
+        applyProjectModalContent(project);
+      }
+    });
+
+    if (typeof updateCounts === 'function') {
+      updateCounts();
+    }
+  })();
+
+
   // Editor modal
   const editorModal = document.getElementById('project-editor-modal');
   const editorForm = document.getElementById('project-editor-form');
