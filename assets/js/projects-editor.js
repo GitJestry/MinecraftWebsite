@@ -2005,6 +2005,7 @@
     }
     const safeType = normaliseType(project.type);
     const fallbackId = (project.id && project.id.trim()) || slugifyId(project.title || 'project');
+    const contentPayload = buildModalContentPayload(project);
     if (!fallbackId) {
       return { modalId: '', modal: null };
     }
@@ -2029,10 +2030,16 @@
       : buildAutoBadgesHtml(safeType, project.status, project.mcVersion, project.tags, project.category);
     const heroActionsHtml = (typeof project.modalHeroActions === 'string' && project.modalHeroActions.trim())
       ? project.modalHeroActions.trim()
-      : buildAutoHeroActionsHtml(project.downloadFile, fallbackId);
+      : buildAutoHeroActionsHtml(
+          project.downloadFile || (contentPayload ? contentPayload.primaryDownloadUrl : ''),
+          fallbackId,
+        );
     let bodyHtml = (typeof project.modalBody === 'string' && project.modalBody.trim())
       ? project.modalBody
       : '';
+    if (!bodyHtml && contentPayload) {
+      bodyHtml = buildModalBodyHtml(modalId, contentPayload.bodyData, fallbackId);
+    }
     if (!bodyHtml) {
       const sidebar = buildAutoSidebarData(safeType, project.status, project.category, project.mcVersion, project.tags);
       const fallbackBody = {
@@ -2049,12 +2056,19 @@
     }
     const statsHtml = (typeof project.modalStats === 'string' && project.modalStats.trim())
       ? project.modalStats.trim()
-      : buildAutoStatsHtml({
-          latestVersion: '',
-          updatedAt: project.updatedAt || project.createdAt || new Date().toISOString(),
-          projectId: fallbackId,
-          downloadUrl: project.downloadFile || '',
-        });
+      : (contentPayload
+        ? buildAutoStatsHtml({
+            latestVersion: contentPayload.latestVersionLabel || '',
+            updatedAt: project.updatedAt || project.createdAt || contentPayload.latestVersionDate || new Date().toISOString(),
+            projectId: fallbackId,
+            downloadUrl: project.downloadFile || contentPayload.primaryDownloadUrl || '',
+          })
+        : buildAutoStatsHtml({
+            latestVersion: '',
+            updatedAt: project.updatedAt || project.createdAt || new Date().toISOString(),
+            projectId: fallbackId,
+            downloadUrl: project.downloadFile || '',
+          }));
     const modal = document.createElement('div');
     modal.className = 'modal';
     modal.id = modalId;
@@ -2687,6 +2701,168 @@
       steps: [],
       versions: [],
       gallery: [],
+    };
+  }
+
+  function normaliseCmsTextList(list, fieldName) {
+    if (!Array.isArray(list)) return [];
+    return list
+      .map((entry) => {
+        if (!entry) return '';
+        if (typeof entry === 'string') {
+          return entry.trim();
+        }
+        if (fieldName && typeof entry[fieldName] === 'string') {
+          return entry[fieldName].trim();
+        }
+        if (typeof entry.text === 'string') {
+          return entry.text.trim();
+        }
+        if (typeof entry.value === 'string') {
+          return entry.value.trim();
+        }
+        return '';
+      })
+      .map((text) => text.replace(/\s+/g, ' ').trim())
+      .filter(Boolean);
+  }
+
+  function normaliseModalInfoItems(items) {
+    if (!Array.isArray(items)) return [];
+    return items
+      .map((item) => {
+        if (!item) return null;
+        const key = typeof item.key === 'string' ? item.key.trim() : '';
+        const value = typeof item.value === 'string' ? item.value.trim() : '';
+        if (!key && !value) return null;
+        const url = typeof item.url === 'string' ? resolveProjectStaticUrl(item.url.trim()) : '';
+        const newTab = !!item.newTab;
+        return { key, value, url, newTab };
+      })
+      .filter(Boolean);
+  }
+
+  function formatModalContentDate(value) {
+    const raw = typeof value === 'string' ? value.trim() : (value ? String(value).trim() : '');
+    if (!raw) return '';
+    const date = new Date(raw);
+    if (Number.isFinite(date.getTime())) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+    return raw;
+  }
+
+  function normaliseModalGallery(entries) {
+    if (!Array.isArray(entries)) return [];
+    return entries
+      .map((item) => {
+        if (!item) return null;
+        const src = typeof item === 'string'
+          ? item.trim()
+          : (typeof item.src === 'string' ? item.src.trim() : '');
+        const resolvedSrc = resolveProjectStaticUrl(src || '');
+        if (!resolvedSrc) return null;
+        const alt = typeof item === 'string'
+          ? ''
+          : (typeof item.alt === 'string' ? item.alt.trim() : '');
+        return { src: resolvedSrc, alt };
+      })
+      .filter(Boolean);
+  }
+
+  function normaliseModalVersions(entries) {
+    if (!Array.isArray(entries)) return [];
+    return entries
+      .map((entry) => {
+        if (!entry) return null;
+        const release = typeof entry.release === 'string' ? entry.release.trim() : '';
+        const minecraft = typeof entry.minecraft === 'string' ? entry.minecraft.trim() : '';
+        const date = formatModalContentDate(entry.date);
+        const rawDownload = typeof entry.downloadFile === 'string' ? entry.downloadFile.trim() : '';
+        const rawUrl = typeof entry.url === 'string' ? entry.url.trim() : '';
+        const resolvedUrl = resolveProjectStaticUrl(rawUrl || rawDownload || '');
+        const downloadFile = rawDownload
+          ? deriveDownloadFileId(rawDownload)
+          : (resolvedUrl ? deriveDownloadFileId(resolvedUrl) : '');
+        const labelEn = typeof entry.labelEn === 'string' ? entry.labelEn.trim() : '';
+        const labelDe = typeof entry.labelDe === 'string' ? entry.labelDe.trim() : '';
+        const label = typeof entry.label === 'string' ? entry.label.trim() : '';
+        const notes = typeof entry.notes === 'string' ? entry.notes.trim() : '';
+        const details = typeof entry.details === 'string' ? entry.details.trim() : '';
+        const trackId = typeof entry.trackId === 'string' ? entry.trackId.trim() : '';
+        if (!(release || minecraft || date || resolvedUrl || notes || details || label || labelEn || labelDe)) {
+          return null;
+        }
+        return {
+          release,
+          minecraft,
+          date,
+          url: resolvedUrl,
+          downloadFile,
+          labelEn,
+          labelDe,
+          label,
+          notes,
+          details,
+          trackId,
+        };
+      })
+      .filter(Boolean);
+  }
+
+  function buildModalContentPayload(project) {
+    if (!project || !project.modalContent) {
+      return null;
+    }
+    let content = project.modalContent;
+    if (typeof content === 'string') {
+      try {
+        content = JSON.parse(content);
+      } catch (err) {
+        content = null;
+      }
+    }
+    if (!content || typeof content !== 'object') {
+      return null;
+    }
+    const bodyData = createEmptyModalBody();
+    bodyData.infoTitle = typeof content.infoTitle === 'string' ? content.infoTitle.trim() : '';
+    bodyData.infoItems = normaliseModalInfoItems(content.infoItems);
+    bodyData.tagsTitle = typeof content.tagsTitle === 'string' ? content.tagsTitle.trim() : '';
+    const cmsTags = normaliseCmsTextList(content.modalTags, 'tag');
+    const fallbackTags = Array.isArray(project.tags) ? project.tags.filter((tag) => tag && tag.trim()) : [];
+    bodyData.tags = cmsTags.length ? cmsTags : fallbackTags;
+    bodyData.description = normaliseCmsTextList(content.description, 'text');
+    bodyData.steps = normaliseCmsTextList(content.steps, 'step');
+    bodyData.versions = normaliseModalVersions(content.versions);
+    bodyData.gallery = normaliseModalGallery(content.gallery);
+    const hasStructuredContent = (
+      (bodyData.infoItems && bodyData.infoItems.length)
+      || (bodyData.tags && bodyData.tags.length)
+      || (bodyData.description && bodyData.description.length)
+      || (bodyData.steps && bodyData.steps.length)
+      || (bodyData.versions && bodyData.versions.length)
+      || (bodyData.gallery && bodyData.gallery.length)
+    );
+    if (!hasStructuredContent) {
+      return null;
+    }
+    const primaryVersion = bodyData.versions.find((version) => version && version.url) || bodyData.versions[0] || null;
+    const primaryDownloadUrl = primaryVersion ? primaryVersion.url : resolveProjectStaticUrl(project.downloadFile || '');
+    const primaryDownloadFile = primaryVersion
+      ? (primaryVersion.downloadFile || (primaryVersion.url ? deriveDownloadFileId(primaryVersion.url) : ''))
+      : deriveDownloadFileId(project.downloadFile || '');
+    const latestVersionLabel = primaryVersion ? (primaryVersion.release || '') : '';
+    const latestVersionDate = primaryVersion ? (primaryVersion.date || '') : '';
+    return {
+      bodyData,
+      primaryDownloadUrl,
+      primaryDownloadFile,
+      latestVersionLabel,
+      latestVersionDate,
     };
   }
 
@@ -3699,6 +3875,8 @@
     const { modalId, modal } = getModalRef(project);
     if (!modalId || !modal) return;
     const defaults = modalDefaults.get(modalId) || { hero: '', body: '', badges: '', heroActions: '', stats: '' };
+    const fallbackId = (project && project.id && project.id.trim()) || slugifyId(project && project.title ? project.title : 'project');
+    const contentPayload = buildModalContentPayload(project);
 
     const heroEl = modal.querySelector('.modal-hero .muted');
     if (heroEl) {
@@ -3726,9 +3904,11 @@
       actionsEl.hidden = !actionsHtml.trim();
 
       if (!customActions) {
-        const downloadPath = (project.downloadFile || '').trim();
+        const downloadPath = (project.downloadFile || (contentPayload ? contentPayload.primaryDownloadUrl : '') || '').trim();
         if (downloadPath) {
-          const fileId = downloadPath.split('/').pop() || downloadPath;
+          const fileId = (contentPayload && contentPayload.primaryDownloadFile)
+            ? contentPayload.primaryDownloadFile
+            : (downloadPath.split('/').pop() || downloadPath);
           actionsEl.querySelectorAll('[data-download-file]').forEach((link) => {
             link.setAttribute('href', downloadPath);
             link.setAttribute('data-download-file', fileId);
@@ -3740,7 +3920,18 @@
     const statsEl = modal.querySelector('.modal-hero .stats');
     if (statsEl) {
       const customStats = typeof project.modalStats === 'string' ? project.modalStats.trim() : '';
-      const statsHtml = customStats || defaults.stats || '';
+      let statsHtml = customStats;
+      if (!statsHtml && contentPayload) {
+        statsHtml = buildAutoStatsHtml({
+          latestVersion: contentPayload.latestVersionLabel || '',
+          updatedAt: project.updatedAt || project.createdAt || contentPayload.latestVersionDate || new Date().toISOString(),
+          projectId: fallbackId,
+          downloadUrl: project.downloadFile || contentPayload.primaryDownloadUrl || '',
+        });
+      }
+      if (!statsHtml) {
+        statsHtml = defaults.stats || '';
+      }
       statsEl.innerHTML = statsHtml;
       statsEl.hidden = !statsHtml.trim();
     }
@@ -3751,6 +3942,12 @@
       if (typeof project.modalBody === 'string' && project.modalBody.trim()) {
         bodyEl.innerHTML = project.modalBody;
         bodyApplied = true;
+      } else if (contentPayload) {
+        const html = buildModalBodyHtml(modalId, contentPayload.bodyData, fallbackId);
+        if (html) {
+          bodyEl.innerHTML = html;
+          bodyApplied = true;
+        }
       } else if (defaults.body) {
         bodyEl.innerHTML = defaults.body;
         bodyApplied = true;
