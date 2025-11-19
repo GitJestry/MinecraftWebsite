@@ -1,219 +1,219 @@
 {
-    "projects": [
-        {
-            "shortDescription": "Lightweight jetpack for survival. Vanilla-friendly, no mods required.",
-            "mcVersion": "1.21.8",
+  "projects": [
+    {
+      "shortDescription": "Lightweight jetpack for survival. Vanilla-friendly, no mods required.",
+      "mcVersion": "1.21.8",
+      "downloadFile": "downloads/jetpack-datapack-1.21.8.zip",
+      "modalHero": "",
+      "modalContent": {
+        "infoTitle": "Details",
+        "infoItems": [
+          {
+            "key": "Status",
+            "value": "Released"
+          },
+          {
+            "key": "Minecraft",
+            "value": "1.21.8"
+          }
+        ],
+        "tagsTitle": "Tags",
+        "modalTags": [
+          "Movement",
+          "Utility",
+          "Survival"
+        ],
+        "description": [
+          "Lightweight jetpack for survival. Vanilla-friendly, no mods required."
+        ],
+        "steps": [
+          "Download the datapack ZIP and drop it into your world's datapacks folder.",
+          "Reload the world and enable the pack with /reload."
+        ],
+        "versions": [
+          {
+            "release": "v01",
+            "minecraft": "1.21.8",
+            "date": "2024-01-01T00:00:00.000Z",
             "downloadFile": "downloads/jetpack-datapack-1.21.8.zip",
-            "modalHero": "",
-            "updatedAt": "2024-01-01T00:00:00.000Z",
-            "modalBody": "",
-            "modalStats": "",
-            "status": "released",
-            "modalHeroActions": "",
-            "title": "Jetpack Data....",
-            "tags": [
-                "Movement",
-                "Utility",
-                "Survival"
-            ],
-            "tagMeta": [
-                {
-                    "label": "Movement",
-                    "color": "#4CAF50",
-                    "description": "Movement-focused gameplay utility",
-                    "icon": "\ud83e\ude82"
-                },
-                {
-                    "label": "Utility",
-                    "color": "#2196F3",
-                    "description": "Useful survival helper",
-                    "icon": "\ud83d\udee0\ufe0f"
-                },
-                {
-                    "label": "Survival",
-                    "color": "#8BC34A",
-                    "description": "Balanced for survival worlds",
-                    "icon": "\ud83e\udded"
-                }
-            ],
-            "modalContent": {
-                "infoTitle": "Details",
-                "infoItems": [
-                    {
-                        "key": "Status",
-                        "value": "Released"
-                    },
-                    {
-                        "key": "Minecraft",
-                        "value": "1.21.8"
-                    }
-                ],
-                "tagsTitle": "Tags",
-                "modalTags": [
-                    "Movement",
-                    "Utility",
-                    "Survival"
-                ],
-                "description": [
-                    "Lightweight jetpack for survival. Vanilla-friendly, no mods required."
-                ],
-                "steps": [
-                    "Download the datapack ZIP and drop it into your world's datapacks folder.",
-                    "Reload the world and enable the pack with /reload."
-                ],
-                "versions": [
-                    {
-                        "release": "v01",
-                        "minecraft": "1.21.8",
-                        "date": "2024-01-01T00:00:00.000Z",
-                        "downloadFile": "downloads/jetpack-datapack-1.21.8.zip",
-                        "labelEn": "Download",
-                        "labelDe": "Herunterladen",
-                        "notes": "Initial release for 1.21.8."
-                    }
-                ],
-                "gallery": [
-                    {
-                        "src": "assets/img/logo.jpg",
-                        "alt": "Jetpack datapack logo"
-                    }
-                ]
-            },
-            "type": "datapack",
-            "id": "jetpack-datapack",
-            "createdAt": "2024-01-01T00:00:00.000Z",
-            "image": "assets/img/logo.jpg",
-            "modalBadges": "",
-            "category": "movement"
+            "labelEn": "Download",
+            "labelDe": "Herunterladen",
+            "notes": "Initial release for 1.21.8."
+          }
+        ],
+        "gallery": [
+          {
+            "src": "assets/img/logo.jpg",
+            "alt": "Jetpack datapack logo"
+          }
+        ]
+      },
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "modalBody": "",
+      "modalStats": "",
+      "status": "released",
+      "modalHeroActions": "",
+      "title": "Jetpack Data....",
+      "tags": [
+        "Movement",
+        "Utility",
+        "Survival"
+      ],
+      "type": "datapack",
+      "id": "jetpack-datapack",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "image": "assets/img/logo.jpg",
+      "modalBadges": "",
+      "category": "movement",
+      "tagMeta": [
+        {
+          "label": "Movement",
+          "color": "#4CAF50",
+          "description": "Movement-focused gameplay utility",
+          "icon": "🪂"
         },
         {
-            "shortDescription": "A Minecraft pickaxe desk model that prints support-free and snaps together.",
-            "mcVersion": "",
-            "downloadFile": "downloads/pickaxe-desk-model.zip",
-            "modalHero": "",
-            "modalBody": "",
-            "modalStats": "",
-            "status": "released",
-            "modalHeroActions": "",
-            "title": "Pickaxe Desk Model",
-            "tags": [
-                "Display",
-                "Desk"
-            ],
-            "tagMeta": [
-                {
-                    "label": "Display",
-                    "color": "#FFC107",
-                    "description": "Looks great on any shelf",
-                    "icon": "\ud83d\uddbc\ufe0f"
-                },
-                {
-                    "label": "Desk",
-                    "color": "#00BCD4",
-                    "description": "Sized for your workspace",
-                    "icon": "\ud83e\ude91"
-                }
-            ],
-            "modalContent": {
-                "infoTitle": "Print Details",
-                "infoItems": [
-                    {
-                        "key": "Status",
-                        "value": "Released"
-                    },
-                    {
-                        "key": "Format",
-                        "value": "STL"
-                    }
-                ],
-                "tagsTitle": "Tags",
-                "modalTags": [
-                    "Display",
-                    "Desk"
-                ],
-                "description": [
-                    "A Minecraft pickaxe desk model that prints support-free and snaps together."
-                ],
-                "steps": [
-                    "Slice the model with 0.2mm layer height.",
-                    "Print without supports and assemble the parts."
-                ],
-                "versions": [
-                    {
-                        "release": "v01",
-                        "minecraft": "Print",
-                        "date": "2024-02-15T00:00:00.000Z",
-                        "downloadFile": "downloads/pickaxe-desk-model.zip",
-                        "labelEn": "Download",
-                        "labelDe": "Herunterladen",
-                        "notes": "Initial print-ready files."
-                    }
-                ],
-                "gallery": [
-                    {
-                        "src": "assets/img/logo.jpg",
-                        "alt": "Pickaxe desk model render"
-                    }
-                ]
-            },
-            "type": "printing",
-            "id": "pickaxe-desk-print",
-            "image": "assets/img/logo.jpg",
-            "modalBadges": "",
-            "category": "display"
+          "label": "Utility",
+          "color": "#2196F3",
+          "description": "Useful survival helper",
+          "icon": "🛠️"
         },
         {
-            "shortDescription": "32234",
-            "downloadFile": "/downloads/minecraftwebsite_github_backend.zip",
-            "modalHero": "2r32r3",
-            "updatedAt": "2025-11-18T02:58:00.000+01:00",
-            "modalBody": "23r23r",
-            "modalStats": "23r2r3",
-            "status": "released",
-            "modalHeroActions": "2r32r3",
-            "title": "test",
-            "type": "datapack",
-            "id": "33",
-            "createdAt": "2025-11-18T02:58:00.000+01:00",
-            "image": "/assets/uploads/screenshot-2024-06-15-211142.png",
-            "modalBadges": "23r2r3",
-            "tagMeta": [
-                {
-                    "label": "Example",
-                    "color": "#9E9E9E",
-                    "description": "Sample tag metadata",
-                    "icon": "\ud83c\udff7\ufe0f"
-                }
-            ],
-            "modalContent": {
-                "infoTitle": "Info",
-                "infoItems": [
-                    {
-                        "key": "Status",
-                        "value": "released"
-                    }
-                ],
-                "tagsTitle": "Tags",
-                "modalTags": [
-                    "Example"
-                ],
-                "description": [
-                    "32234"
-                ],
-                "steps": [],
-                "versions": [
-                    {
-                        "release": "v01",
-                        "minecraft": "",
-                        "date": "2025-11-18T02:58:00.000+01:00",
-                        "downloadFile": "/downloads/minecraftwebsite_github_backend.zip",
-                        "labelEn": "Download",
-                        "labelDe": "Herunterladen",
-                        "notes": "Autogenerated placeholder entry."
-                    }
-                ],
-                "gallery": []
-            }
+          "label": "Survival",
+          "color": "#8BC34A",
+          "description": "Balanced for survival worlds",
+          "icon": "🧭"
         }
-    ]
+      ]
+    },
+    {
+      "shortDescription": "A Minecraft pickaxe desk model that prints support-free and snaps together.",
+      "mcVersion": "",
+      "downloadFile": "downloads/pickaxe-desk-model.zip",
+      "modalHero": "",
+      "modalContent": {
+        "infoTitle": "Print Details",
+        "infoItems": [
+          {
+            "key": "Status",
+            "value": "Released"
+          },
+          {
+            "key": "Format",
+            "value": "STL"
+          }
+        ],
+        "tagsTitle": "Tags",
+        "modalTags": [
+          "Display",
+          "Desk"
+        ],
+        "description": [
+          "A Minecraft pickaxe desk model that prints support-free and snaps together."
+        ],
+        "steps": [
+          "Slice the model with 0.2mm layer height.",
+          "Print without supports and assemble the parts."
+        ],
+        "versions": [
+          {
+            "release": "v01",
+            "minecraft": "Print",
+            "date": "2024-02-15T00:00:00.000Z",
+            "downloadFile": "downloads/pickaxe-desk-model.zip",
+            "labelEn": "Download",
+            "labelDe": "Herunterladen",
+            "notes": "Initial print-ready files."
+          }
+        ],
+        "gallery": [
+          {
+            "src": "assets/img/logo.jpg",
+            "alt": "Pickaxe desk model render"
+          }
+        ]
+      },
+      "modalBody": "",
+      "modalStats": "",
+      "status": "released",
+      "modalHeroActions": "",
+      "title": "Pickaxe Desk Model",
+      "tags": [
+        "Display",
+        "Desk"
+      ],
+      "type": "printing",
+      "id": "pickaxe-desk-print",
+      "image": "/assets/uploads/screenshot-2024-06-15-211142.png",
+      "modalBadges": "",
+      "category": "display",
+      "tagMeta": [
+        {
+          "label": "Display",
+          "color": "#FFC107",
+          "description": "Looks great on any shelf",
+          "icon": "🖼️"
+        },
+        {
+          "label": "Desk",
+          "color": "#00BCD4",
+          "description": "Sized for your workspace",
+          "icon": "🪑"
+        }
+      ]
+    },
+    {
+      "shortDescription": "32234",
+      "downloadFile": "/downloads/minecraftwebsite_github_backend.zip",
+      "modalHero": "2r32r3",
+      "modalContent": {
+        "infoTitle": "Info",
+        "infoItems": [
+          {
+            "key": "Status",
+            "value": "released"
+          }
+        ],
+        "tagsTitle": "Tags",
+        "modalTags": [
+          "Example"
+        ],
+        "description": [
+          "32234"
+        ],
+        "steps": [],
+        "versions": [
+          {
+            "release": "v01",
+            "minecraft": "",
+            "date": "2025-11-18T02:58:00.000+01:00",
+            "downloadFile": "/downloads/minecraftwebsite_github_backend.zip",
+            "labelEn": "Download",
+            "labelDe": "Herunterladen",
+            "notes": "Autogenerated placeholder entry."
+          }
+        ],
+        "gallery": []
+      },
+      "updatedAt": "2025-11-18T02:58:00.000+01:00",
+      "modalBody": "23r23r",
+      "modalStats": "23r2r3",
+      "status": "released",
+      "modalHeroActions": "2r32r3",
+      "title": "test",
+      "type": "datapack",
+      "id": "33",
+      "createdAt": "2025-11-18T02:58:00.000+01:00",
+      "image": "/assets/uploads/screenshot-2024-06-15-211142.png",
+      "modalBadges": "23r2r3",
+      "tagMeta": [
+        {
+          "label": "Example",
+          "color": "#9E9E9E",
+          "description": "Sample tag metadata",
+          "icon": "🏷️"
+        }
+      ]
+    }
+  ]
 }
