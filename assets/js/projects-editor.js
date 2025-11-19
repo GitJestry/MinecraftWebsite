@@ -689,6 +689,13 @@
     if (localProjectsStore && Array.isArray(localProjectsStore)) {
       return localProjectsStore;
     }
+    const staticData = await fetchStaticProjects();
+    if (Array.isArray(staticData) && staticData.length) {
+      localProjectsStore = staticData.map((item) => normaliseProjectRecord(item));
+      persistLocalProjects();
+      return localProjectsStore;
+    }
+
     let stored = null;
     if (typeof localStorage !== 'undefined') {
       try {
@@ -703,8 +710,8 @@
       persistLocalProjects();
       return localProjectsStore;
     }
-    const staticData = await fetchStaticProjects();
-    localProjectsStore = Array.isArray(staticData) ? staticData.map((item) => normaliseProjectRecord(item)) : [];
+
+    localProjectsStore = [];
     persistLocalProjects();
     return localProjectsStore;
   }
@@ -3769,29 +3776,30 @@
   let staticProjectsCache = null;
 
   async function fetchStaticProjects() {
-  if (staticProjectsCache) {
-    return staticProjectsCache;
-  }
-  try {
-    const response = await fetch(STATIC_PROJECTS_URL, { cache: 'no-cache' });
-    if (!response.ok) {
-      throw new Error('HTTP ' + response.status);
+    if (staticProjectsCache) {
+      return staticProjectsCache;
     }
-    const payload = await response.json();
+    try {
+      const response = await fetch(STATIC_PROJECTS_URL, { cache: 'no-cache' });
+      if (!response.ok) {
+        throw new Error('HTTP ' + response.status);
+      }
+      const payload = await response.json();
 
-    // Alter Modus: Root ist direkt ein Array
-    if (Array.isArray(payload)) {
-      staticProjectsCache = payload;
-      return payload;
-    }
+      // Alter Modus: Root ist direkt ein Array
+      if (Array.isArray(payload)) {
+        staticProjectsCache = payload;
+        return payload;
+      }
 
-    // Neuer Modus: Decap CMS schreibt { "projects": [...] }
-    if (payload && Array.isArray(payload.projects)) {
-      staticProjectsCache = payload.projects;
-      return payload.projects;
+      // Neuer Modus: Decap CMS schreibt { "projects": [...] }
+      if (payload && Array.isArray(payload.projects)) {
+        staticProjectsCache = payload.projects;
+        return payload.projects;
+      }
+    } catch (err) {
+      console.warn('Konnte statische Projektliste nicht laden:', err);
     }
-  } catch (err) {
-    console.warn('Konnte statische Projektliste nicht laden:', err);
+    return null;
   }
-  return null;
 })();
