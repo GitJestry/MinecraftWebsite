@@ -89,7 +89,7 @@
     {
       "shortDescription": "A Minecraft pickaxe desk model that prints support-free and snaps together.",
       "mcVersion": "",
-      "downloadFile": "downloads/pickaxe-desk-model.zip",
+      "downloadFile": "/downloads/minecraftwebsite.zip",
       "modalHero": "",
       "modalContent": {
         "infoTitle": "Print Details",
@@ -137,7 +137,7 @@
       "modalStats": "",
       "status": "released",
       "modalHeroActions": "",
-      "title": "Pickaxe Desk Model",
+      "title": "Pickaxe Desk Model lol test",
       "tags": [
         "Display",
         "Desk"
