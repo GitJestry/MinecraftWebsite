@@ -132,6 +132,9 @@
   const labelCollator = (typeof Intl !== 'undefined' && typeof Intl.Collator === 'function')
     ? new Intl.Collator('de', { sensitivity: 'base' })
     : null;
+  // Cache for statische Projektliste; muss vor erster Verwendung initialisiert werden,
+  // damit Aufrufe (z.B. beim Laden der öffentlichen Seite) nicht in der TDZ landen.
+  let staticProjectsCache = null;
 
   function getCryptoSubtle() {
     if (typeof globalThis !== 'undefined' && globalThis.crypto && globalThis.crypto.subtle) {
@@ -1070,8 +1073,14 @@
 
       // Keine existierende Karte? Neue Karte anhand der Daten bauen
       if (!card) {
-        renderProjectCard(project);
-        return;
+        card = renderProjectCard(project);
+        if (!card) {
+          return;
+        }
+      }
+
+      if (card.dataset) {
+        card.dataset.projectHydrated = '1';
       }
 
       // Bestehende Karte mit Daten aus /admin "auffüllen"
@@ -1124,6 +1133,21 @@
         applyProjectModalContent(project);
       }
     });
+
+    const cleanupGridCards = (grid) => {
+      if (!grid) return;
+      const cards = Array.from(grid.querySelectorAll('.card'));
+      cards.forEach((card) => {
+        if (card.dataset && card.dataset.projectHydrated === '1') {
+          card.removeAttribute('data-project-hydrated');
+        } else {
+          card.remove();
+        }
+      });
+    };
+
+    cleanupGridCards(dpGrid);
+    cleanupGridCards(prGrid);
 
     if (typeof updateCounts === 'function') {
       updateCounts();
@@ -3796,7 +3820,7 @@
     const type = normaliseType(project.type);
     const isDatapack = type === 'datapack';
     const grid = isDatapack ? dpGrid : prGrid;
-    if (!grid) return;
+    if (!grid) return null;
 
     const card = document.createElement('article');
     card.className = isDatapack ? 'item card dp-card' : 'item card pr-card';
@@ -3840,6 +3864,7 @@
 
     attachCardEditorTools(card, project);
     grid.appendChild(card);
+    return card;
   }
 
   function initModalTabs(modal) {
@@ -3969,8 +3994,6 @@
       prCount.textContent = n + (n === 1 ? ' item' : ' items');
     }
   }
-
-  let staticProjectsCache = null;
 
   async function fetchStaticProjects() {
     if (staticProjectsCache) {
