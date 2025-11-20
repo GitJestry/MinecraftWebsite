@@ -1,0 +1,34 @@
+{
+  "tags": [
+    {
+      "label": "Desk",
+      "color": "#00BCD4",
+      "description": "Sized for your workspace",
+      "icon": "🪑"
+    },
+    {
+      "label": "Display",
+      "color": "#FFC107",
+      "description": "Looks great on any shelf",
+      "icon": "🖼️"
+    },
+    {
+      "label": "Movement",
+      "color": "#4CAF50",
+      "description": "Movement-focused gameplay utility",
+      "icon": "🪂"
+    },
+    {
+      "label": "Survival",
+      "color": "#8BC34A",
+      "description": "Balanced for survival worlds",
+      "icon": "🧭"
+    },
+    {
+      "label": "Utility",
+      "color": "#2196F3",
+      "description": "Useful survival helper",
+      "icon": "🛠️"
+    }
+  ]
+}

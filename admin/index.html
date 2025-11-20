@@ -9,5 +9,58 @@
   <body>
     <!-- Decap CMS UI -->
     <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+  
+    <script>
+      // Automatische Slug-ID-Erzeugung für Projekte
+      function mirlSlugifyId(input) {
+        if (!input) return '';
+        return String(input)
+          .toLowerCase()
+          .trim()
+          // Umlaute/Diakritika entfernen
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+          // Alles, was kein a–z oder 0–9 ist, durch Bindestrich ersetzen
+          .replace(/[^a-z0-9]+/g, '-')
+          // Führende / doppelte / endende Bindestriche aufräumen
+          .replace(/^-+|-+$/g, '');
+      }
+
+      if (window.CMS) {
+        CMS.registerEventListener({
+          name: 'preSave',
+          handler: ({ entry }) => {
+            if (!entry) return;
+            const slug = entry.get('slug');
+            // Nur auf die projects.json-Datei anwenden
+            if (slug !== 'projects') {
+              return;
+            }
+            const data = entry.get('data');
+            if (!data || !data.get('projects')) {
+              return;
+            }
+            const projects = data.get('projects');
+            if (!projects || typeof projects.map !== 'function') {
+              return;
+            }
+            const updated = projects.map((project) => {
+              if (!project) return project;
+              const titleRaw = project.get('title');
+              const idRaw = project.get('id');
+              const title = titleRaw == null ? '' : String(titleRaw);
+              const currentId = idRaw == null ? '' : String(idRaw).trim();
+              // Bestehende IDs nicht überschreiben, nur leere füllen
+              if (!title || currentId) {
+                return project;
+              }
+              const slugified = mirlSlugifyId(title) || 'projekt';
+              return project.set('id', slugified);
+            });
+            return data.set('projects', updated);
+          }
+        });
+      }
+    </script>
+
   </body>
 </html>

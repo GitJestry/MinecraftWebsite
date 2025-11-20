@@ -25,7 +25,13 @@ collections:
             label_singular: "Projekt"
             summary: "{{fields.title}} ({{fields.type}})"
             fields:
-              - { label: "ID (slug)", name: "id", widget: "string" }
+              - label: "ID (Slug)"
+                name: "id"
+                widget: "string"
+                hint: "Wird automatisch aus dem Titel generiert; nur Kleinbuchstaben, Zahlen und Bindestriche. Kann bei Bedarf manuell angepasst werden."
+                pattern:
+                  - "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+                  - "Nur Kleinbuchstaben, Ziffern und Bindestriche, z. B. jetpack-datapack"
               - { label: "Titel", name: "title", widget: "string" }
 
               - label: "Typ"
@@ -48,18 +54,17 @@ collections:
                 default: "released"
 
               - { label: "Kategorie", name: "category", widget: "string", required: false }
-              - { label: "Tags", name: "tags", widget: "list", required: false }
-              - label: "Tag-Details"
-                name: "tagMeta"
-                widget: "list"
+              - label: "Tags"
+                name: "tags"
+                widget: "relation"
+                collection: "tags"
+                file: "taglist"
+                search_fields: ["tags.*.label", "tags.*.description"]
+                display_fields: ["tags.*.label"]
+                value_field: "tags.*.label"
+                multiple: true
                 required: false
-                summary: "{{fields.label}}"
-                fields:
-                  - { label: "Label", name: "label", widget: "string" }
-                  - { label: "Farbe (Hex)", name: "color", widget: "string", required: false, hint: "z. B. #4CAF50" }
-                  - { label: "Beschreibung", name: "description", widget: "text", required: false }
-                  - { label: "Icon", name: "icon", widget: "string", required: false, hint: "Optionale Icon-Klasse oder Emoji" }
-
+                hint: "Wähle Tags aus der globalen Tag-Liste. Neue Tags kannst du unter „Tags“ anlegen."
               - label: "Download-Datei (ZIP)"
                 name: "downloadFile"
                 widget: "file"
@@ -133,3 +138,23 @@ collections:
 
               - { label: "Angelegt", name: "createdAt", widget: "datetime", required: false }
               - { label: "Zuletzt geändert", name: "updatedAt", widget: "datetime", required: false }
+  - name: "tags"
+    label: "Tags"
+    label_singular: "Tag"
+    files:
+      - label: "Tag-Liste"
+        name: "taglist"
+        file: "assets/data/tags.json"
+        format: "json"
+        fields:
+          - label: "Tags"
+            name: "tags"
+            widget: "list"
+            label_singular: "Tag"
+            summary: "{{fields.label}}"
+            fields:
+              - { label: "Label", name: "label", widget: "string" }
+              - { label: "Farbe (Hex)", name: "color", widget: "string", required: false, hint: "z. B. #4CAF50" }
+              - { label: "Beschreibung", name: "description", widget: "text", required: false }
+              - { label: "Icon", name: "icon", widget: "string", required: false, hint: "Emoji oder Icon-Klasse" }
+

@@ -103,32 +103,12 @@
       "createdAt": "2024-01-01T00:00:00.000Z",
       "image": "assets/uploads/screenshot-2025-11-17-223048.png",
       "modalBadges": "",
-      "category": "movement",
-      "tagMeta": [
-        {
-          "label": "Movement",
-          "color": "#4CAF50",
-          "description": "Movement-focused gameplay utility",
-          "icon": "🪂"
-        },
-        {
-          "label": "Utility",
-          "color": "#2196F3",
-          "description": "Useful survival helper",
-          "icon": "🛠️"
-        },
-        {
-          "label": "Survival",
-          "color": "#8BC34A",
-          "description": "Balanced for survival worlds",
-          "icon": "🧭"
-        }
-      ]
+      "category": "movement"
     },
     {
       "shortDescription": "Desk-sized Minecraft pickaxe display model, ready to print on most FDM printers.",
       "mcVersion": "",
-      "downloadFile": "/downloads/minecraftwebsite.zip",
+      "downloadFile": "downloads/pickaxe-desk-model.zip",
       "modalHero": "",
       "modalContent": {
         "infoTitle": "Details",
@@ -194,7 +174,7 @@
       "modalStats": "",
       "status": "released",
       "modalHeroActions": "",
-      "title": "Pickaxe Desk Model lol test",
+      "title": "Pickaxe Desk Model",
       "tags": [
         "Display",
         "Desk"
@@ -203,21 +183,7 @@
       "id": "pickaxe-desk-print",
       "image": "assets/uploads/screenshot-2024-06-15-211142.png",
       "modalBadges": "",
-      "category": "display",
-      "tagMeta": [
-        {
-          "label": "Display",
-          "color": "#FFC107",
-          "description": "Looks great on any shelf",
-          "icon": "🖼️"
-        },
-        {
-          "label": "Desk",
-          "color": "#00BCD4",
-          "description": "Sized for your workspace",
-          "icon": "🪑"
-        }
-      ]
+      "category": "display"
     }
   ]
 }
