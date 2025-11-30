@@ -1108,7 +1108,8 @@
 
       const chipsEl = card.querySelector('.meta .chips');
       if (chipsEl) {
-        const chipA = project.mcVersion || (type === 'datapack' ? '1.21.x' : '');
+        const sidebarValues = deriveSidebarValues(project);
+        const chipA = sidebarValues.mcVersion || (type === 'datapack' ? '1.21.x' : '');
         const tags = Array.isArray(project.tags) ? project.tags : [];
         const chipB = (tags && tags.length) ? tags[0] : (project.status || '');
 
@@ -2049,9 +2050,10 @@
       (typeof project.modalHero === 'string' && project.modalHero.trim())
         || (typeof project.shortDescription === 'string' ? project.shortDescription.trim() : ''),
     );
+    const sidebarValues = deriveSidebarValues(project);
     const badgesHtml = (typeof project.modalBadges === 'string' && project.modalBadges.trim())
       ? project.modalBadges.trim()
-      : buildAutoBadgesHtml(safeType, project.status, project.mcVersion, project.tags, project.category);
+      : buildAutoBadgesHtml(safeType, project.status, sidebarValues.mcVersion, project.tags, project.category);
     const heroActionsHtml = (typeof project.modalHeroActions === 'string' && project.modalHeroActions.trim())
       ? project.modalHeroActions.trim()
       : buildAutoHeroActionsHtml(
@@ -2065,15 +2067,16 @@
       bodyHtml = buildModalBodyHtml(modalId, contentPayload.bodyData, fallbackId);
     }
     if (!bodyHtml) {
+      const sidebarValues = deriveSidebarValues(project);
       const sidebar = buildAutoSidebarData(
         safeType,
         project.status,
         project.category,
-        project.mcVersion,
+        sidebarValues.mcVersion,
         project.tags,
-        project.requires,
-        project.printer,
-        project.material,
+        sidebarValues.requires,
+        sidebarValues.printer,
+        sidebarValues.material,
       );
       const fallbackBody = {
         infoTitle: sidebar.infoTitle,
@@ -2775,6 +2778,42 @@
       .filter(Boolean);
   }
 
+  function findInfoValue(items, key) {
+    if (!Array.isArray(items)) return '';
+    const match = items.find((item) => item && item.key && item.key.toLowerCase() === key.toLowerCase());
+    return match && typeof match.value === 'string' ? match.value.trim() : '';
+  }
+
+  function deriveSidebarValues(project, infoItems) {
+    const modalContent = project && project.modalContent ? project.modalContent : {};
+    const providedItems = Array.isArray(infoItems)
+      ? infoItems
+      : (modalContent && Array.isArray(modalContent.infoItems) ? modalContent.infoItems : []);
+    const normalisedItems = normaliseModalInfoItems(providedItems);
+
+    const safeType = normaliseType(project && project.type);
+    const mcVersion = safeType === 'datapack'
+      ? (findInfoValue(normalisedItems, 'minecraft') || (project && project.mcVersion) || '')
+      : '';
+    const requires = safeType === 'datapack'
+      ? (findInfoValue(normalisedItems, 'requires') || (project && project.requires) || '')
+      : '';
+    const printer = safeType === 'printing'
+      ? (findInfoValue(normalisedItems, 'printer') || (project && project.printer) || '')
+      : '';
+    const material = safeType === 'printing'
+      ? (findInfoValue(normalisedItems, 'material') || (project && project.material) || '')
+      : '';
+
+    return {
+      mcVersion,
+      requires,
+      printer,
+      material,
+      infoItems: normalisedItems,
+    };
+  }
+
   function mergeSidebarInfoItems(type, status, category, mcVersion, tags, requires, printer, material, infoItems) {
     const sidebarDefaults = buildAutoSidebarData(
       type,
@@ -2821,26 +2860,27 @@
   function applySidebarDefaults(bodyData, project) {
     const record = project || {};
     const safeType = normaliseType(record.type);
+    const sidebarValues = deriveSidebarValues(record, bodyData.infoItems);
     const sidebarDefaults = buildAutoSidebarData(
       safeType,
       record.status,
       record.category,
-      record.mcVersion,
+      sidebarValues.mcVersion,
       record.tags,
-      record.requires,
-      record.printer,
-      record.material,
+      sidebarValues.requires,
+      sidebarValues.printer,
+      sidebarValues.material,
     );
     const infoItems = mergeSidebarInfoItems(
       safeType,
       record.status,
       record.category,
-      record.mcVersion,
+      sidebarValues.mcVersion,
       record.tags,
-      record.requires,
-      record.printer,
-      record.material,
-      bodyData.infoItems,
+      sidebarValues.requires,
+      sidebarValues.printer,
+      sidebarValues.material,
+      sidebarValues.infoItems.length ? sidebarValues.infoItems : bodyData.infoItems,
     );
     return {
       ...bodyData,
@@ -3775,15 +3815,16 @@
     const record = project || {};
     const safeType = normaliseType(record.type);
     const tags = Array.isArray(record.tags) ? record.tags : [];
+    const sidebarValues = deriveSidebarValues(record);
     const sidebar = buildAutoSidebarData(
       safeType,
       record.status,
       record.category,
-      record.mcVersion,
+      sidebarValues.mcVersion,
       tags,
-      record.requires,
-      record.printer,
-      record.material,
+      sidebarValues.requires,
+      sidebarValues.printer,
+      sidebarValues.material,
     );
     const pitch = typeof record.shortDescription === 'string' ? record.shortDescription.trim() : '';
     return {
@@ -3880,7 +3921,8 @@
         bodyData.gallery = contentData.gallery;
       }
     }
-    const badgesHtml = buildAutoBadgesHtml(safeType, status, mcVersion, tags, category);
+    const sidebarValues = deriveSidebarValues({ ...fallbackRecord, modalContent: { infoItems: bodyData.infoItems || [] } }, bodyData.infoItems);
+    const badgesHtml = buildAutoBadgesHtml(safeType, status, sidebarValues.mcVersion, tags, category);
     const actionsHtml = buildAutoHeroActionsHtml(downloadFile, fallbackId);
     const statsHtml = buildAutoStatsHtml({
       latestVersion: bodyData.versions && bodyData.versions.length ? bodyData.versions[0].release : '',
@@ -3973,7 +4015,8 @@
     }
 
     const imgSrc = resolveProjectStaticUrl(project.image || 'assets/img/logo.jpg') || 'assets/img/logo.jpg';
-    const chipA = project.mcVersion || (isDatapack ? '1.21.x' : '');
+    const sidebarValues = deriveSidebarValues(project);
+    const chipA = sidebarValues.mcVersion || (isDatapack ? '1.21.x' : '');
     const chipB = (tags && tags.length) ? tags[0] : (project.status || '');
 
     let chipsHtml = '';

@@ -55,6 +55,19 @@
           }
         };
 
+        const SIDEBAR_TEMPLATES = {
+          datapack: [
+            { key: 'Minecraft' },
+            { key: 'Requires' }
+          ],
+          printing: [
+            { key: 'Printer' },
+            { key: 'Material' }
+          ]
+        };
+
+        const { fromJS } = (typeof Immutable !== 'undefined' ? Immutable : {});
+
         function normaliseText(value) {
           return typeof value === 'string' ? value.trim() : '';
         }
@@ -63,6 +76,71 @@
           const key = normaliseText(value).toLowerCase();
           if (!key) return '';
           return STATUS_LABELS[key] || (key.charAt(0).toUpperCase() + key.slice(1));
+        }
+
+        function getModalInfoItems(project) {
+          if (!project || typeof project.get !== 'function') return [];
+          const modalContent = project.get('modalContent');
+          const infoItems = modalContent && modalContent.get ? modalContent.get('infoItems') : null;
+          if (infoItems && typeof infoItems.toJS === 'function') {
+            return infoItems.toJS();
+          }
+          return Array.isArray(infoItems) ? infoItems : [];
+        }
+
+        function ensureSidebarTemplates(project) {
+          if (!project || typeof project.get !== 'function') return project;
+
+          const typeRaw = normaliseText(project.get('type'));
+          const type = typeRaw === 'printing' ? 'printing' : 'datapack';
+          const templates = SIDEBAR_TEMPLATES[type] || [];
+          const infoItems = getModalInfoItems(project);
+          const existing = new Set();
+
+          infoItems.forEach((item) => {
+            const key = normaliseText(item && item.key);
+            if (key) existing.add(key.toLowerCase());
+          });
+
+          const ensuredItems = infoItems.slice();
+
+          templates.forEach((template) => {
+            const key = normaliseText(template && template.key);
+            if (!key || existing.has(key.toLowerCase())) return;
+            ensuredItems.push({ key, value: '' });
+          });
+
+          if (fromJS && project.setIn) {
+            return project.setIn(['modalContent', 'infoItems'], fromJS(ensuredItems));
+          }
+
+          return project;
+        }
+
+        function findInfoValue(items, key) {
+          if (!Array.isArray(items)) return '';
+          const match = items.find((item) => item && item.key && String(item.key).toLowerCase() === key.toLowerCase());
+          return match && match.value ? normaliseText(match.value) : '';
+        }
+
+        function deriveSidebarValues(project) {
+          const typeRaw = normaliseText(project && project.get ? project.get('type') : project && project.type);
+          const type = typeRaw === 'printing' ? 'printing' : 'datapack';
+          const infoItems = getModalInfoItems(project);
+          const mcVersion = type === 'datapack'
+            ? (findInfoValue(infoItems, 'minecraft') || normaliseText(project.get('mcVersion')))
+            : '';
+          const requires = type === 'datapack'
+            ? (findInfoValue(infoItems, 'requires') || normaliseText(project.get('requires')))
+            : '';
+          const printer = type === 'printing'
+            ? (findInfoValue(infoItems, 'printer') || normaliseText(project.get('printer')))
+            : '';
+          const material = type === 'printing'
+            ? (findInfoValue(infoItems, 'material') || normaliseText(project.get('material')))
+            : '';
+
+          return { mcVersion, requires, printer, material, infoItems };
         }
 
         // Zusätzliche (manuell gepflegte) Infozeilen ohne Duplikate dazumischen
@@ -100,11 +178,21 @@
           const type = typeRaw === 'printing' ? 'printing' : 'datapack';
 
           const modalContent = project.get('modalContent');
-          const mcVersion = normaliseText(project.get('mcVersion'));
+          const sidebarValues = deriveSidebarValues(project);
           const statusLabel = formatStatusLabel(project.get('status'));
-          const requires = normaliseText(project.get('requires'));
-          const printer = normaliseText(project.get('printer'));
-          const material = normaliseText(project.get('material'));
+          const missingRequired = [];
+
+          if (type === 'datapack') {
+            if (!sidebarValues.mcVersion) missingRequired.push('Minecraft-Version (Sidebar)');
+            if (!sidebarValues.requires) missingRequired.push('Erfordert (Sidebar)');
+          } else {
+            if (!sidebarValues.printer) missingRequired.push('3D-Druck – Drucker (Sidebar)');
+            if (!sidebarValues.material) missingRequired.push('3D-Druck – Material (Sidebar)');
+          }
+
+          if (missingRequired.length) {
+            throw new Error(`Bitte fülle die Pflichtangaben in der Sidebar aus: ${missingRequired.join(', ')}`);
+          }
 
           const items = [];
 
@@ -114,12 +202,12 @@
             if (statusLabel) {
               items.push({ key: 'Status', value: statusLabel });
             }
-            items.push({ key: 'Minecraft', value: mcVersion || '—' });
-            items.push({ key: 'Requires', value: requires || '—' });
+            items.push({ key: 'Minecraft', value: sidebarValues.mcVersion || '—' });
+            items.push({ key: 'Requires', value: sidebarValues.requires || '—' });
           } else {
             items.push({ key: 'Project type', value: DEFAULT_VALUES.printing.projectType });
-            items.push({ key: 'Printer', value: printer || '—' });
-            items.push({ key: 'Material', value: material || '—' });
+            items.push({ key: 'Printer', value: sidebarValues.printer || '—' });
+            items.push({ key: 'Material', value: sidebarValues.material || '—' });
             if (statusLabel) {
               items.push({ key: 'Status', value: statusLabel });
             }
@@ -142,13 +230,14 @@
           const updated = projects.map((project) => {
             if (!project || typeof project.get !== 'function') return project;
 
-            const titleRaw = project.get('title');
-            const idRaw = project.get('id');
+            const projectWithTemplates = ensureSidebarTemplates(project);
+            const titleRaw = projectWithTemplates.get('title');
+            const idRaw = projectWithTemplates.get('id');
             const title = titleRaw == null ? '' : String(titleRaw);
             const currentId = idRaw == null ? '' : String(idRaw).trim();
-            const modalInfoItems = buildInfoItems(project);
+            const modalInfoItems = buildInfoItems(projectWithTemplates);
 
-            let nextProject = project;
+            let nextProject = projectWithTemplates;
 
             // IDs nur setzen, wenn sie leer sind
             if (!currentId && title) {
