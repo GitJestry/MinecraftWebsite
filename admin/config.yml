@@ -27,11 +27,9 @@ collections:
             fields:
               - label: "ID (Slug)"
                 name: "id"
-                widget: "string"
-                hint: "Wird automatisch aus dem Titel generiert; nur Kleinbuchstaben, Zahlen und Bindestriche. Kann bei Bedarf manuell angepasst werden."
-                pattern:
-                  - "^[a-z0-9]+(?:-[a-z0-9]+)*$"
-                  - "Nur Kleinbuchstaben, Ziffern und Bindestriche, z. B. jetpack-datapack"
+                widget: "hidden"
+                required: false
+                hint: "Wird automatisch aus dem Titel erzeugt. Du musst hier nichts eintragen."
               - { label: "Titel", name: "title", widget: "string" }
 
               - label: "Typ"
@@ -76,58 +74,64 @@ collections:
                 widget: "image"
                 required: false
 
-              - { label: "Modal Hero HTML", name: "modalHero", widget: "text", required: false }
-              - label: "Modal-Inhalt (strukturiert)"
+              
+              - { label: "Modal Hero (Subtitel, optional)", name: "modalHero", widget: "text", required: false, hint: "Kurzer Satz unter dem Titel im Modal. Leer lassen, um die Kurzbeschreibung zu verwenden." }
+              - label: "Modal-Inhalt (empfohlen)"
                 name: "modalContent"
                 widget: "object"
                 required: false
                 fields:
-                  - { label: "Info-Titel", name: "infoTitle", widget: "string", required: false }
-                  - label: "Info-Liste"
+                  - { label: "Sidebar-Titel", name: "infoTitle", widget: "string", required: false, hint: "Überschrift über der Info-Box rechts, z. B. \"Details\"." }
+                  - label: "Sidebar – Infozeilen"
                     name: "infoItems"
                     widget: "list"
                     required: false
                     summary: "{{fields.key}}: {{fields.value}}"
+                    hint: "Datapack: Game, Type, Status, Minecraft, License, Requires, Client / Server. 3D-Druck: Project type, Printer, Material, Status, License."
                     fields:
-                      - { label: "Key", name: "key", widget: "string" }
+                      - { label: "Label", name: "key", widget: "string" }
                       - { label: "Wert", name: "value", widget: "string" }
-                      - { label: "Link", name: "url", widget: "string", required: false }
+                      - { label: "Link-URL (optional)", name: "url", widget: "string", required: false }
                       - { label: "Im neuen Tab öffnen", name: "newTab", widget: "boolean", required: false, default: false }
-                  - { label: "Tag-Titel", name: "tagsTitle", widget: "string", required: false }
-                  - label: "Tags (Anzeige)"
+                  - { label: "Tags-Titel", name: "tagsTitle", widget: "string", required: false, hint: "Überschrift über den Tags, z. B. \"Tags\"." }
+                  - label: "Tags (Anzeige im Modal)"
                     name: "modalTags"
                     widget: "list"
                     required: false
                     field: { label: "Tag", name: "tag", widget: "string" }
-                  - label: "Beschreibungstexte"
+                  - label: "Beschreibung – Tab \"Overview\""
                     name: "description"
                     widget: "list"
                     required: false
+                    hint: "Mehrere Absätze für den ersten Tab. Datapacks: Feature-Überblick. 3D-Druck: Was druckt man, für wen ist es gedacht?"
                     field: { label: "Absatz", name: "text", widget: "text" }
-                  - label: "Tabs – Schritte"
+                  - label: "Schritte – Tab \"Installation / Assembly\""
                     name: "steps"
                     widget: "list"
                     required: false
+                    hint: "Datapacks: Installation und In-Game Nutzung. 3D-Druck: Aufbau / Nachbearbeitung."
                     field: { label: "Schritt", name: "step", widget: "text" }
-                  - label: "Versionshistorie"
+                  - label: "Versionen & Downloads – Tab \"Changelog\""
                     name: "versions"
                     widget: "list"
                     required: false
                     summary: "{{fields.release}} ({{fields.date}})"
+                    hint: "Einträge für Releases mit optionalem Download (z. B. verschiedene Minecraft-Versionen oder STL-Pakete)."
                     fields:
                       - { label: "Release-Label", name: "release", widget: "string" }
-                      - { label: "Minecraft / Setup", name: "minecraft", widget: "string", required: false }
+                      - { label: "Minecraft / Setup-Ziel", name: "minecraft", widget: "string", required: false, hint: "z. B. \"1.21.8\", \"Print\" oder \"Any\"." }
                       - { label: "Datum", name: "date", widget: "datetime", required: false }
                       - { label: "Download-Datei", name: "downloadFile", widget: "file", required: false, media_folder: "downloads", public_folder: "/downloads" }
                       - { label: "Externe Download-URL", name: "url", widget: "string", required: false }
                       - { label: "Download-Text (EN)", name: "labelEn", widget: "string", required: false }
                       - { label: "Download-Text (DE)", name: "labelDe", widget: "string", required: false }
-                      - { label: "Tracking-ID", name: "trackId", widget: "string", required: false }
+                      - { label: "Tracking-ID (optional)", name: "trackId", widget: "string", required: false, hint: "Nur ändern, wenn du eigenes Tracking verwendest." }
                       - { label: "Details / Notes", name: "notes", widget: "text", required: false }
-                  - label: "Galerie"
+                  - label: "Galerie – Tab \"Gallery\""
                     name: "gallery"
                     widget: "list"
                     required: false
+                    hint: "Bilder, die im Galerie-Tab angezeigt werden."
                     fields:
                       - { label: "Bild", name: "src", widget: "image" }
                       - { label: "Alt-Text", name: "alt", widget: "string", required: false }
