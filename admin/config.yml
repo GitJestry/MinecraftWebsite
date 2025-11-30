@@ -50,7 +50,7 @@ collections:
                   - { label: "Draft", value: "draft" }
                 default: "released"
 
-              - { label: "Kategorie", name: "category", widget: "string", required: false }
+              - { label: "Kategorie", name: "category", widget: "string", required: true }
               - label: "Tags"
                 name: "tags"
                 widget: "relation"
@@ -73,7 +73,7 @@ collections:
                 widget: "image"
                 required: false
 
-              
+
               - label: "Modal Hero (Subtitel, optional)"
                 name: "modalHero"
                 widget: "text"
@@ -172,4 +172,3 @@ collections:
               - { label: "Farbe (Hex)", name: "color", widget: "string", required: false, hint: "z. B. #4CAF50" }
               - { label: "Beschreibung", name: "description", widget: "text", required: false }
               - { label: "Icon", name: "icon", widget: "string", required: false, hint: "Emoji oder Icon-Klasse" }
-

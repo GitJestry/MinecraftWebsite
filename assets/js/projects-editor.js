@@ -1198,7 +1198,6 @@
   const requiredFieldDefs = [
     { input: titleInput, label: 'Titel' },
     { input: shortInput, label: 'Kurzbeschreibung' },
-    { input: statusInput, label: 'Status' },
     { input: categoryInput, label: 'Kategorie' },
     { input: downloadInput, label: 'Download-Datei' },
     { input: imageInput, label: 'Vorschaubild' },
@@ -3138,43 +3137,61 @@
   }
 
   function buildAutoSidebarData(type, status, category, mcVersion, tags, requires, printer, material) {
-    const safeType = type === 'printing' ? 'printing' : 'datapack';
-    const infoItems = [];
-    const statusLabel = formatStatusLabel(status);
-    if (safeType === 'datapack') {
-      infoItems.push({ key: 'Game', value: INFO_DEFAULTS.datapack.game });
-      infoItems.push({ key: 'Type', value: INFO_DEFAULTS.datapack.type });
-      if (statusLabel) {
-        infoItems.push({ key: 'Status', value: statusLabel });
-      }
-      infoItems.push({
-        key: 'Minecraft',
-        value: mcVersion || INFO_DEFAULTS.datapack.minecraftFallback,
-      });
-      infoItems.push({
-        key: 'Requires',
-        value: (requires && String(requires).trim()) || INFO_DEFAULTS.datapack.requires,
-      });
-    } else {
-      infoItems.push({ key: 'Project type', value: INFO_DEFAULTS.printing.projectType });
-      infoItems.push({ key: 'Printer', value: (printer && String(printer).trim()) || INFO_DEFAULTS.printing.printer });
-      infoItems.push({ key: 'Material', value: (material && String(material).trim()) || INFO_DEFAULTS.printing.material });
-      if (statusLabel) {
-        infoItems.push({ key: 'Status', value: statusLabel });
-      }
-    }
-    if (category) {
-      infoItems.push({ key: 'Category', value: category });
-    }
-    infoItems.push(DEFAULT_INFO_LICENSE);
-    const tagList = Array.isArray(tags) ? tags.filter((tag) => tag && tag.trim()) : [];
-    return {
-      infoTitle: 'Project info',
-      infoItems,
-      tagsTitle: tagList.length ? 'Tags' : '',
-      tags: tagList,
-    };
+  const safeType = type === 'printing' ? 'printing' : 'datapack';
+  const infoItems = [];
+
+  if (safeType === 'datapack') {
+    // Pflichtfelder für Datapacks:
+    // Game, Type, Minecraft (Version), Requires, Category, License
+    infoItems.push({ key: 'Game', value: INFO_DEFAULTS.datapack.game });
+    infoItems.push({ key: 'Type', value: INFO_DEFAULTS.datapack.type });
+
+    infoItems.push({
+      key: 'Minecraft',
+      value: mcVersion || INFO_DEFAULTS.datapack.minecraftFallback,
+    });
+
+    infoItems.push({
+      key: 'Requires',
+      value: (requires && String(requires).trim()) || INFO_DEFAULTS.datapack.requires,
+    });
+  } else {
+    // Pflichtfelder für 3D-Prints:
+    // Type, Printer, Material, Category, License
+    infoItems.push({ key: 'Type', value: INFO_DEFAULTS.printing.projectType });
+
+    infoItems.push({
+      key: 'Printer',
+      value: (printer && String(printer).trim()) || INFO_DEFAULTS.printing.printer,
+    });
+
+    infoItems.push({
+      key: 'Material',
+      value: (material && String(material).trim()) || INFO_DEFAULTS.printing.material,
+    });
   }
+
+  // Category bei beiden Typen
+  if (category) {
+    infoItems.push({ key: 'Category', value: category });
+  }
+
+  // License automatisch unten anhängen, basierend auf DEFAULT_INFO_LICENSE
+  infoItems.push(DEFAULT_INFO_LICENSE);
+
+  // Tags / Chips
+  const tagList = Array.isArray(tags)
+    ? tags.filter((tag) => tag && tag.trim())
+    : [];
+
+  return {
+    infoTitle: 'Project info',
+    infoItems,
+    tagsTitle: tagList.length ? 'Tags' : '',
+    tags: tagList,
+  };
+}
+
 
   function buildAutoBadgesHtml(type, status, mcVersion, tags, category) {
     const safeType = type === 'printing' ? 'printing' : 'datapack';
