@@ -41,13 +41,6 @@ collections:
                 default: "datapack"
 
               - { label: "Kurzbeschreibung", name: "shortDescription", widget: "text" }
-              - { label: "Minecraft-Version", name: "mcVersion", widget: "string" }
-
-              - label: "Erfordert (Datapack)"
-                name: "requires"
-                widget: "string"
-                hint: "Automatisch in der Sidebar eingetragen; z. B. \"No mods\"."
-
               - label: "Status"
                 name: "status"
                 widget: "select"
@@ -80,17 +73,6 @@ collections:
                 required: false
 
 
-              - label: "3D-Druck – Drucker"
-                name: "printer"
-                widget: "string"
-                hint: "Automatisch in der Sidebar eingetragen; z. B. \"FDM, 0.4 mm nozzle\"."
-
-              - label: "3D-Druck – Material"
-                name: "material"
-                widget: "string"
-                hint: "Automatisch in der Sidebar eingetragen; z. B. \"PLA or PETG\"."
-
-              
               - label: "Modal Hero (Subtitel, optional)"
                 name: "modalHero"
                 widget: "text"
@@ -114,7 +96,7 @@ collections:
                     required: false
                     collapsed: true
                     summary: "{{fields.key}}: {{fields.value}}"
-                    hint: "Standardzeilen (Game, Type, Status, Minecraft/Printer, Requires/Material, License) werden automatisch erzeugt. Hier kannst du nur zusätzliche Zeilen ergänzen."
+                    hint: "Standardzeilen (Game, Type, Status, License) werden automatisch erzeugt. Hier kannst du nur zusätzliche Zeilen ergänzen."
                     fields:
                       - { label: "Label", name: "key", widget: "string" }
                       - { label: "Wert", name: "value", widget: "string" }
