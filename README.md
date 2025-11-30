@@ -31,18 +31,6 @@ node -e "const crypto=require('crypto');const salt='mirl-editor::v1';const passw
 
 Only the salted hash is stored in the repository, so the plaintext password never ships with the site files.
 
-## Automated upload sync ("moderate" option)
-
-If you prefer to drag files into a cloud folder and let automation update the site, the repository now includes a GitHub Actions workflow (`.github/workflows/sync_uploads.yml`) plus a helper script (`scripts/sync_uploads.py`). The workflow uses the Dropbox API to pull anything in the `assets/` or `downloads/` subfolders of a designated Dropbox directory and commits the changes back to the repo.
-
-### Setup steps
-1. **Create a Dropbox app** (Scoped access, full Dropbox or app folder) and generate a long-lived access token. Store it as the `DROPBOX_ACCESS_TOKEN` secret in your GitHub repository settings.
-2. **Choose the Dropbox folder** that mirrors your site structure (for example `/MinecraftWebsite`). Add the folder path—starting with a `/`—as a GitHub repository variable named `DROPBOX_ROOT_PATH`.
-3. **Organize files in Dropbox** so that inside the root path you have `assets/…` and/or `downloads/…` just like the repository. Only those two directories are synchronized.
-4. **Trigger the workflow** manually from the Actions tab or wait for the scheduled run (every 6 hours). When new or updated files are detected, the workflow downloads them, commits the changes, and pushes directly to `main`.
-
-You can customize the cron schedule, add additional directories to sync, or adapt `scripts/sync_uploads.py` to point at other providers if you prefer a different storage service.
-
 ## Runtime download analytics configuration
 
 Because the static site is published via GitHub Pages, download counters and upload handling are provided by a separate Node.js
