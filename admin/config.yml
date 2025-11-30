@@ -91,19 +91,30 @@ collections:
                 hint: "Automatisch in der Sidebar eingetragen; z. B. \"PLA or PETG\"."
 
               
-              - { label: "Modal Hero (Subtitel, optional)", name: "modalHero", widget: "text", required: false, hint: "Kurzer Satz unter dem Titel im Modal. Leer lassen, um die Kurzbeschreibung zu verwenden." }
+              - label: "Modal Hero (Subtitel, optional)"
+                name: "modalHero"
+                widget: "text"
+                required: false
+                hint: "Kurzer Satz unter dem Titel im Modal. Leer lassen, um die Kurzbeschreibung zu verwenden."
+
               - label: "Modal-Inhalt (empfohlen)"
                 name: "modalContent"
                 widget: "object"
                 required: false
                 fields:
-                  - { label: "Sidebar-Titel", name: "infoTitle", widget: "string", required: false, hint: "Überschrift über der Info-Box rechts, z. B. \"Details\"." }
-                  - label: "Sidebar – Infozeilen"
+                  - label: "Sidebar-Titel"
+                    name: "infoTitle"
+                    widget: "string"
+                    required: false
+                    default: "Project info"
+                    hint: "Überschrift über der Info-Box rechts, z. B. \"Details\"."
+                  - label: "Sidebar – Infozeilen (zusätzlich)"
                     name: "infoItems"
                     widget: "list"
                     required: false
+                    collapsed: true
                     summary: "{{fields.key}}: {{fields.value}}"
-                    hint: "Wird automatisch aus den Projektfeldern generiert."
+                    hint: "Standardzeilen (Game, Type, Status, Minecraft/Printer, Requires/Material, License) werden automatisch erzeugt. Hier kannst du nur zusätzliche Zeilen ergänzen."
                     fields:
                       - { label: "Label", name: "key", widget: "string" }
                       - { label: "Wert", name: "value", widget: "string" }

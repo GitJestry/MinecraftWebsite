@@ -10,170 +10,197 @@
     <!-- Decap CMS UI -->
     <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
   
-    <script>
-      // Automatische Slug-ID-Erzeugung für Projekte
-      function mirlSlugifyId(input) {
-        if (!input) return '';
-        return String(input)
-          .toLowerCase()
-          .trim()
-          // Umlaute/Diakritika entfernen
-          .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-          // Alles, was kein a–z oder 0–9 ist, durch Bindestrich ersetzen
-          .replace(/[^a-z0-9]+/g, '-')
-          // Führende / doppelte / endende Bindestriche aufräumen
-          .replace(/^-+|-+$/g, '');
-      }
-
-      const DEFAULT_LICENSE = {
-        key: 'License',
-        value: 'MIT • CC BY-NC-SA',
-        url: '#license'
-      };
-
-      const STATUS_LABELS = {
-        released: 'Released',
-        draft: 'Draft',
-        beta: 'Beta',
-        wip: 'WIP',
-        planned: 'Planned'
-      };
-
-      const DEFAULT_VALUES = {
-        datapack: {
-          game: 'Minecraft Java',
-          type: 'Datapack'
-        },
-        printing: {
-          projectType: '3D print'
+        <script>
+      (function () {
+        // Automatische Slug-ID-Erzeugung für Projekte
+        function mirlSlugifyId(input) {
+          if (!input) return '';
+          return String(input)
+            .toLowerCase()
+            .trim()
+            // Umlaute/Diakritika entfernen
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            // Alles, was kein a–z oder 0–9 ist, durch Bindestrich ersetzen
+            .replace(/[^a-z0-9]+/g, '-')
+            // Mehrere/führende/abschließende Bindestriche aufräumen
+            .replace(/-+/g, '-')
+            .replace(/^-+|-+$/g, '');
         }
-      };
 
-      function normaliseText(value) {
-        return typeof value === 'string' ? value.trim() : '';
-      }
+        // Feste License-Zeile für alle Projekte
+        const DEFAULT_LICENSE = {
+          key: 'License',
+          value: 'MIT • CC BY-NC-SA',
+          url: '#license'
+        };
 
-      function formatStatusLabel(value) {
-        const key = normaliseText(value).toLowerCase();
-        if (!key) return '';
-        return STATUS_LABELS[key] || (key.charAt(0).toUpperCase() + key.slice(1));
-      }
+        // Mapping für Status-Labels
+        const STATUS_LABELS = {
+          released: 'Released',
+          draft: 'Draft',
+          beta: 'Beta',
+          wip: 'WIP',
+          planned: 'Planned'
+        };
 
-      function mergeCustomInfoItems(autoItems, modalContent) {
-        if (!modalContent || typeof modalContent.get !== 'function') return autoItems;
-        const existing = modalContent.get('infoItems');
-        if (!existing || typeof existing.forEach !== 'function') return autoItems;
-        const keys = new Set(autoItems.map((item) => item.key.toLowerCase()));
-        existing.forEach((entry) => {
-          const key = normaliseText(entry && entry.get ? entry.get('key') : entry.key);
-          const value = normaliseText(entry && entry.get ? entry.get('value') : entry.value);
-          if (!key || !value || keys.has(key.toLowerCase())) return;
-          const url = normaliseText(entry && entry.get ? entry.get('url') : entry.url);
-          const newTab = !!(entry && entry.get ? entry.get('newTab') : entry.newTab);
-          autoItems.push({ key, value, url, newTab });
-          keys.add(key.toLowerCase());
-        });
-        return autoItems;
-      }
+        // Standardwerte je Projekttyp
+        const DEFAULT_VALUES = {
+          datapack: {
+            game: 'Minecraft Java',
+            type: 'Datapack'
+          },
+          printing: {
+            projectType: '3D print'
+          }
+        };
 
-      function buildInfoItems(project) {
-        if (!project) return [];
-        const typeRaw = normaliseText(project.get && project.get('type'));
-        const type = typeRaw === 'printing' ? 'printing' : 'datapack';
-        const modalContent = project.get && project.get('modalContent');
-        const mcVersion = normaliseText(project.get && project.get('mcVersion'));
-        const statusLabel = formatStatusLabel(project.get && project.get('status'));
-        const requires = normaliseText(project.get && project.get('requires'));
-        const printer = normaliseText(project.get && project.get('printer'));
-        const material = normaliseText(project.get && project.get('material'));
-
-        const items = [];
-        if (type === 'datapack') {
-          items.push({ key: 'Game', value: DEFAULT_VALUES.datapack.game });
-          items.push({ key: 'Type', value: DEFAULT_VALUES.datapack.type });
-          if (statusLabel) items.push({ key: 'Status', value: statusLabel });
-          items.push({ key: 'Minecraft', value: mcVersion });
-          items.push({ key: 'Requires', value: requires });
-        } else {
-          items.push({ key: 'Project type', value: DEFAULT_VALUES.printing.projectType });
-          items.push({ key: 'Printer', value: printer });
-          items.push({ key: 'Material', value: material });
-          if (statusLabel) items.push({ key: 'Status', value: statusLabel });
+        function normaliseText(value) {
+          return typeof value === 'string' ? value.trim() : '';
         }
-        items.push({ ...DEFAULT_LICENSE });
 
-        return mergeCustomInfoItems(items, modalContent);
-      }
+        function formatStatusLabel(value) {
+          const key = normaliseText(value).toLowerCase();
+          if (!key) return '';
+          return STATUS_LABELS[key] || (key.charAt(0).toUpperCase() + key.slice(1));
+        }
 
-      function applyProjectDefaults(data) {
-        if (!data || !data.get) return data;
-        const projects = data.get('projects');
-        if (!projects || typeof projects.map !== 'function') return data;
+        // Zusätzliche (manuell gepflegte) Infozeilen ohne Duplikate dazumischen
+        function mergeCustomInfoItems(autoItems, modalContent) {
+          if (!modalContent || typeof modalContent.get !== 'function') return autoItems;
 
-        const updated = projects.map((project) => {
-          if (!project) return project;
-          const titleRaw = project.get('title');
-          const idRaw = project.get('id');
-          const title = titleRaw == null ? '' : String(titleRaw);
-          const currentId = idRaw == null ? '' : String(idRaw).trim();
-          const modalInfoItems = buildInfoItems(project);
+          const existing = modalContent.get('infoItems');
+          if (!existing || typeof existing.forEach !== 'function') return autoItems;
 
-          let nextProject = project;
-          // Bestehende IDs nicht überschreiben, nur leere füllen
-          if (!currentId && title) {
-            const slugified = mirlSlugifyId(title) || 'projekt';
-            nextProject = nextProject.set('id', slugified);
+          const keys = new Set(
+            autoItems.map((item) => String(item.key || '').toLowerCase())
+          );
+
+          existing.forEach((entry) => {
+            const key = normaliseText(entry && entry.get ? entry.get('key') : entry.key);
+            const value = normaliseText(entry && entry.get ? entry.get('value') : entry.value);
+
+            if (!key || !value || keys.has(key.toLowerCase())) return;
+
+            const url = normaliseText(entry && entry.get ? entry.get('url') : entry.url);
+            const newTab = !!(entry && entry.get ? entry.get('newTab') : entry.newTab);
+
+            autoItems.push({ key, value, url, newTab });
+            keys.add(key.toLowerCase());
+          });
+
+          return autoItems;
+        }
+
+        // Baut die Infozeilen für Sidebar/Modal anhand der Projektfelder
+        function buildInfoItems(project) {
+          if (!project || typeof project.get !== 'function') return [];
+
+          const typeRaw = normaliseText(project.get('type'));
+          const type = typeRaw === 'printing' ? 'printing' : 'datapack';
+
+          const modalContent = project.get('modalContent');
+          const mcVersion = normaliseText(project.get('mcVersion'));
+          const statusLabel = formatStatusLabel(project.get('status'));
+          const requires = normaliseText(project.get('requires'));
+          const printer = normaliseText(project.get('printer'));
+          const material = normaliseText(project.get('material'));
+
+          const items = [];
+
+          if (type === 'datapack') {
+            items.push({ key: 'Game', value: DEFAULT_VALUES.datapack.game });
+            items.push({ key: 'Type', value: DEFAULT_VALUES.datapack.type });
+            if (statusLabel) {
+              items.push({ key: 'Status', value: statusLabel });
+            }
+            items.push({ key: 'Minecraft', value: mcVersion || '—' });
+            items.push({ key: 'Requires', value: requires || '—' });
+          } else {
+            items.push({ key: 'Project type', value: DEFAULT_VALUES.printing.projectType });
+            items.push({ key: 'Printer', value: printer || '—' });
+            items.push({ key: 'Material', value: material || '—' });
+            if (statusLabel) {
+              items.push({ key: 'Status', value: statusLabel });
+            }
           }
 
-          if (modalInfoItems.length) {
-            nextProject = nextProject.setIn(['modalContent', 'infoItems'], modalInfoItems);
-          }
-          return nextProject;
-        });
+          // License immer anhängen
+          items.push({ ...DEFAULT_LICENSE });
 
-        return data.set('projects', updated);
-      }
-
-      function applyProjectDefaultsToEntry(entry) {
-        if (!entry || typeof entry.get !== 'function') return entry;
-        const slug = entry.get('slug');
-        if (slug !== 'projects') {
-          return entry;
+          // zusätzliche, manuelle Einträge dazumischen
+          return mergeCustomInfoItems(items, modalContent);
         }
 
-        const data = entry.get('data');
-        const updatedData = applyProjectDefaults(data);
-        if (!updatedData || updatedData === data) {
-          return entry;
-        }
+        // Wendet Slug + Infozeilen auf alle Projekte im JSON an
+        function applyProjectDefaults(data) {
+          if (!data || !data.get) return data;
 
-        return entry.set('data', updatedData);
-      }
+          const projects = data.get('projects');
+          if (!projects || typeof projects.map !== 'function') return data;
 
-      if (window.CMS) {
-        CMS.registerEventListener({
-          name: 'entryDraftCreated',
-          handler: ({ entry }) => applyProjectDefaultsToEntry(entry)
-        });
+          const updated = projects.map((project) => {
+            if (!project || typeof project.get !== 'function') return project;
 
-        CMS.registerEventListener({
-          name: 'prePublish',
-          handler: ({ entry }) => applyProjectDefaultsToEntry(entry)
-        });
+            const titleRaw = project.get('title');
+            const idRaw = project.get('id');
+            const title = titleRaw == null ? '' : String(titleRaw);
+            const currentId = idRaw == null ? '' : String(idRaw).trim();
+            const modalInfoItems = buildInfoItems(project);
 
-        CMS.registerEventListener({
-          name: 'preSave',
-          handler: ({ entry }) => {
-            const updatedEntry = applyProjectDefaultsToEntry(entry);
-            if (!updatedEntry || updatedEntry === entry) {
-              return;
+            let nextProject = project;
+
+            // IDs nur setzen, wenn sie leer sind
+            if (!currentId && title) {
+              const slugified = mirlSlugifyId(title) || 'projekt';
+              nextProject = nextProject.set('id', slugified);
             }
 
-            return updatedEntry.get('data');
+            if (modalInfoItems.length) {
+              nextProject = nextProject.setIn(['modalContent', 'infoItems'], modalInfoItems);
+            }
+
+            return nextProject;
+          });
+
+          return data.set('projects', updated);
+        }
+
+        // Nur auf die projects.json anwenden
+        function applyProjectDefaultsToEntry(entry) {
+          if (!entry || typeof entry.get !== 'function') return entry;
+
+          const slug = entry.get('slug');
+          if (slug !== 'projects') {
+            return entry;
           }
-        });
-      }
+
+          const data = entry.get('data');
+          const updatedData = applyProjectDefaults(data);
+
+          if (!updatedData || updatedData === data) {
+            return entry;
+          }
+
+          return entry.set('data', updatedData);
+        }
+
+        if (window.CMS) {
+          CMS.registerEventListener({
+            name: 'preSave',
+            handler: ({ entry }) => {
+              const updatedEntry = applyProjectDefaultsToEntry(entry);
+              if (!updatedEntry || updatedEntry === entry) {
+                // keine Änderungen – Originaldaten weiterverwenden
+                return;
+              }
+              return updatedEntry.get('data');
+            }
+          });
+        }
+      })();
     </script>
+
 
   </body>
 </html>
