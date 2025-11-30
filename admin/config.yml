@@ -43,6 +43,12 @@ collections:
               - { label: "Kurzbeschreibung", name: "shortDescription", widget: "text" }
               - { label: "Minecraft-Version", name: "mcVersion", widget: "string", required: false }
 
+              - label: "Erfordert (Datapack)"
+                name: "requires"
+                widget: "string"
+                required: false
+                hint: "Automatisch in der Sidebar eingetragen; z. B. \"No mods\"."
+
               - label: "Status"
                 name: "status"
                 widget: "select"
@@ -74,6 +80,19 @@ collections:
                 widget: "image"
                 required: false
 
+
+              - label: "3D-Druck – Drucker"
+                name: "printer"
+                widget: "string"
+                required: false
+                hint: "Automatisch in der Sidebar eingetragen; z. B. \"FDM, 0.4 mm nozzle\"."
+
+              - label: "3D-Druck – Material"
+                name: "material"
+                widget: "string"
+                required: false
+                hint: "Automatisch in der Sidebar eingetragen; z. B. \"PLA or PETG\"."
+
               
               - { label: "Modal Hero (Subtitel, optional)", name: "modalHero", widget: "text", required: false, hint: "Kurzer Satz unter dem Titel im Modal. Leer lassen, um die Kurzbeschreibung zu verwenden." }
               - label: "Modal-Inhalt (empfohlen)"
@@ -85,9 +104,9 @@ collections:
                   - label: "Sidebar – Infozeilen"
                     name: "infoItems"
                     widget: "list"
-                    required: true
+                    required: false
                     summary: "{{fields.key}}: {{fields.value}}"
-                    hint: "Datapack: Game, Type, Status, Minecraft, License, Requires, Client / Server. 3D-Druck: Project type, Printer, Material, Status, License."
+                    hint: "Wird automatisch aus den Projektfeldern generiert."
                     fields:
                       - { label: "Label", name: "key", widget: "string" }
                       - { label: "Wert", name: "value", widget: "string" }

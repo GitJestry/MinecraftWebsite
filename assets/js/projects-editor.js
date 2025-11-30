@@ -2065,7 +2065,16 @@
       bodyHtml = buildModalBodyHtml(modalId, contentPayload.bodyData, fallbackId);
     }
     if (!bodyHtml) {
-      const sidebar = buildAutoSidebarData(safeType, project.status, project.category, project.mcVersion, project.tags);
+      const sidebar = buildAutoSidebarData(
+        safeType,
+        project.status,
+        project.category,
+        project.mcVersion,
+        project.tags,
+        project.requires,
+        project.printer,
+        project.material,
+      );
       const fallbackBody = {
         infoTitle: sidebar.infoTitle,
         infoItems: sidebar.infoItems,
@@ -2766,8 +2775,17 @@
       .filter(Boolean);
   }
 
-  function mergeSidebarInfoItems(type, status, category, mcVersion, tags, infoItems) {
-    const sidebarDefaults = buildAutoSidebarData(type, status, category, mcVersion, tags);
+  function mergeSidebarInfoItems(type, status, category, mcVersion, tags, requires, printer, material, infoItems) {
+    const sidebarDefaults = buildAutoSidebarData(
+      type,
+      status,
+      category,
+      mcVersion,
+      tags,
+      requires,
+      printer,
+      material,
+    );
     const baseItems = Array.isArray(sidebarDefaults.infoItems) ? sidebarDefaults.infoItems : [];
     const normalised = normaliseModalInfoItems(infoItems);
     const merged = [];
@@ -2803,13 +2821,25 @@
   function applySidebarDefaults(bodyData, project) {
     const record = project || {};
     const safeType = normaliseType(record.type);
-    const sidebarDefaults = buildAutoSidebarData(safeType, record.status, record.category, record.mcVersion, record.tags);
+    const sidebarDefaults = buildAutoSidebarData(
+      safeType,
+      record.status,
+      record.category,
+      record.mcVersion,
+      record.tags,
+      record.requires,
+      record.printer,
+      record.material,
+    );
     const infoItems = mergeSidebarInfoItems(
       safeType,
       record.status,
       record.category,
       record.mcVersion,
       record.tags,
+      record.requires,
+      record.printer,
+      record.material,
       bodyData.infoItems,
     );
     return {
@@ -3029,15 +3059,35 @@
       .join('');
   }
 
+  const DEFAULT_INFO_LICENSE = { key: 'License', value: 'MIT • CC BY-NC-SA', url: '#license' };
+
+  const STATUS_LABELS = {
+    released: 'Released',
+    draft: 'Draft',
+    beta: 'Beta',
+    wip: 'WIP',
+    planned: 'Planned',
+  };
+
+  const INFO_DEFAULTS = {
+    datapack: {
+      game: 'Minecraft Java',
+      type: 'Datapack',
+      requires: 'No mods',
+      minecraftFallback: 'Not specified',
+    },
+    printing: {
+      projectType: '3D print',
+      printer: 'Not specified',
+      material: 'Not specified',
+    },
+  };
+
   function formatStatusLabel(status) {
     const value = String(status == null ? '' : status).trim();
     if (!value) return '';
     const key = value.toLowerCase();
-    if (key === 'released') return 'Stable';
-    if (key === 'beta') return 'Beta';
-    if (key === 'wip') return 'WIP';
-    if (key === 'planned') return 'Planned';
-    return value.charAt(0).toUpperCase() + value.slice(1);
+    return STATUS_LABELS[key] || (value.charAt(0).toUpperCase() + value.slice(1));
   }
 
   function deriveDownloadFileId(path) {
@@ -3047,25 +3097,36 @@
     return parts.pop() || cleaned || 'download';
   }
 
-  function buildAutoSidebarData(type, status, category, mcVersion, tags) {
+  function buildAutoSidebarData(type, status, category, mcVersion, tags, requires, printer, material) {
     const safeType = type === 'printing' ? 'printing' : 'datapack';
     const infoItems = [];
+    const statusLabel = formatStatusLabel(status);
     if (safeType === 'datapack') {
-      infoItems.push({ key: 'Game', value: 'Minecraft Java' });
+      infoItems.push({ key: 'Game', value: INFO_DEFAULTS.datapack.game });
+      infoItems.push({ key: 'Type', value: INFO_DEFAULTS.datapack.type });
+      if (statusLabel) {
+        infoItems.push({ key: 'Status', value: statusLabel });
+      }
+      infoItems.push({
+        key: 'Minecraft',
+        value: mcVersion || INFO_DEFAULTS.datapack.minecraftFallback,
+      });
+      infoItems.push({
+        key: 'Requires',
+        value: (requires && String(requires).trim()) || INFO_DEFAULTS.datapack.requires,
+      });
+    } else {
+      infoItems.push({ key: 'Project type', value: INFO_DEFAULTS.printing.projectType });
+      infoItems.push({ key: 'Printer', value: (printer && String(printer).trim()) || INFO_DEFAULTS.printing.printer });
+      infoItems.push({ key: 'Material', value: (material && String(material).trim()) || INFO_DEFAULTS.printing.material });
+      if (statusLabel) {
+        infoItems.push({ key: 'Status', value: statusLabel });
+      }
     }
-    infoItems.push({ key: 'Type', value: safeType === 'printing' ? '3D Print' : 'Datapack' });
     if (category) {
       infoItems.push({ key: 'Category', value: category });
     }
-    if (mcVersion) {
-      const label = safeType === 'printing' ? 'Print setup' : 'Minecraft';
-      infoItems.push({ key: label, value: mcVersion });
-    }
-    const statusLabel = formatStatusLabel(status);
-    if (statusLabel) {
-      infoItems.push({ key: 'Status', value: statusLabel });
-    }
-    infoItems.push({ key: 'License', value: 'MIT • CC BY-NC-SA', url: '#license' });
+    infoItems.push(DEFAULT_INFO_LICENSE);
     const tagList = Array.isArray(tags) ? tags.filter((tag) => tag && tag.trim()) : [];
     return {
       infoTitle: 'Project info',
@@ -3714,7 +3775,16 @@
     const record = project || {};
     const safeType = normaliseType(record.type);
     const tags = Array.isArray(record.tags) ? record.tags : [];
-    const sidebar = buildAutoSidebarData(safeType, record.status, record.category, record.mcVersion, tags);
+    const sidebar = buildAutoSidebarData(
+      safeType,
+      record.status,
+      record.category,
+      record.mcVersion,
+      tags,
+      record.requires,
+      record.printer,
+      record.material,
+    );
     const pitch = typeof record.shortDescription === 'string' ? record.shortDescription.trim() : '';
     return {
       infoTitle: sidebar.infoTitle,
