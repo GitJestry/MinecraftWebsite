@@ -2758,12 +2758,66 @@
         if (!item) return null;
         const key = typeof item.key === 'string' ? item.key.trim() : '';
         const value = typeof item.value === 'string' ? item.value.trim() : '';
-        if (!key && !value) return null;
+        if (!key || !value) return null;
         const url = typeof item.url === 'string' ? resolveProjectStaticUrl(item.url.trim()) : '';
         const newTab = !!item.newTab;
         return { key, value, url, newTab };
       })
       .filter(Boolean);
+  }
+
+  function mergeSidebarInfoItems(type, status, category, mcVersion, tags, infoItems) {
+    const sidebarDefaults = buildAutoSidebarData(type, status, category, mcVersion, tags);
+    const baseItems = Array.isArray(sidebarDefaults.infoItems) ? sidebarDefaults.infoItems : [];
+    const normalised = normaliseModalInfoItems(infoItems);
+    const merged = [];
+
+    const findIndexByKey = (key) => merged.findIndex((item) => item && item.key && item.key.toLowerCase() === key.toLowerCase());
+
+    const upsertItem = (item) => {
+      if (!item || !item.key || !item.value) return;
+      const existingIndex = findIndexByKey(item.key);
+      if (existingIndex >= 0) {
+        const current = merged[existingIndex];
+        merged[existingIndex] = {
+          key: current.key || item.key,
+          value: item.value || current.value,
+          url: item.url || current.url || '',
+          newTab: current.newTab || item.newTab || false,
+        };
+        return;
+      }
+      merged.push({
+        key: item.key,
+        value: item.value,
+        url: item.url || '',
+        newTab: !!item.newTab,
+      });
+    };
+
+    normalised.forEach(upsertItem);
+    baseItems.forEach(upsertItem);
+    return merged;
+  }
+
+  function applySidebarDefaults(bodyData, project) {
+    const record = project || {};
+    const safeType = normaliseType(record.type);
+    const sidebarDefaults = buildAutoSidebarData(safeType, record.status, record.category, record.mcVersion, record.tags);
+    const infoItems = mergeSidebarInfoItems(
+      safeType,
+      record.status,
+      record.category,
+      record.mcVersion,
+      record.tags,
+      bodyData.infoItems,
+    );
+    return {
+      ...bodyData,
+      infoTitle: bodyData.infoTitle || sidebarDefaults.infoTitle || '',
+      infoItems,
+      tagsTitle: bodyData.tagsTitle || sidebarDefaults.tagsTitle || '',
+    };
   }
 
   function formatModalContentDate(value) {
@@ -2863,18 +2917,19 @@
     bodyData.steps = normaliseCmsTextList(content.steps, 'step');
     bodyData.versions = normaliseModalVersions(content.versions);
     bodyData.gallery = normaliseModalGallery(content.gallery);
+    const enrichedBodyData = applySidebarDefaults(bodyData, project);
     const hasStructuredContent = (
-      (bodyData.infoItems && bodyData.infoItems.length)
-      || (bodyData.tags && bodyData.tags.length)
-      || (bodyData.description && bodyData.description.length)
-      || (bodyData.steps && bodyData.steps.length)
-      || (bodyData.versions && bodyData.versions.length)
-      || (bodyData.gallery && bodyData.gallery.length)
+      (enrichedBodyData.infoItems && enrichedBodyData.infoItems.length)
+      || (enrichedBodyData.tags && enrichedBodyData.tags.length)
+      || (enrichedBodyData.description && enrichedBodyData.description.length)
+      || (enrichedBodyData.steps && enrichedBodyData.steps.length)
+      || (enrichedBodyData.versions && enrichedBodyData.versions.length)
+      || (enrichedBodyData.gallery && enrichedBodyData.gallery.length)
     );
     if (!hasStructuredContent) {
       return null;
     }
-    const primaryVersion = bodyData.versions.find((version) => version && version.url) || bodyData.versions[0] || null;
+    const primaryVersion = enrichedBodyData.versions.find((version) => version && version.url) || enrichedBodyData.versions[0] || null;
     const primaryDownloadUrl = primaryVersion ? primaryVersion.url : resolveProjectStaticUrl(project.downloadFile || '');
     const primaryDownloadFile = primaryVersion
       ? (primaryVersion.downloadFile || (primaryVersion.url ? deriveDownloadFileId(primaryVersion.url) : ''))
@@ -2882,7 +2937,7 @@
     const latestVersionLabel = primaryVersion ? (primaryVersion.release || '') : '';
     const latestVersionDate = primaryVersion ? (primaryVersion.date || '') : '';
     return {
-      bodyData,
+      bodyData: enrichedBodyData,
       primaryDownloadUrl,
       primaryDownloadFile,
       latestVersionLabel,
@@ -3707,8 +3762,9 @@
         data.gallery = parsed.gallery;
       }
     }
+    const enrichedData = applySidebarDefaults(data, project);
     if (modalBodyInput) modalBodyInput.value = bodyHtml || '';
-    applyModalBodyData(data);
+    applyModalBodyData(enrichedData);
   }
 
   function collectModalBodyData() {
