@@ -135,10 +135,6 @@ collections:
                     fields:
                       - { label: "Bild", name: "src", widget: "image" }
                       - { label: "Alt-Text", name: "alt", widget: "string", required: false }
-              - { label: "Modal Body HTML", name: "modalBody", widget: "text", required: false }
-              - { label: "Modal Badges HTML", name: "modalBadges", widget: "text", required: false }
-              - { label: "Modal Hero Actions HTML", name: "modalHeroActions", widget: "text", required: false }
-              - { label: "Modal Stats HTML", name: "modalStats", widget: "text", required: false }
 
               - { label: "Angelegt", name: "createdAt", widget: "datetime", required: false }
               - { label: "Zuletzt geändert", name: "updatedAt", widget: "datetime", required: false }
