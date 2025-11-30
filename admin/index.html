@@ -42,13 +42,10 @@
       const DEFAULT_VALUES = {
         datapack: {
           game: 'Minecraft Java',
-          type: 'Datapack',
-          requires: 'No mods'
+          type: 'Datapack'
         },
         printing: {
-          projectType: '3D print',
-          printer: 'Not specified',
-          material: 'Not specified'
+          projectType: '3D print'
         }
       };
 
@@ -86,16 +83,16 @@
         const modalContent = project.get && project.get('modalContent');
         const mcVersion = normaliseText(project.get && project.get('mcVersion'));
         const statusLabel = formatStatusLabel(project.get && project.get('status'));
-        const requires = normaliseText(project.get && project.get('requires')) || DEFAULT_VALUES.datapack.requires;
-        const printer = normaliseText(project.get && project.get('printer')) || DEFAULT_VALUES.printing.printer;
-        const material = normaliseText(project.get && project.get('material')) || DEFAULT_VALUES.printing.material;
+        const requires = normaliseText(project.get && project.get('requires'));
+        const printer = normaliseText(project.get && project.get('printer'));
+        const material = normaliseText(project.get && project.get('material'));
 
         const items = [];
         if (type === 'datapack') {
           items.push({ key: 'Game', value: DEFAULT_VALUES.datapack.game });
           items.push({ key: 'Type', value: DEFAULT_VALUES.datapack.type });
           if (statusLabel) items.push({ key: 'Status', value: statusLabel });
-          items.push({ key: 'Minecraft', value: mcVersion || 'Not specified' });
+          items.push({ key: 'Minecraft', value: mcVersion });
           items.push({ key: 'Requires', value: requires });
         } else {
           items.push({ key: 'Project type', value: DEFAULT_VALUES.printing.projectType });

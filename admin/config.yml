@@ -41,12 +41,11 @@ collections:
                 default: "datapack"
 
               - { label: "Kurzbeschreibung", name: "shortDescription", widget: "text" }
-              - { label: "Minecraft-Version", name: "mcVersion", widget: "string", required: false }
+              - { label: "Minecraft-Version", name: "mcVersion", widget: "string" }
 
               - label: "Erfordert (Datapack)"
                 name: "requires"
                 widget: "string"
-                required: false
                 hint: "Automatisch in der Sidebar eingetragen; z. B. \"No mods\"."
 
               - label: "Status"
@@ -84,13 +83,11 @@ collections:
               - label: "3D-Druck – Drucker"
                 name: "printer"
                 widget: "string"
-                required: false
                 hint: "Automatisch in der Sidebar eingetragen; z. B. \"FDM, 0.4 mm nozzle\"."
 
               - label: "3D-Druck – Material"
                 name: "material"
                 widget: "string"
-                required: false
                 hint: "Automatisch in der Sidebar eingetragen; z. B. \"PLA or PETG\"."
 
               
