@@ -105,45 +105,71 @@
         return mergeCustomInfoItems(items, modalContent);
       }
 
+      function applyProjectDefaults(data) {
+        if (!data || !data.get) return data;
+        const projects = data.get('projects');
+        if (!projects || typeof projects.map !== 'function') return data;
+
+        const updated = projects.map((project) => {
+          if (!project) return project;
+          const titleRaw = project.get('title');
+          const idRaw = project.get('id');
+          const title = titleRaw == null ? '' : String(titleRaw);
+          const currentId = idRaw == null ? '' : String(idRaw).trim();
+          const modalInfoItems = buildInfoItems(project);
+
+          let nextProject = project;
+          // Bestehende IDs nicht überschreiben, nur leere füllen
+          if (!currentId && title) {
+            const slugified = mirlSlugifyId(title) || 'projekt';
+            nextProject = nextProject.set('id', slugified);
+          }
+
+          if (modalInfoItems.length) {
+            nextProject = nextProject.setIn(['modalContent', 'infoItems'], modalInfoItems);
+          }
+          return nextProject;
+        });
+
+        return data.set('projects', updated);
+      }
+
+      function applyProjectDefaultsToEntry(entry) {
+        if (!entry || typeof entry.get !== 'function') return entry;
+        const slug = entry.get('slug');
+        if (slug !== 'projects') {
+          return entry;
+        }
+
+        const data = entry.get('data');
+        const updatedData = applyProjectDefaults(data);
+        if (!updatedData || updatedData === data) {
+          return entry;
+        }
+
+        return entry.set('data', updatedData);
+      }
+
       if (window.CMS) {
+        CMS.registerEventListener({
+          name: 'entryDraftCreated',
+          handler: ({ entry }) => applyProjectDefaultsToEntry(entry)
+        });
+
+        CMS.registerEventListener({
+          name: 'prePublish',
+          handler: ({ entry }) => applyProjectDefaultsToEntry(entry)
+        });
+
         CMS.registerEventListener({
           name: 'preSave',
           handler: ({ entry }) => {
-            if (!entry) return;
-            const slug = entry.get('slug');
-            // Nur auf die projects.json-Datei anwenden
-            if (slug !== 'projects') {
+            const updatedEntry = applyProjectDefaultsToEntry(entry);
+            if (!updatedEntry || updatedEntry === entry) {
               return;
             }
-            const data = entry.get('data');
-            if (!data || !data.get('projects')) {
-              return;
-            }
-            const projects = data.get('projects');
-            if (!projects || typeof projects.map !== 'function') {
-              return;
-            }
-            const updated = projects.map((project) => {
-              if (!project) return project;
-              const titleRaw = project.get('title');
-              const idRaw = project.get('id');
-              const title = titleRaw == null ? '' : String(titleRaw);
-              const currentId = idRaw == null ? '' : String(idRaw).trim();
-              const modalInfoItems = buildInfoItems(project);
 
-              let nextProject = project;
-              // Bestehende IDs nicht überschreiben, nur leere füllen
-              if (!currentId && title) {
-                const slugified = mirlSlugifyId(title) || 'projekt';
-                nextProject = nextProject.set('id', slugified);
-              }
-
-              if (modalInfoItems.length) {
-                nextProject = nextProject.setIn(['modalContent', 'infoItems'], modalInfoItems);
-              }
-              return nextProject;
-            });
-            return data.set('projects', updated);
+            return updatedEntry.get('data');
           }
         });
       }
