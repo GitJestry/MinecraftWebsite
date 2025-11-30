@@ -41,12 +41,6 @@ collections:
                 default: "datapack"
 
               - { label: "Kurzbeschreibung", name: "shortDescription", widget: "text" }
-              - { label: "Minecraft-Version", name: "mcVersion", widget: "string" }
-
-              - label: "Erfordert (Datapack)"
-                name: "requires"
-                widget: "string"
-                hint: "Automatisch in der Sidebar eingetragen; z. B. \"No mods\"."
 
               - label: "Status"
                 name: "status"
@@ -79,17 +73,6 @@ collections:
                 widget: "image"
                 required: false
 
-
-              - label: "3D-Druck – Drucker"
-                name: "printer"
-                widget: "string"
-                hint: "Automatisch in der Sidebar eingetragen; z. B. \"FDM, 0.4 mm nozzle\"."
-
-              - label: "3D-Druck – Material"
-                name: "material"
-                widget: "string"
-                hint: "Automatisch in der Sidebar eingetragen; z. B. \"PLA or PETG\"."
-
               
               - label: "Modal Hero (Subtitel, optional)"
                 name: "modalHero"
@@ -108,13 +91,18 @@ collections:
                     required: false
                     default: "Project info"
                     hint: "Überschrift über der Info-Box rechts, z. B. \"Details\"."
-                  - label: "Sidebar – Infozeilen (zusätzlich)"
+                  - label: "Sidebar – Infozeilen (inkl. Pflichtwerte)"
                     name: "infoItems"
                     widget: "list"
                     required: false
                     collapsed: true
+                    default:
+                      - { key: "Minecraft", value: "" }
+                      - { key: "Requires", value: "" }
+                      - { key: "Printer", value: "" }
+                      - { key: "Material", value: "" }
                     summary: "{{fields.key}}: {{fields.value}}"
-                    hint: "Standardzeilen (Game, Type, Status, Minecraft/Printer, Requires/Material, License) werden automatisch erzeugt. Hier kannst du nur zusätzliche Zeilen ergänzen."
+                    hint: "Trage hier die Werte für die Standardzeilen (Game, Type, Status, Minecraft & Requires bei Datapacks // Printer & Material bei 3D-Druck, License) sowie zusätzliche Einträge ein."
                     fields:
                       - { label: "Label", name: "key", widget: "string" }
                       - { label: "Wert", name: "value", widget: "string" }
