@@ -25,6 +25,89 @@
           .replace(/^-+|-+$/g, '');
       }
 
+      const DEFAULT_LICENSE = {
+        key: 'License',
+        value: 'MIT • CC BY-NC-SA',
+        url: '#license'
+      };
+
+      const STATUS_LABELS = {
+        released: 'Released',
+        draft: 'Draft',
+        beta: 'Beta',
+        wip: 'WIP',
+        planned: 'Planned'
+      };
+
+      const DEFAULT_VALUES = {
+        datapack: {
+          game: 'Minecraft Java',
+          type: 'Datapack',
+          requires: 'No mods'
+        },
+        printing: {
+          projectType: '3D print',
+          printer: 'Not specified',
+          material: 'Not specified'
+        }
+      };
+
+      function normaliseText(value) {
+        return typeof value === 'string' ? value.trim() : '';
+      }
+
+      function formatStatusLabel(value) {
+        const key = normaliseText(value).toLowerCase();
+        if (!key) return '';
+        return STATUS_LABELS[key] || (key.charAt(0).toUpperCase() + key.slice(1));
+      }
+
+      function mergeCustomInfoItems(autoItems, modalContent) {
+        if (!modalContent || typeof modalContent.get !== 'function') return autoItems;
+        const existing = modalContent.get('infoItems');
+        if (!existing || typeof existing.forEach !== 'function') return autoItems;
+        const keys = new Set(autoItems.map((item) => item.key.toLowerCase()));
+        existing.forEach((entry) => {
+          const key = normaliseText(entry && entry.get ? entry.get('key') : entry.key);
+          const value = normaliseText(entry && entry.get ? entry.get('value') : entry.value);
+          if (!key || !value || keys.has(key.toLowerCase())) return;
+          const url = normaliseText(entry && entry.get ? entry.get('url') : entry.url);
+          const newTab = !!(entry && entry.get ? entry.get('newTab') : entry.newTab);
+          autoItems.push({ key, value, url, newTab });
+          keys.add(key.toLowerCase());
+        });
+        return autoItems;
+      }
+
+      function buildInfoItems(project) {
+        if (!project) return [];
+        const typeRaw = normaliseText(project.get && project.get('type'));
+        const type = typeRaw === 'printing' ? 'printing' : 'datapack';
+        const modalContent = project.get && project.get('modalContent');
+        const mcVersion = normaliseText(project.get && project.get('mcVersion'));
+        const statusLabel = formatStatusLabel(project.get && project.get('status'));
+        const requires = normaliseText(project.get && project.get('requires')) || DEFAULT_VALUES.datapack.requires;
+        const printer = normaliseText(project.get && project.get('printer')) || DEFAULT_VALUES.printing.printer;
+        const material = normaliseText(project.get && project.get('material')) || DEFAULT_VALUES.printing.material;
+
+        const items = [];
+        if (type === 'datapack') {
+          items.push({ key: 'Game', value: DEFAULT_VALUES.datapack.game });
+          items.push({ key: 'Type', value: DEFAULT_VALUES.datapack.type });
+          if (statusLabel) items.push({ key: 'Status', value: statusLabel });
+          items.push({ key: 'Minecraft', value: mcVersion || 'Not specified' });
+          items.push({ key: 'Requires', value: requires });
+        } else {
+          items.push({ key: 'Project type', value: DEFAULT_VALUES.printing.projectType });
+          items.push({ key: 'Printer', value: printer });
+          items.push({ key: 'Material', value: material });
+          if (statusLabel) items.push({ key: 'Status', value: statusLabel });
+        }
+        items.push({ ...DEFAULT_LICENSE });
+
+        return mergeCustomInfoItems(items, modalContent);
+      }
+
       if (window.CMS) {
         CMS.registerEventListener({
           name: 'preSave',
@@ -49,12 +132,19 @@
               const idRaw = project.get('id');
               const title = titleRaw == null ? '' : String(titleRaw);
               const currentId = idRaw == null ? '' : String(idRaw).trim();
+              const modalInfoItems = buildInfoItems(project);
+
+              let nextProject = project;
               // Bestehende IDs nicht überschreiben, nur leere füllen
-              if (!title || currentId) {
-                return project;
+              if (!currentId && title) {
+                const slugified = mirlSlugifyId(title) || 'projekt';
+                nextProject = nextProject.set('id', slugified);
               }
-              const slugified = mirlSlugifyId(title) || 'projekt';
-              return project.set('id', slugified);
+
+              if (modalInfoItems.length) {
+                nextProject = nextProject.setIn(['modalContent', 'infoItems'], modalInfoItems);
+              }
+              return nextProject;
             });
             return data.set('projects', updated);
           }

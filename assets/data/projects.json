@@ -3,6 +3,7 @@
     {
       "shortDescription": "Lightweight jetpack datapack for survival – vanilla-friendly flight without mods.",
       "mcVersion": "1.21.8",
+      "requires": "No mods",
       "downloadFile": "downloads/jetpack-datapack-1.21.8.zip",
       "modalHero": "",
       "modalContent": {
@@ -108,6 +109,8 @@
     {
       "shortDescription": "Desk-sized Minecraft pickaxe display model, ready to print on most FDM printers.",
       "mcVersion": "",
+      "printer": "FDM, 0.4 mm nozzle",
+      "material": "PLA or PETG",
       "downloadFile": "downloads/pickaxe-desk-model.zip",
       "modalHero": "",
       "modalContent": {
@@ -131,7 +134,7 @@
           },
           {
             "key": "License",
-            "value": "CC BY-NC-SA 4.0",
+            "value": "MIT • CC BY-NC-SA",
             "url": "#license"
           }
         ],
