@@ -85,7 +85,7 @@ collections:
                   - label: "Sidebar – Infozeilen"
                     name: "infoItems"
                     widget: "list"
-                    required: false
+                    required: true
                     summary: "{{fields.key}}: {{fields.value}}"
                     hint: "Datapack: Game, Type, Status, Minecraft, License, Requires, Client / Server. 3D-Druck: Project type, Printer, Material, Status, License."
                     fields:
