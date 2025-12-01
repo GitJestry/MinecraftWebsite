@@ -693,7 +693,7 @@
       return localProjectsStore;
     }
     const staticData = await fetchStaticProjects();
-    if (Array.isArray(staticData) && staticData.length) {
+    if (Array.isArray(staticData)) {
       localProjectsStore = staticData.map((item) => normaliseProjectRecord(item));
       persistLocalProjects();
       return localProjectsStore;
