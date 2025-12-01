@@ -192,7 +192,7 @@
       document.dispatchEvent(evt);
     }
   }
-  
+
   // --- i18n strings for small UI bits ---
   const STRINGS = {
     en: {
@@ -748,51 +748,52 @@
   }
 
   function fetchDownloadSize(path) {
-    if (!path) return Promise.resolve(null);
-    let pending = downloadSizeCache.get(path);
-    if (!pending) {
-      pending = (async () => {
-        try {
-          const response = await fetch(path, { method: 'HEAD' });
-          if (!response.ok) throw new Error('HEAD failed');
-          const length = Number(response.headers.get('content-length'));
-          return Number.isFinite(length) ? length : null;
-        } catch (err) {
-          return null;
-        }
-      })();
-      downloadSizeCache.set(path, pending);
-    }
-    return pending;
-  }
-
-  function initDownloadSizes() {
-    const elements = Array.from(document.querySelectorAll('[data-download-size]'));
-    if (!elements.length) return;
-    const groups = new Map();
-    elements.forEach((el) => {
-      const path = el.getAttribute('data-download-size');
-      if (!path) return;
-      if (!groups.has(path)) {
-        groups.set(path, []);
+  if (!path) return Promise.resolve(null);
+  let pending = downloadSizeCache.get(path);
+  if (!pending) {
+    pending = (async () => {
+      try {
+        const response = await fetch(path, { method: 'HEAD' });
+        if (!response.ok) throw new Error('HEAD failed');
+        const length = Number(response.headers.get('content-length'));
+        return Number.isFinite(length) ? length : null;
+      } catch (err) {
+        return null;
       }
-      groups.get(path).push(el);
-    });
-    groups.forEach((els, path) => {
-      fetchDownloadSize(path)
-        .then((bytes) => {
-          const label = Number.isFinite(bytes) ? formatFileSizeLabel(bytes) : '—';
-          els.forEach((el) => {
-            el.textContent = label || '—';
-          });
-        })
-        .catch(() => {
-          els.forEach((el) => {
-            el.textContent = '—';
-          });
-        });
-    });
+    })();
+    downloadSizeCache.set(path, pending);
   }
+  return pending;
+}
+
+function initDownloadSizes() {
+  const elements = Array.from(document.querySelectorAll('[data-download-size]'));
+  if (!elements.length) return;
+  const groups = new Map();
+  elements.forEach((el) => {
+    const path = el.getAttribute('data-download-size');
+    if (!path) return;
+    if (!groups.has(path)) {
+      groups.set(path, []);
+    }
+    groups.get(path).push(el);
+  });
+  groups.forEach((els, path) => {
+    fetchDownloadSize(path)
+      .then((bytes) => {
+        const label = Number.isFinite(bytes) ? formatFileSizeLabel(bytes) : '—';
+        els.forEach((el) => {
+          el.textContent = label || '—';
+        });
+      })
+      .catch(() => {
+        els.forEach((el) => {
+          el.textContent = '—';
+        });
+      });
+  });
+}
+
 
   document.addEventListener('keydown', (event) => {
     if (!event || typeof event.key !== 'string') return;
@@ -830,7 +831,9 @@
     updateDocTitles(lang);
     updateBannerTexts(lang);
     patchLinkCards();
-    initDownloadTracking();
+
+    // Download-Count-Tracking deaktiviert
+    // initDownloadTracking();
     initDownloadSizes();
   });
 

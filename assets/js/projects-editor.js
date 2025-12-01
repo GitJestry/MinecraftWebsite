@@ -3242,18 +3242,29 @@
   }
 
   function buildAutoStatsHtml(options) {
-    const opts = options || {};
-    const versionValue = opts.latestVersion ? escapeHtml(opts.latestVersion) : '—';
-    const updatedLabel = formatUpdatedLabel(opts.updatedAt) || '—';
-    const projectAttr = opts.projectId ? ` data-download-count="${escapeAttr(opts.projectId)}"` : '';
-    const sizeAttr = opts.downloadUrl ? ` data-download-size="${escapeAttr(opts.downloadUrl)}"` : '';
-    const stats = [];
-    stats.push(`<div class="stat"><div class="label">Version</div><div class="value">${versionValue}</div></div>`);
-    stats.push(`<div class="stat"><div class="label">Last updated</div><div class="value">${escapeHtml(updatedLabel)}</div></div>`);
-    stats.push(`<div class="stat"><div class="label"><span class="lang-en">Downloads</span><span class="lang-de">Downloads</span></div><div class="value"${projectAttr}>—</div></div>`);
-    stats.push(`<div class="stat"><div class="label">Size</div><div class="value"${sizeAttr}>—</div></div>`);
-    return stats.join('');
-  }
+  const opts = options || {};
+  const versionValue = opts.latestVersion ? escapeHtml(opts.latestVersion) : '—';
+  const updatedLabel = formatUpdatedLabel(opts.updatedAt) || '—';
+
+  // Datei-Pfad/URL, aus dem später per HEAD die Größe gelesen wird
+  const sizeAttr = opts.downloadUrl
+    ? ` data-download-size="${escapeAttr(opts.downloadUrl)}"`
+    : '';
+
+  const stats = [];
+  stats.push(
+    `<div class="stat"><div class="label">Version</div><div class="value">${versionValue}</div></div>`
+  );
+  stats.push(
+    `<div class="stat"><div class="label">Last updated</div><div class="value">${escapeHtml(updatedLabel)}</div></div>`
+  );
+  stats.push(
+    `<div class="stat"><div class="label">Size</div><div class="value"${sizeAttr}>—</div></div>`
+  );
+
+  return stats.join('');
+}
+
 
   function parseStatsHtml(html) {
     if (!html) return [];
