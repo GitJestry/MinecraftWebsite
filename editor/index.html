@@ -1339,35 +1339,16 @@ dialog[open] .content {
 <div class="left"><div class="badge-dot"></div>
 <!-- Subcategory navigation (Modrinth-inspired, themed) -->
 </div>
-<div class="count">1 item</div>
+<div class="count">0 items</div>
 </div>
-<div class="itemgrid">
-<article aria-controls="dp-jetpack" aria-expanded="false" class="item card dp-card" data-modal-target="dp-jetpack" data-subcats="movement,utility" role="button" tabindex="0">
-<div class="thumb"><img alt="Jetpack Datapack cover" src="../assets/img/logo.jpg"/></div>
-<div class="meta">
-<div class="title">Jetpack Datapack</div>
-<div class="chips"><span class="chip">1.21.8</span><span class="chip">Survival</span></div>
-<div class="quick">Lightweight jetpack for survival. Vanilla-friendly, no mods required.</div>
-</div>
-</article>
-</div>
+<div class="itemgrid"></div>
 </div>
 <div class="section-block" hidden="" id="printing" role="tabpanel">
 <div class="head">
 <div class="left"><div class="badge-dot"></div></div>
-<div class="count">1 item</div>
+<div class="count">0 items</div>
 </div>
-<div class="itemgrid">
-  <article aria-controls="pr-spool-holder" aria-expanded="false" class="item card pr-card" data-modal-target="pr-spool-holder" data-subcats="hardware,utility" role="button" tabindex="0">
-    <div class="thumb"><img alt="Minecraft Pickaxe 3D print thumbnail" loading="lazy" src="../assets/img/logo.jpg"/></div>
-    <div class="meta">
-      <div class="title">Minecraft Pickaxe</div>
-      <div class="chips"><span class="chip">STL</span><span class="chip">No supports</span><span class="chip">0.2mm</span></div>
-      <div class="quick">Tool-free spool holder; two printed parts, fits most 1kg rolls.</div>
-      <div class="muted">A simple two-part Minecraft pickaxe desk model – prints support-free and snaps together.</div>
-    </div>
-  </article>
-</div>
+<div class="itemgrid"></div>
 </div>
 <div class="notice" id="license" style="margin-top:1.6rem;">
 <strong>Licensing:</strong> Code is under MIT. Original assets (icons, images, text) are under CC BY-NC-SA 4.0. No redistribution of Minecraft/Mojang assets.
@@ -1495,103 +1476,6 @@ window.addEventListener('load', function() {
   onScroll();
 })();
 </script>
-<!-- Datapack detail modal -->
-<div aria-hidden="true" aria-labelledby="dp-jetpack-title" class="modal" data-project-id="jetpack-datapack" id="dp-jetpack" role="dialog">
-<div class="modal-backdrop" data-close="dp-jetpack"></div>
-<div class="modal-content" role="document">
-<button aria-label="Close" class="modal-close" data-close="dp-jetpack">×</button>
-<header class="modal-hero">
-<div class="title" id="dp-jetpack-title">Jetpack Datapack</div>
-<div class="muted">Lightweight jetpack for survival. Vanilla-friendly, no mods required.</div>
-<div class="badges">
-<span class="badge"><span class="dot"></span> Stable</span>
-<span class="badge">Minecraft 1.21.8</span>
-<span class="badge">Single &amp; Multiplayer</span>
-<span class="badge">Survival</span>
-</div>
-<div class="hero-actions"><a class="btn primary dl" data-download-file="jetpack-datapack-1.21.8.zip" data-track-download="jetpack-datapack" download="" href="../downloads/jetpack-datapack-1.21.8.zip"><svg aria-hidden="true" focusable="false" height="18" viewbox="0 0 24 24" width="18"><path d="M12 3v10m0 0l4-4m-4 4l-4-4M5 21h14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg><span><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></span></a></div><div class="stats">
-<div class="stat"><div class="label">Version</div><div class="value">v1.0.3</div></div>
-<div class="stat"><div class="label">Last updated</div><div class="value">Sep 2025</div></div>
-<div class="stat"><div class="label"><span class="lang-en">Downloads</span><span class="lang-de">Downloads</span></div><div class="value" data-download-count="jetpack-datapack">—</div></div>
-<div class="stat"><div class="label">Size</div><div class="value">~20 KB</div></div>
-</div>
-</header>
-<div class="modal-body">
-<aside class="sidebar">
-<div class="info-card">
-<h4>Project info</h4>
-<ul class="info-list">
-<li><span class="k">Game</span><span>Minecraft Java</span></li>
-<li><span class="k">Type</span><span>Datapack</span></li>
-<li><span class="k">Compat</span><span>1.21.x</span></li>
-<li><span class="k">Requires</span><span>None</span></li>
-<li><span class="k"><span class="lang-en">License</span><span class="lang-de">Lizenz</span></span><span><a href="#license">MIT • CC BY-NC-SA</a></span></li>
-</ul>
-</div>
-<div class="info-card">
-<h4>Tags</h4>
-<div class="info-tags">
-<span class="chip">Survival</span>
-<span class="chip">Lightweight</span>
-<span class="chip">Vanilla+</span>
-</div>
-</div>
-</aside>
-  <section class="content">
-  <nav aria-label="Jetpack Datapack Tabs" class="tabs" role="tablist">
-  <button aria-selected="true" class="active" data-tab="description" role="tab">Description</button>
-  <button aria-selected="false" data-tab="gallery" role="tab">Gallery</button>
-  <button aria-selected="false" data-tab="versions" role="tab"><span class="lang-en">Versions &amp; Changelog</span><span class="lang-de">Versionen &amp; Changelog</span></button>
-  </nav>
-<div class="tabpanels">
-<div class="active prose" id="dp-jetpack-description" role="tabpanel">
-<p>Jetpack Datapack adds a balanced flight mechanic powered by fuel crafted in survival. It’s designed to feel native to Minecraft and to work on servers without any mods.</p>
-<p><strong>Highlights:</strong> compact recipes, configurable fuel cost, and zero client-side requirements.</p>
-</div>
-<div class="prose" id="dp-jetpack-installation" role="tabpanel">
-<div class="steps">
-<div class="step"><div></div><div><strong><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></strong> the <em>.zip</em> and keep it zipped.</div></div>
-<div class="step"><div></div><div>Open your world folder and put the file into <code>world/datapacks</code>.</div></div>
-<div class="step"><div></div><div>Start or reload the world with <code>/reload</code>.</div></div>
-<div class="step"><div></div><div>Optional: run <code>/function jetpack:setup</code> to see config options.</div></div>
-</div>
-</div>
-  <div id="dp-jetpack-versions" role="tabpanel">
-  <div class="version-timeline">
-  <article class="version-entry head">
-  <div class="version-entry-header">
-  <div>
-  <div class="version-entry-title">v1.0.3</div>
-  <div class="version-entry-meta">2025‑09‑10 • Minecraft 1.21.8</div>
-  </div>
-  <div class="version-entry-actions"><a class="btn ghost dl" data-download-file="jetpack-datapack-1.21.8.zip" data-track-download="jetpack-datapack" download="" href="../downloads/jetpack-datapack-1.21.8.zip"><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></a></div>
-  </div>
-  <p class="version-entry-notes">Balance tweaks, Fuel HUD polish und Nether-Portale gefixt.</p>
-  </article>
-  <article class="version-entry">
-  <div class="version-entry-header">
-  <div>
-  <div class="version-entry-title">v1.0.2</div>
-  <div class="version-entry-meta">2025‑07‑22 • Minecraft 1.21.4</div>
-  </div>
-  <div class="version-entry-actions"><a class="btn ghost dl" data-download-file="jetpack-datapack-1.21.8.zip" data-track-download="jetpack-datapack" download="" href="../downloads/jetpack-datapack-1.21.8.zip"><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></a></div>
-  </div>
-  <p class="version-entry-notes">Initialer Release für 1.21.4 mit Survival-Rezepten.</p>
-  </article>
-  </div>
-  </div>
-<div id="dp-jetpack-gallery" role="tabpanel">
-<div class="gallery">
-<img alt="Jetpack showcase 1" loading="lazy" src="../assets/img/logo.jpg"/>
-<img alt="Jetpack showcase 2" loading="lazy" src="../assets/img/logo.jpg"/>
-<img alt="Jetpack showcase 3" loading="lazy" src="../assets/img/logo.jpg"/>
-</div>
-</div>
-</div>
-</section>
-</div>
-</div>
-</div><div aria-hidden="true" aria-labelledby="pr-spool-holder-title" class="modal" data-project-id="pickaxe-desk-print" id="pr-spool-holder" role="dialog"><div class="modal-backdrop" data-close="pr-spool-holder"></div><div class="modal-content" role="document"><button aria-label="Close" class="modal-close" data-close="pr-spool-holder">×</button><header class="modal-hero"><div class="title" id="pr-spool-holder-title">Minecraft Pickaxe</div><div class="muted">Simple, sturdy filament spool holder designed for easy printing and assembly.</div><div class="badges"><span class="badge">Print-ready</span><span class="badge">STL included</span><span class="badge">No supports</span><span class="badge">0.2 mm layer</span></div><div class="hero-actions"><a class="btn primary dl" href="../downloads/pickaxe-desk-model.zip" download="" data-download-file="pickaxe-desk-model.zip" data-track-download="pickaxe-desk-print"><svg aria-hidden="true" focusable="false" height="18" viewbox="0 0 24 24" width="18"><path d="M12 3v10m0 0l4-4m-4 4l-4-4M5 21h14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg><span><span class="lang-en">Download</span><span class="lang-de">Herunterladen</span></span></a></div><div class="stats"><div class="stat"><div class="label">Version</div><div class="value">v1.0.3</div></div><div class="stat"><div class="label">Last updated</div><div class="value">Sep 2025</div></div><div class="stat"><div class="label"><span class="lang-en">Downloads</span><span class="lang-de">Downloads</span></div><div class="value" data-download-count="pickaxe-desk-print">—</div></div><div class="stat"><div class="label">Size</div><div class="value">~20 KB</div></div></div></header><div class="modal-body"><aside class="sidebar"><div class="info-card"><h4>Project info</h4><ul class="info-list"><li><span class="k">Print time</span><span>≈ 4–5 h</span></li><li><span class="k">Material</span><span>PLA or PETG</span></li><li><span class="k">Nozzle</span><span>0.4 mm</span></li><li><span class="k">Layer height</span><span>0.20 mm (0.28 quick)</span></li><li><span class="k">Perimeters</span><span>3–4</span></li><li><span class="k">Infill</span><span>15–25% (Gyroid/Cubic)</span></li><li><span class="k">Supports</span><span>None</span></li><li><span class="k">Bed adhesion</span><span>Brim optional (PETG)</span></li><li><span class="k"><span class="lang-en">License</span><span class="lang-de">Lizenz</span></span><a href="#license">MIT • CC BY-NC-SA</a></li></ul></div><div class="info-card"><h4>Tags</h4><div class="info-tags"><span class="chip">STL</span><span class="chip">No supports</span><span class="chip">0.2 mm</span><span class="chip">Hardware: M8</span></div></div></aside><section class="content"><nav aria-label="3D Print Tabs" class="tabs" role="tablist"><button aria-selected="true" class="active" data-tab="description" role="tab">Description</button><button aria-selected="false" class="" data-tab="gallery" role="tab">Gallery</button><button aria-selected="false" class="" data-tab="settings" role="tab">Print Settings</button><button aria-selected="false" data-tab="bom" role="tab">BOM</button><button aria-selected="false" data-tab="files" role="tab">Files</button><button aria-selected="false" data-tab="changelog" role="tab"><span class="lang-en">Changelog</span><span class="lang-de">Änderungsprotokoll</span></button></nav><div class="tabpanels"><div class="active prose" id="pr-spool-holder-description" role="tabpanel"><div style="max-width: 60ch; margin: 0 auto;"><p>A clean, display-friendly take on the classic Minecraft pickaxe. Designed for easy printing and quick assembly.</p><ul><li>Two parts: handle and head – align with a keyed joint.</li><li>Support-free on most FDM printers; recommended 0.2 mm layer height.</li><li>Best in PLA or PETG; a quick color swap gives the iconic look.</li><li>Optional: a dab of CA glue for a permanent fit.</li></ul><p>Print time ~2–4 hours depending on nozzle and layer settings. Scale up to use as a wall prop or down for a desk trinket.</p></div></div><div id="pr-spool-holder-gallery" role="tabpanel"><img alt="Spool holder render" src="../assets/img/logo.jpg" style="max-width:100%;height:auto;border-radius:12px;"/><p class="muted">Placeholder render — replace with real photos when ready.</p><div class="gallery"><img alt="Minecraft Pickaxe – Front view" loading="lazy" src="../assets/img/logo.jpg"/><img alt="Minecraft Pickaxe – Angle view" loading="lazy" src="../assets/img/logo.jpg"/><img alt="Minecraft Pickaxe – Assembly detail" loading="lazy" src="../assets/img/logo.jpg"/></div></div><div id="pr-spool-holder-settings" role="tabpanel"><ul class="info-list"><li><div class="k">Material</div><div class="v">PLA or PETG</div></li><li><div class="k">Nozzle</div><div class="v">0.4 mm</div></li><li><div class="k">Layer Height</div><div class="v">0.2 mm (0.28 mm draft OK)</div></li><li><div class="k">Perimeters</div><div class="v">3–4</div></li><li><div class="k">Infill</div><div class="v">15–25% (Gyroid/Cubic)</div></li><li><div class="k">Supports</div><div class="v">None</div></li><li><div class="k">Bed Adhesion</div><div class="v">Brim optional (PETG)</div></li></ul></div><div id="pr-spool-holder-bom" role="tabpanel"><ul class="info-list"><li><div class="k">M8 rod/bolt</div><div class="v">1× ~220–260 mm length</div></li><li><div class="k">M8 nuts</div><div class="v">2×</div></li><li><div class="k">M8 washers</div><div class="v">2×</div></li><li><div class="k">Rubber feet</div><div class="v">4× (optional)</div></li><li><div class="k">608 bearings</div><div class="v">2× (optional, upgrade)</div></li></ul><p class="muted">Dimensions can be adjusted to your printer or spool width.</p></div><div id="pr-spool-holder-files" role="tabpanel"><div class="prose"><ul><li>Spool_Holder_v1.0.stl — ~1.2 MB</li><li>Spool_Holder_Source.step — ~0.8 MB</li></ul></div></div><div id="pr-spool-holder-changelog" role="tabpanel"><ol class="steps"><li><strong>v1.0.1 — 2025-10-28</strong><ul><li>Tweaked tolerances for easier assembly</li><li>Optional bearing upgrade documented</li><li>Minor geometry cleanup</li></ul></li><li><strong>v1.0.0 — 2025-10-20</strong><ul><li>Initial release</li><li>No-support printable design</li></ul></li></ol></div></div></section></div></div></div>
 <script>
 (function(){
   const wrap = document.getElementById('datapacks');
