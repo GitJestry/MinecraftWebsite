@@ -2979,9 +2979,9 @@
     bodyData.infoTitle = typeof content.infoTitle === 'string' ? content.infoTitle.trim() : '';
     bodyData.infoItems = normaliseModalInfoItems(content.infoItems);
     bodyData.tagsTitle = typeof content.tagsTitle === 'string' ? content.tagsTitle.trim() : '';
-    const cmsTags = normaliseCmsTextList(content.modalTags, 'tag');
     const fallbackTags = Array.isArray(project.tags) ? project.tags.filter((tag) => tag && tag.trim()) : [];
-    bodyData.tags = cmsTags.length ? cmsTags : fallbackTags;
+    const cmsTags = normaliseCmsTextList(content.modalTags, 'tag');
+    bodyData.tags = fallbackTags.length ? fallbackTags : cmsTags;
     bodyData.description = normaliseCmsTextList(content.description, 'text');
     bodyData.steps = normaliseCmsTextList(content.steps, 'step');
     bodyData.versions = normaliseModalVersions(content.versions);
