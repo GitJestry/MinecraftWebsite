@@ -125,10 +125,6 @@ collections:
                           - { label: "Minecraft / Setup-Ziel", name: "minecraft", widget: "string", required: false, hint: "z. B. \"1.21.8\", \"Print\" oder \"Any\"." }
                           - { label: "Datum", name: "date", widget: "datetime", required: false }
                           - { label: "Download-Datei", name: "downloadFile", widget: "file", required: false, media_folder: "assets/data/downloads", public_folder: "assets/data/downloads" }
-                          - { label: "Externe Download-URL", name: "url", widget: "string", required: false }
-                          - { label: "Download-Text (EN)", name: "labelEn", widget: "string", required: false }
-                          - { label: "Download-Text (DE)", name: "labelDe", widget: "string", required: false }
-                          - { label: "Tracking-ID (optional)", name: "trackId", widget: "string", required: false, hint: "Nur ändern, wenn du eigenes Tracking verwendest." }
                           - { label: "Details / Notes", name: "notes", widget: "text", required: false }
                       - label: "Galerie – Tab \"Gallery\""
                         name: "gallery"
@@ -241,10 +237,6 @@ collections:
                           - { label: "Minecraft / Setup-Ziel", name: "minecraft", widget: "string", required: false, hint: "z. B. \"1.21.8\", \"Print\" oder \"Any\"." }
                           - { label: "Datum", name: "date", widget: "datetime", required: false }
                           - { label: "Download-Datei", name: "downloadFile", widget: "file", required: false, media_folder: "assets/data/downloads", public_folder: "assets/data/downloads" }
-                          - { label: "Externe Download-URL", name: "url", widget: "string", required: false }
-                          - { label: "Download-Text (EN)", name: "labelEn", widget: "string", required: false }
-                          - { label: "Download-Text (DE)", name: "labelDe", widget: "string", required: false }
-                          - { label: "Tracking-ID (optional)", name: "trackId", widget: "string", required: false, hint: "Nur ändern, wenn du eigenes Tracking verwendest." }
                           - { label: "Details / Notes", name: "notes", widget: "text", required: false }
                       - label: "Galerie – Tab \"Gallery\""
                         name: "gallery"
