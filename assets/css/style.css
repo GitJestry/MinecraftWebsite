@@ -1243,13 +1243,13 @@ header.nav-min.is-hidden {
 }
 
 
-/* Prevent scroll on home and links pages */
-.home, .links-page { overflow: hidden; }
-.home .viewport, .links-page .viewport { overflow: hidden; }
+/* Allow native scrolling on home and links pages (match Projects) */
+.home, .links-page { overflow: visible; }
+.home .viewport, .links-page .viewport { overflow: visible; }
 
 /* Ensure hero section fits without extra padding on home */
 .home .hero-stack { padding-top: 0 !important; padding-bottom: 0 !important; min-height: calc(100dvh - var(--header-h) - var(--footer-h)); }
-/* Links page layout: center without scroll */
+/* Links page layout: center content while allowing scroll */
 .links-page main section.compact { min-height: calc(100dvh - var(--header-h) - var(--footer-h)); padding-top: 0 !important; padding-bottom: 0 !important; }
 
 
