@@ -234,11 +234,28 @@
           return mergeCustomInfoItems(items, modalContent);
         }
 
-        function hasAnyItems(collection) {
+        function getVersionField(version, key) {
+          if (!version) return '';
+          if (typeof version.get === 'function') {
+            return normaliseText(version.get(key));
+          }
+          return normaliseText(version[key]);
+        }
+
+        function hasMeaningfulVersions(collection) {
           if (!collection) return false;
-          if (typeof collection.size === 'number') return collection.size > 0;
-          if (typeof collection.length === 'number') return collection.length > 0;
-          return true;
+
+          const list = Array.isArray(collection)
+            ? collection
+            : (typeof collection.toArray === 'function' ? collection.toArray() : []);
+
+          return list.some((version) => {
+            const release = getVersionField(version, 'release');
+            const downloadFile = getVersionField(version, 'downloadFile');
+            const url = getVersionField(version, 'url');
+            const notes = getVersionField(version, 'notes');
+            return Boolean(release || downloadFile || url || notes);
+          });
         }
 
         // Wendet Slug + Infozeilen auf alle Projekte im JSON an
@@ -261,7 +278,7 @@
             const modalVersions = projectWithTemplates.getIn
               ? projectWithTemplates.getIn(['modalContent', 'versions'])
               : null;
-            const hasVersions = hasAnyItems(modalVersions);
+            const hasVersions = hasMeaningfulVersions(modalVersions);
 
             let nextProject = projectWithTemplates;
 
