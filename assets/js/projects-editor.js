@@ -3259,20 +3259,12 @@
   const versionValue = opts.latestVersion ? escapeHtml(opts.latestVersion) : '—';
   const updatedLabel = formatUpdatedLabel(opts.updatedAt) || '—';
 
-  // Datei-Pfad/URL, aus dem später per HEAD die Größe gelesen wird
-  const sizeAttr = opts.downloadUrl
-    ? ` data-download-size="${escapeAttr(opts.downloadUrl)}"`
-    : '';
-
   const stats = [];
   stats.push(
     `<div class="stat"><div class="label">Version</div><div class="value">${versionValue}</div></div>`
   );
   stats.push(
     `<div class="stat"><div class="label">Last updated</div><div class="value">${escapeHtml(updatedLabel)}</div></div>`
-  );
-  stats.push(
-    `<div class="stat"><div class="label">Size</div><div class="value"${sizeAttr}>—</div></div>`
   );
 
   return stats.join('');
