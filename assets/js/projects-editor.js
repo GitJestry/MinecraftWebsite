@@ -97,6 +97,10 @@
       return trimmed;
     }
     try {
+      if (trimmed.startsWith('/')) {
+        const withoutSlash = trimmed.replace(/^\/+/, '');
+        return new URL(`./${withoutSlash}`, base).toString();
+      }
       return new URL(trimmed, base).toString();
     } catch (err) {
       return trimmed;
