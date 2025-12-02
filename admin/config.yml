@@ -100,10 +100,8 @@ collections:
                         default:
                           - { key: "Minecraft", value: "" }
                           - { key: "Requires", value: "" }
-                          - { key: "Printer", value: "" }
-                          - { key: "Material", value: "" }
                         summary: "{{fields.key}}: {{fields.value}}"
-                        hint: "Trage hier die Werte für die Standardzeilen (Game, Type, Status, Minecraft & Requires bei Datapacks // Printer & Material bei 3D-Druck, License) sowie zusätzliche Einträge ein."
+                        hint: "Trage hier die Werte für die Standardzeilen (Game, Type, Status, Minecraft & Requires) sowie zusätzliche Einträge ein."
                         fields:
                           - { label: "Label", name: "key", widget: "string" }
                           - { label: "Wert", name: "value", widget: "string" }
@@ -222,12 +220,10 @@ collections:
                         required: false
                         collapsed: true
                         default:
-                          - { key: "Minecraft", value: "" }
-                          - { key: "Requires", value: "" }
                           - { key: "Printer", value: "" }
                           - { key: "Material", value: "" }
                         summary: "{{fields.key}}: {{fields.value}}"
-                        hint: "Trage hier die Werte für die Standardzeilen (Game, Type, Status, Minecraft & Requires bei Datapacks // Printer & Material bei 3D-Druck, License) sowie zusätzliche Einträge ein."
+                        hint: "Trage hier die Werte für die Standardzeilen (Game, Type, Status, Printer & Material) sowie zusätzliche Einträge ein."
                         fields:
                           - { label: "Label", name: "key", widget: "string" }
                           - { label: "Wert", name: "value", widget: "string" }
