@@ -3786,7 +3786,7 @@
       versionFileInput.setAttribute('data-file-prefix', 'assets/data/downloads/');
       versionFileInput.setAttribute('data-file-accept', '.zip,.mcpack,.mcaddon,.rar,.stl,.obj,.gcode,.3mf,.zip');
       versionFileInput.setAttribute('data-file-button', 'Datei auswählen');
-      versionFileInput.setAttribute('data-file-helper', 'ZIP/STL auswählen oder Pfad einfügen – ältere Downloads bleiben erhalten.');
+      versionFileInput.setAttribute('data-file-helper', 'ZIP/STL auswählen oder relativen Pfad einfügen – ältere Downloads bleiben erhalten.');
     }
     enhanceFilePickerTargets(row);
     modalVersionsList.appendChild(row);

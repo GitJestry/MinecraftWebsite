@@ -2,7 +2,7 @@
   "projects": [
     {
       "shortDescription": "Adds a enchantment that lets you walk on lava",
-      "downloadFile": "/assets/data/downloads/lava_walker.zip",
+      "downloadFile": "assets/data/downloads/lava_walker.zip",
       "modalContent": {
         "infoTitle": "Project info",
         "infoItems": [
@@ -49,7 +49,7 @@
     },
     {
       "shortDescription": "23",
-      "downloadFile": "/assets/data/downloads/blatt_06_julianmeyer.zip",
+      "downloadFile": "assets/data/downloads/blatt_06_julianmeyer.zip",
       "modalContent": {
         "infoTitle": "Project info",
         "infoItems": [
