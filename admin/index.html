@@ -9,8 +9,8 @@
   <body>
     <!-- Decap CMS UI -->
     <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
-  
-        <script>
+
+    <script>
       (function () {
         // Automatische Slug-ID-Erzeugung für Projekte
         function mirlSlugifyId(input) {
@@ -124,8 +124,9 @@
             ensuredItems.push({ key, value: '' });
           });
 
-          if (fromJS && project.setIn) {
-            return project.setIn(['modalContent', 'infoItems'], fromJS(ensuredItems));
+          if (project && typeof project.setIn === 'function') {
+            const value = fromJS ? fromJS(ensuredItems) : ensuredItems;
+            return project.setIn(['modalContent', 'infoItems'], value);
           }
 
           return project;
@@ -292,7 +293,10 @@
               nextProject = nextProject.setIn(['modalContent', 'infoItems'], modalInfoItems);
             }
 
-            if (fromJS && typeof nextProject.setIn === 'function' && downloadFile && !hasVersions) {
+            // Initiale Version 1.0.0 nur erzeugen, wenn:
+            // - ein Download-File gesetzt ist
+            // - noch keine "meaningful" Version existiert
+            if (typeof nextProject.setIn === 'function' && downloadFile && !hasVersions) {
               const createdAtRaw = projectWithTemplates.get('createdAt');
               const defaultDate = createdAtRaw ? String(createdAtRaw) : new Date().toISOString();
               const defaultVersion = {
@@ -304,8 +308,10 @@
                 notes: '',
                 details: ''
               };
+              // Immutable verwenden, falls verfügbar; sonst normales Array
+              const versionsValue = fromJS ? fromJS([defaultVersion]) : [defaultVersion];
               // Only inject a default version on initial creation so existing versions stay untouched.
-              nextProject = nextProject.setIn(['modalContent', 'versions'], fromJS([defaultVersion]));
+              nextProject = nextProject.setIn(['modalContent', 'versions'], versionsValue);
             }
 
             return nextProject;
@@ -348,7 +354,5 @@
         }
       })();
     </script>
-
-
   </body>
 </html>
