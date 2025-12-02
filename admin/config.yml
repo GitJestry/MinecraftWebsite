@@ -50,8 +50,6 @@ collections:
                       - { label: "Draft", value: "draft" }
                     default: "released"
 
-                  - { label: "Kategorie", name: "category", widget: "string", required: true }
-
                   - label: "Tags"
                     name: "tags"
                     widget: "relation"
@@ -161,8 +159,6 @@ collections:
                       - { label: "Released", value: "released" }
                       - { label: "Draft", value: "draft" }
                     default: "released"
-
-                  - { label: "Kategorie", name: "category", widget: "string", required: true }
 
                   - label: "Tags"
                     name: "tags"
