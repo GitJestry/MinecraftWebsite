@@ -275,13 +275,9 @@
                 minecraft: '',
                 date: defaultDate,
                 downloadFile,
-                url: '',
-                labelEn: '',
-                labelDe: '',
                 label: '',
                 notes: '',
-                details: '',
-                trackId: ''
+                details: ''
               };
               // Only inject a default version on initial creation so existing versions stay untouched.
               nextProject = nextProject.setIn(['modalContent', 'versions'], fromJS([defaultVersion]));
