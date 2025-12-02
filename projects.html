@@ -351,7 +351,9 @@ html:not(.editor-mode-on) .editor-add-card {
   width: 30px;
   height: 30px;
   font-size: 18px;
-  line-height: 30px;
+  display: grid;
+  place-items: center;
+  line-height: 1;
   cursor: pointer;
   background: rgba(15,23,42,0.82);
   color: #e5e7eb;
@@ -499,7 +501,7 @@ main p, main li, .content p, .content li, .main-content p, .main-content li, art
 @media (prefers-color-scheme: dark) {
   .modal-content { background: rgba(22,22,26,.86); color: #f6f6f6; }
 }
-.modal-close { position: absolute; top: 10px; right: 10px; border: 0; background: rgba(0,0,0,.08); border-radius: 999px; width: 36px; height: 36px; font-size: 20px; line-height: 36px; cursor: pointer; }
+.modal-close { position: absolute; top: 10px; right: 10px; border: 0; background: rgba(0,0,0,.08); border-radius: 999px; width: 36px; height: 36px; font-size: 20px; display: grid; place-items: center; line-height: 1; cursor: pointer; }
 .modal-close:hover { transform: scale(1.06); }
 .modal-hero { padding: 24px; background: radial-gradient(1200px 400px at -10% -30%, rgba(0,153,255,.35), transparent), linear-gradient(140deg, rgba(99,102,241,.18), rgba(236,72,153,.10)); border-bottom: 1px solid rgba(0,0,0,.06); }
 .modal-hero .title { font-size: clamp(22px, 2.2vw, 32px); font-weight: 800; letter-spacing: .3px; }
