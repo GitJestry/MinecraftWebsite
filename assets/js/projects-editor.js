@@ -547,7 +547,7 @@
   }
 
   function createEmptyLabelHistory() {
-    return { categories: [], tags: [] };
+    return { tags: [] };
   }
 
   function readLabelHistory() {
@@ -581,13 +581,13 @@
     } catch (err) {}
   }
 
-  function getLabelHistoryKey(kind) {
-    return kind === 'category' ? 'categories' : 'tags';
+  function getLabelHistoryKey() {
+    return 'tags';
   }
 
-  function getLabelHistoryList(kind) {
+  function getLabelHistoryList() {
     const history = readLabelHistory();
-    const key = getLabelHistoryKey(kind);
+    const key = getLabelHistoryKey();
     const list = Array.isArray(history[key]) ? history[key] : [];
     return list.slice();
   }
@@ -597,7 +597,7 @@
     if (!clean) {
       return false;
     }
-    const key = getLabelHistoryKey(kind);
+    const key = getLabelHistoryKey();
     const history = readLabelHistory();
     if (!Array.isArray(history[key])) {
       history[key] = [];
@@ -639,19 +639,13 @@
       if (!project) {
         return;
       }
-      if (kind === 'category') {
-        if (project.category) {
-          pushValue(project.category);
-        }
-        return;
-      }
       const tags = Array.isArray(project.tags)
         ? project.tags
         : normaliseTags(project.tags);
       tags.forEach(pushValue);
     });
 
-    getLabelHistoryList(kind).forEach(pushValue);
+    getLabelHistoryList().forEach(pushValue);
 
     if (labelCollator) {
       suggestions.sort(labelCollator.compare);
@@ -669,7 +663,7 @@
   }
 
   function refreshLabelSuggestions(kind) {
-    const kinds = kind ? [kind] : ['category', 'tags'];
+    const kinds = kind ? [kind] : ['tags'];
     kinds.forEach((key) => {
       const controller = getChipFieldController(key);
       if (!controller) {
@@ -1172,11 +1166,7 @@
   const titleInput = document.getElementById('pe-title');
   const mcVersionInput = document.getElementById('pe-mcversion');
   const statusInput = document.getElementById('pe-status');
-  const categoryInput = document.getElementById('pe-category');
   const tagsInput = document.getElementById('pe-tags');
-  const categorySelectedEl = document.getElementById('pe-category-selected');
-  const categorySuggestionsEl = document.getElementById('pe-category-suggestions');
-  const categoryAddBtn = document.getElementById('pe-category-add');
   const tagsSelectedEl = document.getElementById('pe-tags-selected');
   const tagsSuggestionsEl = document.getElementById('pe-tags-suggestions');
   const tagsAddBtn = document.getElementById('pe-tags-add');
@@ -1202,7 +1192,6 @@
   const requiredFieldDefs = [
     { input: titleInput, label: 'Titel' },
     { input: shortInput, label: 'Kurzbeschreibung' },
-    { input: categoryInput, label: 'Kategorie' },
     { input: downloadInput, label: 'Download-Datei' },
     { input: imageInput, label: 'Vorschaubild' },
     {
@@ -1529,10 +1518,8 @@
     };
   }
 
-  function promptForLabel(kind) {
-    const promptLabel = kind === 'category'
-      ? 'Neue Kategorie eingeben:'
-      : 'Neuen Tag eingeben:';
+  function promptForLabel() {
+    const promptLabel = 'Neuen Tag eingeben:';
     if (typeof prompt !== 'function') {
       if (typeof alert === 'function') {
         alert('Eingabedialog nicht verfügbar.');
@@ -1544,22 +1531,19 @@
     if (!trimmed) {
       return '';
     }
-    addLabelToHistory(kind, trimmed);
-    refreshLabelSuggestions(kind);
+    addLabelToHistory('tags', trimmed);
+    refreshLabelSuggestions('tags');
     return trimmed;
   }
 
   function handleChipAdd(kind) {
-    const value = promptForLabel(kind);
+    const value = promptForLabel();
     if (!value) {
       return;
     }
     const controller = getChipFieldController(kind);
     if (controller) {
       controller.addValue(value);
-    } else if (kind === 'category' && categoryInput) {
-      categoryInput.value = value;
-      handleRequiredFieldInput({ currentTarget: categoryInput });
     } else if (kind === 'tags' && tagsInput) {
       const existing = normaliseTags(tagsInput.value || '');
       const hasValue = existing.some((entry) => normaliseLabelValue(entry) === normaliseLabelValue(value));
@@ -1569,18 +1553,6 @@
       tagsInput.value = existing.join(', ');
       handleRequiredFieldInput({ currentTarget: tagsInput });
     }
-  }
-
-  if (categoryInput && categorySelectedEl && categorySuggestionsEl) {
-    chipFieldControllers.category = createChipField({
-      input: categoryInput,
-      selected: categorySelectedEl,
-      suggestions: categorySuggestionsEl,
-      emptyLabel: 'Keine Kategorie ausgewählt.',
-      emptySuggestionsLabel: 'Noch keine Kategorien verfügbar.',
-      removeLabel: 'Kategorie „%s“ entfernen',
-    });
-    chipFieldControllers.category.setValues((categoryInput.value || '').trim() ? [categoryInput.value.trim()] : []);
   }
 
   if (tagsInput && tagsSelectedEl && tagsSuggestionsEl) {
@@ -1596,9 +1568,6 @@
     chipFieldControllers.tags.setValues(normaliseTags(tagsInput.value || ''));
   }
 
-  if (categoryAddBtn) {
-    categoryAddBtn.addEventListener('click', () => handleChipAdd('category'));
-  }
   if (tagsAddBtn) {
     tagsAddBtn.addEventListener('click', () => handleChipAdd('tags'));
   }
@@ -2061,7 +2030,7 @@
     const sidebarValues = deriveSidebarValues(project);
     const badgesHtml = (typeof project.modalBadges === 'string' && project.modalBadges.trim())
       ? project.modalBadges.trim()
-      : buildAutoBadgesHtml(safeType, project.status, sidebarValues.mcVersion, project.tags, project.category);
+      : buildAutoBadgesHtml(safeType, project.status, sidebarValues.mcVersion, project.tags);
     const heroActionsHtml = (typeof project.modalHeroActions === 'string' && project.modalHeroActions.trim())
       ? project.modalHeroActions.trim()
       : buildAutoHeroActionsHtml(
@@ -2079,7 +2048,6 @@
       const sidebar = buildAutoSidebarData(
         safeType,
         project.status,
-        project.category,
         sidebarValues.mcVersion,
         project.tags,
         sidebarValues.requires,
@@ -2826,11 +2794,10 @@
     };
   }
 
-  function mergeSidebarInfoItems(type, status, category, mcVersion, tags, requires, printer, material, infoItems) {
+  function mergeSidebarInfoItems(type, status, mcVersion, tags, requires, printer, material, infoItems) {
     const sidebarDefaults = buildAutoSidebarData(
       type,
       status,
-      category,
       mcVersion,
       tags,
       requires,
@@ -2876,7 +2843,6 @@
     const sidebarDefaults = buildAutoSidebarData(
       safeType,
       record.status,
-      record.category,
       sidebarValues.mcVersion,
       record.tags,
       sidebarValues.requires,
@@ -2886,7 +2852,6 @@
     const infoItems = mergeSidebarInfoItems(
       safeType,
       record.status,
-      record.category,
       sidebarValues.mcVersion,
       record.tags,
       sidebarValues.requires,
@@ -3149,13 +3114,13 @@
     return parts.pop() || cleaned || 'download';
   }
 
-  function buildAutoSidebarData(type, status, category, mcVersion, tags, requires, printer, material) {
+  function buildAutoSidebarData(type, status, mcVersion, tags, requires, printer, material) {
   const safeType = type === 'printing' ? 'printing' : 'datapack';
   const infoItems = [];
 
   if (safeType === 'datapack') {
     // Pflichtfelder für Datapacks:
-    // Game, Type, Minecraft (Version), Requires, Category, License
+    // Game, Type, Minecraft (Version), Requires, License
     infoItems.push({ key: 'Game', value: INFO_DEFAULTS.datapack.game });
     infoItems.push({ key: 'Type', value: INFO_DEFAULTS.datapack.type });
 
@@ -3170,7 +3135,7 @@
     });
   } else {
     // Pflichtfelder für 3D-Prints:
-    // Type, Printer, Material, Category, License
+    // Type, Printer, Material, License
     infoItems.push({ key: 'Type', value: INFO_DEFAULTS.printing.projectType });
 
     infoItems.push({
@@ -3182,11 +3147,6 @@
       key: 'Material',
       value: (material && String(material).trim()) || INFO_DEFAULTS.printing.material,
     });
-  }
-
-  // Category bei beiden Typen
-  if (category) {
-    infoItems.push({ key: 'Category', value: category });
   }
 
   // License automatisch unten anhängen, basierend auf DEFAULT_INFO_LICENSE
@@ -3206,7 +3166,7 @@
 }
 
 
-  function buildAutoBadgesHtml(type, status, mcVersion, tags, category) {
+  function buildAutoBadgesHtml(type, status, mcVersion, tags) {
     const safeType = type === 'printing' ? 'printing' : 'datapack';
     const badges = [];
     const statusLabel = formatStatusLabel(status);
@@ -3217,9 +3177,7 @@
       const label = safeType === 'printing' ? mcVersion : `Minecraft ${mcVersion}`;
       badges.push({ text: label, hasDot: false });
     }
-    if (category) {
-      badges.push({ text: category, hasDot: false });
-    } else if (Array.isArray(tags) && tags.length) {
+    if (Array.isArray(tags) && tags.length) {
       badges.push({ text: tags[0], hasDot: false });
     }
     return buildBadgeHtml(badges);
@@ -3912,7 +3870,6 @@
     const sidebar = buildAutoSidebarData(
       safeType,
       record.status,
-      record.category,
       sidebarValues.mcVersion,
       tags,
       sidebarValues.requires,
@@ -3985,7 +3942,6 @@
     const fallbackId = ctx.projectId && ctx.projectId.trim() ? ctx.projectId.trim() : slugifyId(titleInput ? titleInput.value : '');
     const modalId = currentModalId || `${safeType === 'printing' ? 'pr' : 'dp'}-${fallbackId || 'project'}`;
     const tags = Array.isArray(ctx.tags) ? ctx.tags : [];
-    const category = (ctx.category || '').trim();
     const status = ctx.status || '';
     const mcVersion = ctx.mcVersion || '';
     const downloadFile = (ctx.downloadFile || '').trim();
@@ -3995,7 +3951,6 @@
     const fallbackRecord = {
       type: safeType,
       status,
-      category,
       mcVersion,
       tags,
       shortDescription,
@@ -4015,7 +3970,7 @@
       }
     }
     const sidebarValues = deriveSidebarValues({ ...fallbackRecord, modalContent: { infoItems: bodyData.infoItems || [] } }, bodyData.infoItems);
-    const badgesHtml = buildAutoBadgesHtml(safeType, status, sidebarValues.mcVersion, tags, category);
+    const badgesHtml = buildAutoBadgesHtml(safeType, status, sidebarValues.mcVersion, tags);
     const actionsHtml = buildAutoHeroActionsHtml(downloadFile, fallbackId);
     if ((!Array.isArray(bodyData.versions) || !bodyData.versions.length) && downloadFile) {
       const draftRelease = modalVersionsList ? ((modalVersionsList.querySelector('[data-field="version-release"]') || {}).value || '') : '';
@@ -4096,9 +4051,8 @@
       card.setAttribute('data-project-id', project.id);
     }
     card.setAttribute('data-project-type', type);
-    const category = project.category || '';
     const tags = Array.isArray(project.tags) ? project.tags : [];
-    const subcats = category || (tags.join(',') || '');
+    const subcats = tags.join(',');
     if (subcats) card.setAttribute('data-subcats', subcats);
 
     let modalInfo = getModalRef(project);

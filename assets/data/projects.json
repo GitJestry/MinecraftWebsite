@@ -43,8 +43,7 @@
       "type": "datapack",
       "id": "lava-walker",
       "createdAt": "2025-12-02T12:50:00.000+01:00",
-      "image": "/assets/uploads/picture.png",
-      "category": "enchantments"
+      "image": "/assets/uploads/picture.png"
     },
     {
       "shortDescription": "2",
@@ -89,8 +88,7 @@
       "type": "datapack",
       "id": "test2",
       "createdAt": "2025-12-02T14:27:00.000+01:00",
-      "image": "/assets/uploads/picture.png",
-      "category": "2"
+      "image": "/assets/uploads/picture.png"
     }
   ]
 }
