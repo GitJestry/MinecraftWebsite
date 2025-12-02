@@ -75,12 +75,6 @@ collections:
                     widget: "image"
                     required: false
 
-                  - label: "Modal Hero (Subtitel, optional)"
-                    name: "modalHero"
-                    widget: "text"
-                    required: false
-                    hint: "Kurzer Satz unter dem Titel im Modal. Leer lassen, um die Kurzbeschreibung zu verwenden."
-
                   - label: "Modal-Inhalt (empfohlen)"
                     name: "modalContent"
                     widget: "object"
@@ -196,12 +190,6 @@ collections:
                     name: "image"
                     widget: "image"
                     required: false
-
-                  - label: "Modal Hero (Subtitel, optional)"
-                    name: "modalHero"
-                    widget: "text"
-                    required: false
-                    hint: "Kurzer Satz unter dem Titel im Modal. Leer lassen, um die Kurzbeschreibung zu verwenden."
 
                   - label: "Modal-Inhalt (empfohlen)"
                     name: "modalContent"
