@@ -1,3 +1,51 @@
 {
-  "projects": []
+  "projects": [
+    {
+      "shortDescription": "Adds a enchantment that lets you walk on lava",
+      "downloadFile": "/downloads/lava_walker.zip",
+      "modalHero": "Adds a enchantment that lets you walk on lava",
+      "modalContent": {
+        "infoTitle": "Project info",
+        "infoItems": [
+          {
+            "key": "Game",
+            "value": "Minecraft Java"
+          },
+          {
+            "key": "Type",
+            "value": "Datapack"
+          },
+          {
+            "key": "Status",
+            "value": "Released"
+          },
+          {
+            "key": "Minecraft",
+            "value": "1.21.10"
+          },
+          {
+            "key": "Requires",
+            "value": "nothing"
+          },
+          {
+            "key": "License",
+            "value": "MIT • CC BY-NC-SA",
+            "url": "#license"
+          }
+        ],
+        "tagsTitle": "tags",
+        "description": []
+      },
+      "updatedAt": "2025-12-02T10:46:00.000+01:00",
+      "status": "released",
+      "title": "Lava Walker",
+      "tags": [
+        "Movement"
+      ],
+      "type": "datapack",
+      "id": "lava-walker",
+      "createdAt": "2025-12-02T10:46:00.000+01:00",
+      "category": "enchantments"
+    }
+  ]
 }
