@@ -2056,8 +2056,7 @@
     const titleId = `${modalId}-title`;
     const heroTitle = escapeHtml(project.title || 'Project');
     const heroSubtitle = escapeHtml(
-      (typeof project.modalHero === 'string' && project.modalHero.trim())
-        || (typeof project.shortDescription === 'string' ? project.shortDescription.trim() : ''),
+      typeof project.shortDescription === 'string' ? project.shortDescription.trim() : '',
     );
     const sidebarValues = deriveSidebarValues(project);
     const badgesHtml = (typeof project.modalBadges === 'string' && project.modalBadges.trim())
@@ -4167,12 +4166,11 @@
 
     const heroEl = modal.querySelector('.modal-hero .muted');
     if (heroEl) {
-      const customHero = typeof project.modalHero === 'string' ? project.modalHero.trim() : '';
-      const fallbackHero = customHero
-        || (typeof project.shortDescription === 'string' ? project.shortDescription.trim() : '')
+      const fallbackHero = (typeof project.shortDescription === 'string' ? project.shortDescription.trim() : '')
         || defaults.hero
         || '';
       heroEl.textContent = fallbackHero;
+      heroEl.hidden = !fallbackHero;
     }
 
     const badgesEl = modal.querySelector('.modal-hero .badges');
