@@ -32,7 +32,18 @@
             "url": "#license"
           }
         ],
-        "tagsTitle": "Tags"
+        "tagsTitle": "Tags",
+        "versions": [
+          {
+            "release": "1.0.0",
+            "minecraft": "",
+            "date": "2025-12-02T12:50:00.000+01:00",
+            "downloadFile": "assets/data/downloads/lava_walker.zip",
+            "label": "",
+            "notes": "",
+            "details": ""
+          }
+        ]
       },
       "updatedAt": "2025-12-02T12:50:00.000+01:00",
       "status": "released",
@@ -77,7 +88,18 @@
             "url": "#license"
           }
         ],
-        "newTab": false
+        "newTab": false,
+        "versions": [
+          {
+            "release": "1.0.0",
+            "minecraft": "",
+            "date": "2025-12-02T23:22:00.000+01:00",
+            "downloadFile": "assets/data/downloads/lava_walker.zip",
+            "label": "",
+            "notes": "",
+            "details": ""
+          }
+        ]
       },
       "updatedAt": "2025-12-02T23:22:00.000+01:00",
       "status": "released",
@@ -88,6 +110,62 @@
       "type": "datapack",
       "id": "test",
       "createdAt": "2025-12-02T23:22:00.000+01:00",
+      "image": "/assets/uploads/picture.png"
+    },
+    {
+      "shortDescription": "3",
+      "downloadFile": "assets/data/downloads/lava_walker.zip",
+      "modalContent": {
+        "infoTitle": "Project info",
+        "infoItems": [
+          {
+            "key": "Game",
+            "value": "Minecraft Java"
+          },
+          {
+            "key": "Type",
+            "value": "Datapack"
+          },
+          {
+            "key": "Status",
+            "value": "Released"
+          },
+          {
+            "key": "Minecraft",
+            "value": "3"
+          },
+          {
+            "key": "Requires",
+            "value": "3"
+          },
+          {
+            "key": "License",
+            "value": "MIT • CC BY-NC-SA",
+            "url": "#license"
+          }
+        ],
+        "newTab": false,
+        "versions": [
+          {
+            "release": "1.0.0",
+            "minecraft": "",
+            "date": "2025-12-03T00:27:00.000+01:00",
+            "downloadFile": "assets/data/downloads/lava_walker.zip",
+            "label": "",
+            "notes": "",
+            "details": ""
+          }
+        ]
+      },
+      "updatedAt": "2025-12-03T00:27:00.000+01:00",
+      "status": "released",
+      "title": "title",
+      "tags": [
+        "Survival"
+      ],
+      "type": "datapack",
+      "id": "title",
+      "createdAt": "2025-12-03T00:27:00.000+01:00",
       "image": "/assets/uploads/picture.png"
     }
   ]
