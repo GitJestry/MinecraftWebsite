@@ -44,6 +44,51 @@
       "id": "lava-walker",
       "createdAt": "2025-12-02T12:50:00.000+01:00",
       "image": "/assets/uploads/picture.png"
+    },
+    {
+      "shortDescription": "t",
+      "downloadFile": "assets/data/downloads/lava_walker.zip",
+      "modalContent": {
+        "infoTitle": "Project info",
+        "infoItems": [
+          {
+            "key": "Game",
+            "value": "Minecraft Java"
+          },
+          {
+            "key": "Type",
+            "value": "Datapack"
+          },
+          {
+            "key": "Status",
+            "value": "Released"
+          },
+          {
+            "key": "Minecraft",
+            "value": "23"
+          },
+          {
+            "key": "Requires",
+            "value": "421"
+          },
+          {
+            "key": "License",
+            "value": "MIT • CC BY-NC-SA",
+            "url": "#license"
+          }
+        ],
+        "newTab": false
+      },
+      "updatedAt": "2025-12-02T23:22:00.000+01:00",
+      "status": "released",
+      "title": "test",
+      "tags": [
+        "Movement"
+      ],
+      "type": "datapack",
+      "id": "test",
+      "createdAt": "2025-12-02T23:22:00.000+01:00",
+      "image": "/assets/uploads/picture.png"
     }
   ]
 }
