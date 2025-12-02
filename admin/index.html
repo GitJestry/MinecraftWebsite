@@ -234,6 +234,13 @@
           return mergeCustomInfoItems(items, modalContent);
         }
 
+        function hasAnyItems(collection) {
+          if (!collection) return false;
+          if (typeof collection.size === 'number') return collection.size > 0;
+          if (typeof collection.length === 'number') return collection.length > 0;
+          return true;
+        }
+
         // Wendet Slug + Infozeilen auf alle Projekte im JSON an
         function applyProjectDefaults(data) {
           if (!data || !data.get) return data;
@@ -254,6 +261,7 @@
             const modalVersions = projectWithTemplates.getIn
               ? projectWithTemplates.getIn(['modalContent', 'versions'])
               : null;
+            const hasVersions = hasAnyItems(modalVersions);
 
             let nextProject = projectWithTemplates;
 
@@ -267,7 +275,7 @@
               nextProject = nextProject.setIn(['modalContent', 'infoItems'], modalInfoItems);
             }
 
-            if (fromJS && typeof nextProject.setIn === 'function' && downloadFile && !modalVersions) {
+            if (fromJS && typeof nextProject.setIn === 'function' && downloadFile && !hasVersions) {
               const createdAtRaw = projectWithTemplates.get('createdAt');
               const defaultDate = createdAtRaw ? String(createdAtRaw) : new Date().toISOString();
               const defaultVersion = {
