@@ -69,7 +69,21 @@
         const { fromJS } = (typeof Immutable !== 'undefined' ? Immutable : {});
 
         function normaliseText(value) {
-          return typeof value === 'string' ? value.trim() : '';
+          if (typeof value === 'string') {
+            return value.trim();
+          }
+
+          if (value && typeof value === 'object') {
+            const filePath = typeof value.path === 'string'
+              ? value.path
+              : (typeof value.name === 'string' ? value.name : '');
+
+            if (filePath) {
+              return filePath.trim();
+            }
+          }
+
+          return '';
         }
 
         function formatStatusLabel(value) {
@@ -241,12 +255,6 @@
               ? projectWithTemplates.getIn(['modalContent', 'versions'])
               : null;
 
-            const versionCount = modalVersions
-              ? (typeof modalVersions.size === 'number'
-                ? modalVersions.size
-                : (Array.isArray(modalVersions) ? modalVersions.length : 0))
-              : 0;
-
             let nextProject = projectWithTemplates;
 
             // IDs nur setzen, wenn sie leer sind
@@ -259,7 +267,7 @@
               nextProject = nextProject.setIn(['modalContent', 'infoItems'], modalInfoItems);
             }
 
-            if (fromJS && typeof nextProject.setIn === 'function' && downloadFile && !versionCount) {
+            if (fromJS && typeof nextProject.setIn === 'function' && downloadFile && !modalVersions) {
               const createdAtRaw = projectWithTemplates.get('createdAt');
               const defaultDate = createdAtRaw ? String(createdAtRaw) : new Date().toISOString();
               const defaultVersion = {
