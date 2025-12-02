@@ -3562,6 +3562,29 @@
     return label;
   }
 
+  function buildInitialVersionEntry(downloadValue, releaseFallback) {
+    const downloadPath = typeof downloadValue === 'string' ? downloadValue.trim() : '';
+    if (!downloadPath) return null;
+
+    const release = releaseFallback && releaseFallback.trim()
+      ? releaseFallback.trim()
+      : getNextVersionSuggestion();
+    const today = new Date().toISOString().slice(0, 10);
+    const looksLikeUrl = /^https?:\/\//i.test(downloadPath);
+
+    return {
+      release,
+      minecraft: '',
+      date: today,
+      url: looksLikeUrl ? downloadPath : '',
+      downloadFile: looksLikeUrl ? '' : downloadPath,
+      labelEn: '',
+      labelDe: '',
+      trackId: '',
+      notes: 'Erster Upload',
+    };
+  }
+
   function ensureInitialVersionDraft(downloadValue) {
     if (!modalVersionsList || currentMode !== 'create') return;
     const downloadPath = typeof downloadValue === 'string' ? downloadValue.trim() : '';
@@ -3583,31 +3606,32 @@
     }
     if (!targetRow) return;
 
+    const initialDraft = buildInitialVersionEntry(downloadPath, (targetRow.querySelector('[data-field="version-release"]') || {}).value || '');
+    if (!initialDraft) return;
+
     const releaseInput = targetRow.querySelector('[data-field="version-release"]');
     if (releaseInput && !releaseInput.value.trim()) {
-      releaseInput.value = getNextVersionSuggestion();
+      releaseInput.value = initialDraft.release;
     }
 
-    const today = new Date().toISOString().slice(0, 10);
     const dateInput = targetRow.querySelector('[data-field="version-date"]');
     if (dateInput && !dateInput.value.trim()) {
-      dateInput.value = today;
+      dateInput.value = initialDraft.date;
     }
 
     const urlInput = targetRow.querySelector('[data-field="version-url"]');
     const fileInput = targetRow.querySelector('[data-field="version-file"]');
-    const looksLikeUrl = /^https?:\/\//i.test(downloadPath);
-    if (looksLikeUrl) {
+    if (initialDraft.url) {
       if (urlInput && !urlInput.value.trim()) {
-        urlInput.value = downloadPath;
+        urlInput.value = initialDraft.url;
       }
-    } else if (fileInput && !fileInput.value.trim()) {
-      fileInput.value = downloadPath;
+    } else if (initialDraft.downloadFile && fileInput && !fileInput.value.trim()) {
+      fileInput.value = initialDraft.downloadFile;
     }
 
     const notesInput = targetRow.querySelector('[data-field="version-notes"]');
     if (notesInput && !notesInput.value.trim()) {
-      notesInput.value = 'Erster Upload';
+      notesInput.value = initialDraft.notes;
     }
 
     renderVersionChain();
@@ -3993,6 +4017,13 @@
     const sidebarValues = deriveSidebarValues({ ...fallbackRecord, modalContent: { infoItems: bodyData.infoItems || [] } }, bodyData.infoItems);
     const badgesHtml = buildAutoBadgesHtml(safeType, status, sidebarValues.mcVersion, tags, category);
     const actionsHtml = buildAutoHeroActionsHtml(downloadFile, fallbackId);
+    if ((!Array.isArray(bodyData.versions) || !bodyData.versions.length) && downloadFile) {
+      const draftRelease = modalVersionsList ? ((modalVersionsList.querySelector('[data-field="version-release"]') || {}).value || '') : '';
+      const fallbackVersion = buildInitialVersionEntry(downloadFile, draftRelease || 'v01');
+      if (fallbackVersion) {
+        bodyData.versions = [fallbackVersion];
+      }
+    }
     const statsHtml = buildAutoStatsHtml({
       latestVersion: bodyData.versions && bodyData.versions.length ? bodyData.versions[0].release : '',
       updatedAt: new Date().toISOString(),
