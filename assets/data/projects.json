@@ -2,7 +2,7 @@
   "projects": [
     {
       "shortDescription": "Adds a enchantment that lets you walk on lava",
-      "downloadFile": "/downloads/lava_walker.zip",
+      "downloadFile": "/assets/data/downloads/lava_walker.zip",
       "modalHero": "Adds a enchantment that lets you walk on lava",
       "modalContent": {
         "infoTitle": "Project info",

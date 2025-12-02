@@ -67,8 +67,8 @@ collections:
                   - label: "Download-Datei (ZIP)"
                     name: "downloadFile"
                     widget: "file"
-                    media_folder: "downloads"
-                    public_folder: "/downloads"
+                    media_folder: "assets/data/downloads"
+                    public_folder: "/assets/data/downloads"
 
                   - label: "Cover-Bild"
                     name: "image"
@@ -132,7 +132,7 @@ collections:
                           - { label: "Release-Label", name: "release", widget: "string" }
                           - { label: "Minecraft / Setup-Ziel", name: "minecraft", widget: "string", required: false, hint: "z. B. \"1.21.8\", \"Print\" oder \"Any\"." }
                           - { label: "Datum", name: "date", widget: "datetime", required: false }
-                          - { label: "Download-Datei", name: "downloadFile", widget: "file", required: false, media_folder: "downloads", public_folder: "/downloads" }
+                          - { label: "Download-Datei", name: "downloadFile", widget: "file", required: false, media_folder: "assets/data/downloads", public_folder: "/assets/data/downloads" }
                           - { label: "Externe Download-URL", name: "url", widget: "string", required: false }
                           - { label: "Download-Text (EN)", name: "labelEn", widget: "string", required: false }
                           - { label: "Download-Text (DE)", name: "labelDe", widget: "string", required: false }
@@ -191,8 +191,8 @@ collections:
                   - label: "Download-Datei (ZIP)"
                     name: "downloadFile"
                     widget: "file"
-                    media_folder: "downloads"
-                    public_folder: "/downloads"
+                    media_folder: "assets/data/downloads"
+                    public_folder: "/assets/data/downloads"
 
                   - label: "Cover-Bild"
                     name: "image"
@@ -256,7 +256,7 @@ collections:
                           - { label: "Release-Label", name: "release", widget: "string" }
                           - { label: "Minecraft / Setup-Ziel", name: "minecraft", widget: "string", required: false, hint: "z. B. \"1.21.8\", \"Print\" oder \"Any\"." }
                           - { label: "Datum", name: "date", widget: "datetime", required: false }
-                          - { label: "Download-Datei", name: "downloadFile", widget: "file", required: false, media_folder: "downloads", public_folder: "/downloads" }
+                          - { label: "Download-Datei", name: "downloadFile", widget: "file", required: false, media_folder: "assets/data/downloads", public_folder: "/assets/data/downloads" }
                           - { label: "Externe Download-URL", name: "url", widget: "string", required: false }
                           - { label: "Download-Text (EN)", name: "labelEn", widget: "string", required: false }
                           - { label: "Download-Text (DE)", name: "labelDe", widget: "string", required: false }
