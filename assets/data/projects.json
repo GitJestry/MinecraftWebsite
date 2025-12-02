@@ -45,6 +45,52 @@
       "createdAt": "2025-12-02T12:50:00.000+01:00",
       "image": "/assets/uploads/picture.png",
       "category": "enchantments"
+    },
+    {
+      "shortDescription": "quicktest",
+      "downloadFile": "assets/data/downloads/lava_walker.zip",
+      "modalContent": {
+        "infoTitle": "Project info",
+        "infoItems": [
+          {
+            "key": "Game",
+            "value": "Minecraft Java"
+          },
+          {
+            "key": "Type",
+            "value": "Datapack"
+          },
+          {
+            "key": "Status",
+            "value": "Released"
+          },
+          {
+            "key": "Minecraft",
+            "value": "8.0"
+          },
+          {
+            "key": "Requires",
+            "value": "nothing"
+          },
+          {
+            "key": "License",
+            "value": "MIT • CC BY-NC-SA",
+            "url": "#license"
+          }
+        ],
+        "tagsTitle": "Tags"
+      },
+      "updatedAt": "2025-12-02T13:58:00.000+01:00",
+      "status": "released",
+      "title": "test",
+      "tags": [
+        "Display"
+      ],
+      "type": "datapack",
+      "id": "test",
+      "createdAt": "2025-12-02T13:58:00.000+01:00",
+      "image": "/assets/uploads/picture.png",
+      "category": "nocategory"
     }
   ]
 }
