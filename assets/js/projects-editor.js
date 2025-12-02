@@ -3699,7 +3699,7 @@
       <input type="text" data-field="version-url" placeholder="Externe Download-URL (optional)">
       <input type="text" data-field="version-label-en" placeholder="Download-Text (EN)">
       <input type="text" data-field="version-label-de" placeholder="Download-Text (DE)">
-      <input type="text" data-field="version-file" placeholder="downloads/mein-pack.zip">
+      <input type="text" data-field="version-file" placeholder="assets/data/downloads/mein-pack.zip">
       <input type="text" data-field="version-track" placeholder="Tracking-ID (optional)">
       <textarea class="editor-version-notes" data-field="version-notes" placeholder="Kurzbeschreibung / Changelog"></textarea>
       <button type="button" class="editor-repeat-remove" title="Entfernen">×</button>
@@ -3719,7 +3719,7 @@
     row.querySelector('.editor-repeat-remove').addEventListener('click', () => makeRemoveHandler(modalVersionsList, addVersionRow)(row));
     const versionFileInput = row.querySelector('[data-field="version-file"]');
     if (versionFileInput) {
-      versionFileInput.setAttribute('data-file-prefix', 'downloads/');
+      versionFileInput.setAttribute('data-file-prefix', 'assets/data/downloads/');
       versionFileInput.setAttribute('data-file-accept', '.zip,.mcpack,.mcaddon,.rar,.stl,.obj,.gcode,.3mf,.zip');
       versionFileInput.setAttribute('data-file-button', 'Datei auswählen');
       versionFileInput.setAttribute('data-file-helper', 'ZIP/STL auswählen oder Pfad einfügen – ältere Downloads bleiben erhalten.');
