@@ -1601,6 +1601,12 @@
 
   refreshLabelSuggestions();
 
+  const syncInitialVersionDraft = () => ensureInitialVersionDraft(downloadInput ? downloadInput.value : '');
+  if (downloadInput) {
+    downloadInput.addEventListener('input', syncInitialVersionDraft);
+    downloadInput.addEventListener('change', syncInitialVersionDraft);
+  }
+
   function beginLogin(options) {
     if (!loginBtn) return;
     const opts = (options && typeof options === 'object') ? options : {};
@@ -2333,6 +2339,10 @@
     if (slot.status) {
       const sizeLabel = formatFileSize(upload.size);
       slot.status.textContent = sizeLabel ? `${upload.filename} (${sizeLabel})` : upload.filename;
+    }
+
+    if (slot.input === downloadInput) {
+      ensureInitialVersionDraft(value);
     }
   }
 
@@ -3570,6 +3580,57 @@
     const label = 'v' + String(versionAutoNumber).padStart(2, '0');
     versionAutoNumber += 1;
     return label;
+  }
+
+  function ensureInitialVersionDraft(downloadValue) {
+    if (!modalVersionsList || currentMode !== 'create') return;
+    const downloadPath = typeof downloadValue === 'string' ? downloadValue.trim() : '';
+    if (!downloadPath) return;
+
+    const rows = Array.from(modalVersionsList.querySelectorAll('.editor-repeat-row'));
+    const hasContent = rows.some((row) => {
+      const url = (row.querySelector('[data-field="version-url"]') || {}).value || '';
+      const file = (row.querySelector('[data-field="version-file"]') || {}).value || '';
+      const notes = (row.querySelector('[data-field="version-notes"]') || {}).value || '';
+      return (url && url.trim()) || (file && file.trim()) || (notes && notes.trim());
+    });
+    if (hasContent) return;
+
+    let targetRow = rows[0];
+    if (!targetRow) {
+      addVersionRow({});
+      targetRow = modalVersionsList.querySelector('.editor-repeat-row');
+    }
+    if (!targetRow) return;
+
+    const releaseInput = targetRow.querySelector('[data-field="version-release"]');
+    if (releaseInput && !releaseInput.value.trim()) {
+      releaseInput.value = getNextVersionSuggestion();
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    const dateInput = targetRow.querySelector('[data-field="version-date"]');
+    if (dateInput && !dateInput.value.trim()) {
+      dateInput.value = today;
+    }
+
+    const urlInput = targetRow.querySelector('[data-field="version-url"]');
+    const fileInput = targetRow.querySelector('[data-field="version-file"]');
+    const looksLikeUrl = /^https?:\/\//i.test(downloadPath);
+    if (looksLikeUrl) {
+      if (urlInput && !urlInput.value.trim()) {
+        urlInput.value = downloadPath;
+      }
+    } else if (fileInput && !fileInput.value.trim()) {
+      fileInput.value = downloadPath;
+    }
+
+    const notesInput = targetRow.querySelector('[data-field="version-notes"]');
+    if (notesInput && !notesInput.value.trim()) {
+      notesInput.value = 'Erster Upload';
+    }
+
+    renderVersionChain();
   }
 
   function readVersionDrafts() {
