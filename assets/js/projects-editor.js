@@ -3526,36 +3526,21 @@
       .filter(Boolean)
       .join('');
 
+    const placeholderHtml = '<p class="tab-placeholder"><span class="lang-en">In progress</span><span class="lang-de">In Bearbeitung</span></p>';
+
     const navButtons = [];
-    navButtons.push(`<button aria-selected="true" class="active" data-tab="description" role="tab"><span class="lang-en">Description</span><span class="lang-de">Beschreibung</span></button>`);
-    if (stepsHtml) {
-      navButtons.push(`<button aria-selected="false" data-tab="installation" role="tab"><span class="lang-en">Installation</span><span class="lang-de">Installation</span></button>`);
-    }
-    if (galleryHtml) {
-      navButtons.push(`<button aria-selected="false" data-tab="gallery" role="tab"><span class="lang-en">Gallery</span><span class="lang-de">Galerie</span></button>`);
-    }
-    if (versionsRows) {
-      navButtons.push(`<button aria-selected="false" data-tab="versions" role="tab"><span class="lang-en">Versions &amp; Changelog</span><span class="lang-de">Versionen &amp; Changelog</span></button>`);
-    }
+    navButtons.push(`<button aria-selected="true" class="active" data-tab="description" role="tab"><span class="lang-en">Overview</span><span class="lang-de">Übersicht</span></button>`);
+    navButtons.push(`<button aria-selected="false" data-tab="installation" role="tab"><span class="lang-en">Installation</span><span class="lang-de">Installation</span></button>`);
+    navButtons.push(`<button aria-selected="false" data-tab="gallery" role="tab"><span class="lang-en">Gallery</span><span class="lang-de">Galerie</span></button>`);
+    navButtons.push(`<button aria-selected="false" data-tab="versions" role="tab"><span class="lang-en">Versions &amp; Changelog</span><span class="lang-de">Versionen &amp; Changelog</span></button>`);
 
     const navHtml = `<nav aria-label="Modal Tabs" class="tabs" role="tablist">${navButtons.join('')}</nav>`;
 
     const panels = [];
-    panels.push(`<div class="active prose" id="${safeId}-description" role="tabpanel">${descriptionHtml || ''}</div>`);
-    if (stepsHtml) {
-      panels.push(`<div class="prose" id="${safeId}-installation" role="tabpanel"><div class="steps">${stepsHtml}</div></div>`);
-    }
-    if (versionsRows) {
-      panels.push(`<div id="${safeId}-versions" role="tabpanel"><div class="version-timeline">${versionsRows}</div></div>`);
-    }
-    if (galleryHtml) {
-      panels.push(`<div id="${safeId}-gallery" role="tabpanel"><div class="gallery">${galleryHtml}</div></div>`);
-    }
-
-    const hasContent = (infoCardHtml || tagsCardHtml || descriptionHtml || stepsHtml || versionsRows || galleryHtml);
-    if (!hasContent) {
-      return '';
-    }
+    panels.push(`<div class="active prose" id="${safeId}-description" role="tabpanel">${descriptionHtml || placeholderHtml}</div>`);
+    panels.push(`<div class="prose" id="${safeId}-installation" role="tabpanel"><div class="steps">${stepsHtml || placeholderHtml}</div></div>`);
+    panels.push(`<div id="${safeId}-gallery" role="tabpanel"><div class="gallery">${galleryHtml || placeholderHtml}</div></div>`);
+    panels.push(`<div id="${safeId}-versions" role="tabpanel"><div class="version-timeline">${versionsRows || placeholderHtml}</div></div>`);
 
     const contentHtml = `<section class="content">${navHtml}<div class="tabpanels">${panels.join('')}</div></section>`;
     return `${asideHtml}${contentHtml}`;
