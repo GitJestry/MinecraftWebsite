@@ -2840,11 +2840,14 @@
     const record = project || {};
     const safeType = normaliseType(record.type);
     const sidebarValues = deriveSidebarValues(record, bodyData.infoItems);
+    const tags = (Array.isArray(bodyData.tags) && bodyData.tags.length)
+      ? bodyData.tags
+      : (Array.isArray(record.tags) ? record.tags : []);
     const sidebarDefaults = buildAutoSidebarData(
       safeType,
       record.status,
       sidebarValues.mcVersion,
-      record.tags,
+      tags,
       sidebarValues.requires,
       sidebarValues.printer,
       sidebarValues.material,
@@ -2853,7 +2856,7 @@
       safeType,
       record.status,
       sidebarValues.mcVersion,
-      record.tags,
+      tags,
       sidebarValues.requires,
       sidebarValues.printer,
       sidebarValues.material,
@@ -2863,7 +2866,7 @@
       ...bodyData,
       infoTitle: bodyData.infoTitle || sidebarDefaults.infoTitle || '',
       infoItems,
-      tagsTitle: bodyData.tagsTitle || sidebarDefaults.tagsTitle || '',
+      tagsTitle: sidebarDefaults.tagsTitle,
     };
   }
 
@@ -2956,7 +2959,6 @@
     const bodyData = createEmptyModalBody();
     bodyData.infoTitle = typeof content.infoTitle === 'string' ? content.infoTitle.trim() : '';
     bodyData.infoItems = normaliseModalInfoItems(content.infoItems);
-    bodyData.tagsTitle = typeof content.tagsTitle === 'string' ? content.tagsTitle.trim() : '';
     const fallbackTags = Array.isArray(project.tags) ? project.tags.filter((tag) => tag && tag.trim()) : [];
     const cmsTags = normaliseCmsTextList(content.modalTags, 'tag');
     bodyData.tags = fallbackTags.length ? fallbackTags : cmsTags;
@@ -3301,7 +3303,10 @@
         const card = tagsWrap.closest('.info-card');
         if (card) {
           const titleEl = card.querySelector('h4');
-          data.tagsTitle = titleEl ? titleEl.textContent.trim() : '';
+          const hasTitle = titleEl ? titleEl.textContent.trim() : '';
+          if (hasTitle || tagsWrap.querySelector('.chip')) {
+            data.tagsTitle = 'Tags';
+          }
         }
         tagsWrap.querySelectorAll('.chip').forEach((chip) => {
           const text = chip.textContent.trim();

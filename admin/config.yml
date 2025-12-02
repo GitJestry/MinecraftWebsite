@@ -97,9 +97,8 @@ collections:
                         fields:
                           - { label: "Label", name: "key", widget: "string" }
                           - { label: "Wert", name: "value", widget: "string" }
-                          - { label: "Link-URL (optional)", name: "url", widget: "string", required: false }
-                          - { label: "Im neuen Tab öffnen", name: "newTab", widget: "boolean", required: false, default: false }
-                      - { label: "Tags-Titel", name: "tagsTitle", widget: "string", required: false, hint: "Überschrift über den Tags, z. B. \"Tags\"." }
+                      - { label: "Link-URL (optional)", name: "url", widget: "string", required: false }
+                      - { label: "Im neuen Tab öffnen", name: "newTab", widget: "boolean", required: false, default: false }
                       - label: "Beschreibung – Tab \"Overview\""
                         name: "description"
                         widget: "list"
@@ -207,9 +206,8 @@ collections:
                         fields:
                           - { label: "Label", name: "key", widget: "string" }
                           - { label: "Wert", name: "value", widget: "string" }
-                          - { label: "Link-URL (optional)", name: "url", widget: "string", required: false }
-                          - { label: "Im neuen Tab öffnen", name: "newTab", widget: "boolean", required: false, default: false }
-                      - { label: "Tags-Titel", name: "tagsTitle", widget: "string", required: false, hint: "Überschrift über den Tags, z. B. \"Tags\"." }
+                      - { label: "Link-URL (optional)", name: "url", widget: "string", required: false }
+                      - { label: "Im neuen Tab öffnen", name: "newTab", widget: "boolean", required: false, default: false }
                       - label: "Beschreibung – Tab \"Overview\""
                         name: "description"
                         widget: "list"
