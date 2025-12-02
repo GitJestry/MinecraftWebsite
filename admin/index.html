@@ -235,7 +235,17 @@
             const idRaw = projectWithTemplates.get('id');
             const title = titleRaw == null ? '' : String(titleRaw);
             const currentId = idRaw == null ? '' : String(idRaw).trim();
+            const downloadFile = normaliseText(projectWithTemplates.get('downloadFile'));
             const modalInfoItems = buildInfoItems(projectWithTemplates);
+            const modalVersions = projectWithTemplates.getIn
+              ? projectWithTemplates.getIn(['modalContent', 'versions'])
+              : null;
+
+            const versionCount = modalVersions
+              ? (typeof modalVersions.size === 'number'
+                ? modalVersions.size
+                : (Array.isArray(modalVersions) ? modalVersions.length : 0))
+              : 0;
 
             let nextProject = projectWithTemplates;
 
@@ -247,6 +257,26 @@
 
             if (modalInfoItems.length) {
               nextProject = nextProject.setIn(['modalContent', 'infoItems'], modalInfoItems);
+            }
+
+            if (fromJS && typeof nextProject.setIn === 'function' && downloadFile && !versionCount) {
+              const createdAtRaw = projectWithTemplates.get('createdAt');
+              const defaultDate = createdAtRaw ? String(createdAtRaw) : new Date().toISOString();
+              const defaultVersion = {
+                release: '1.0.0',
+                minecraft: '',
+                date: defaultDate,
+                downloadFile,
+                url: '',
+                labelEn: '',
+                labelDe: '',
+                label: '',
+                notes: '',
+                details: '',
+                trackId: ''
+              };
+              // Only inject a default version on initial creation so existing versions stay untouched.
+              nextProject = nextProject.setIn(['modalContent', 'versions'], fromJS([defaultVersion]));
             }
 
             return nextProject;
