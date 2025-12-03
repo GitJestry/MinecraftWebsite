@@ -55,6 +55,62 @@
       "id": "lava-walker",
       "createdAt": "2025-12-02T12:50:00.000+01:00",
       "image": "/assets/uploads/picture.png"
+    },
+    {
+      "downloadFile": "assets/data/downloads/mace.zip",
+      "modalContent": {
+        "infoTitle": "Project info",
+        "infoItems": [
+          {
+            "key": "Project type",
+            "value": "3D print"
+          },
+          {
+            "key": "Printer",
+            "value": "Bambulab P1S"
+          },
+          {
+            "key": "Material",
+            "value": "PLA Basic Black"
+          },
+          {
+            "key": "Status",
+            "value": "Released"
+          },
+          {
+            "key": "License",
+            "value": "MIT • CC BY-NC-SA",
+            "url": "#license"
+          }
+        ],
+        "newTab": false,
+        "description": [
+          "instructions included"
+        ],
+        "gallery": [
+          {
+            "src": "/assets/uploads/win_20251203_10_32_16_pro.jpg"
+          }
+        ],
+        "versions": [
+          {
+            "release": "1.0.0",
+            "minecraft": "",
+            "date": "2025-12-03T10:58:00.000+01:00",
+            "downloadFile": "assets/data/downloads/mace.zip",
+            "label": "",
+            "notes": "",
+            "details": ""
+          }
+        ]
+      },
+      "updatedAt": "2025-12-03T10:58:00.000+01:00",
+      "status": "released",
+      "title": "Mace",
+      "type": "printing",
+      "id": "mace",
+      "createdAt": "2025-12-03T10:58:00.000+01:00",
+      "image": "/assets/uploads/win_20251203_10_32_16_pro.jpg"
     }
   ]
 }
