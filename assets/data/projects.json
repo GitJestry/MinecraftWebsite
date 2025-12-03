@@ -120,7 +120,7 @@
     },
     {
       "shortDescription": "t",
-      "downloadFile": "/assets/data/downloads/lava_walker.zip",
+      "downloadFile": "/assets/data/downloads/lava_walker-6-.zip",
       "modalContent": {
         "infoTitle": "Project info",
         "infoItems": [
@@ -155,74 +155,20 @@
           {
             "release": "1.0.0",
             "minecraft": "",
-            "date": "2025-12-03T12:01:00.000+01:00",
-            "downloadFile": "/assets/data/downloads/lava_walker.zip",
+            "date": "2025-12-03T12:16:00.000+01:00",
+            "downloadFile": "/assets/data/downloads/lava_walker-6-.zip",
             "label": "",
             "notes": "",
             "details": ""
           }
         ]
       },
-      "updatedAt": "2025-12-03T12:01:00.000+01:00",
+      "updatedAt": "2025-12-03T12:16:00.000+01:00",
       "status": "released",
       "title": "test",
-      "tags": [
-        "Minecraft Weapon"
-      ],
       "type": "datapack",
       "id": "test",
-      "createdAt": "2025-12-03T12:01:00.000+01:00"
-    },
-    {
-      "shortDescription": "t",
-      "downloadFile": "/assets/data/downloads/mace.zip",
-      "modalContent": {
-        "infoTitle": "Project info",
-        "infoItems": [
-          {
-            "key": "Project type",
-            "value": "3D print"
-          },
-          {
-            "key": "Printer",
-            "value": "42"
-          },
-          {
-            "key": "Material",
-            "value": "24"
-          },
-          {
-            "key": "Status",
-            "value": "Released"
-          },
-          {
-            "key": "License",
-            "value": "MIT • CC BY-NC-SA",
-            "url": "#license"
-          }
-        ],
-        "newTab": false,
-        "versions": [
-          {
-            "release": "1.0.0",
-            "minecraft": "",
-            "date": "2025-12-03T12:02:00.000+01:00",
-            "downloadFile": "/assets/data/downloads/mace.zip",
-            "label": "",
-            "notes": "",
-            "details": ""
-          }
-        ]
-      },
-      "updatedAt": "2025-12-03T12:02:00.000+01:00",
-      "status": "released",
-      "title": "test2",
-      "tags": [
-        "Minecraft Weapon"
-      ],
-      "type": "printing",
-      "id": "test2",
-      "createdAt": "2025-12-03T12:02:00.000+01:00"
+      "createdAt": "2025-12-03T12:16:00.000+01:00"
     }
   ]
 }
