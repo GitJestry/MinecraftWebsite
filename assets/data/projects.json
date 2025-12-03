@@ -62,6 +62,7 @@
       "image": "/assets/uploads/picture.png"
     },
     {
+      "shortDescription": "A block mace design",
       "downloadFile": "assets/data/downloads/mace.zip",
       "modalContent": {
         "infoTitle": "Project info",
@@ -116,6 +117,112 @@
       "id": "mace",
       "createdAt": "2025-12-03T10:58:00.000+01:00",
       "image": "/assets/uploads/win_20251203_10_32_16_pro.jpg"
+    },
+    {
+      "shortDescription": "t",
+      "downloadFile": "/assets/data/downloads/lava_walker.zip",
+      "modalContent": {
+        "infoTitle": "Project info",
+        "infoItems": [
+          {
+            "key": "Game",
+            "value": "Minecraft Java"
+          },
+          {
+            "key": "Type",
+            "value": "Datapack"
+          },
+          {
+            "key": "Status",
+            "value": "Released"
+          },
+          {
+            "key": "Minecraft",
+            "value": "t"
+          },
+          {
+            "key": "Requires",
+            "value": "t"
+          },
+          {
+            "key": "License",
+            "value": "MIT • CC BY-NC-SA",
+            "url": "#license"
+          }
+        ],
+        "newTab": false,
+        "versions": [
+          {
+            "release": "1.0.0",
+            "minecraft": "",
+            "date": "2025-12-03T12:01:00.000+01:00",
+            "downloadFile": "/assets/data/downloads/lava_walker.zip",
+            "label": "",
+            "notes": "",
+            "details": ""
+          }
+        ]
+      },
+      "updatedAt": "2025-12-03T12:01:00.000+01:00",
+      "status": "released",
+      "title": "test",
+      "tags": [
+        "Minecraft Weapon"
+      ],
+      "type": "datapack",
+      "id": "test",
+      "createdAt": "2025-12-03T12:01:00.000+01:00"
+    },
+    {
+      "shortDescription": "t",
+      "downloadFile": "/assets/data/downloads/mace.zip",
+      "modalContent": {
+        "infoTitle": "Project info",
+        "infoItems": [
+          {
+            "key": "Project type",
+            "value": "3D print"
+          },
+          {
+            "key": "Printer",
+            "value": "42"
+          },
+          {
+            "key": "Material",
+            "value": "24"
+          },
+          {
+            "key": "Status",
+            "value": "Released"
+          },
+          {
+            "key": "License",
+            "value": "MIT • CC BY-NC-SA",
+            "url": "#license"
+          }
+        ],
+        "newTab": false,
+        "versions": [
+          {
+            "release": "1.0.0",
+            "minecraft": "",
+            "date": "2025-12-03T12:02:00.000+01:00",
+            "downloadFile": "/assets/data/downloads/mace.zip",
+            "label": "",
+            "notes": "",
+            "details": ""
+          }
+        ]
+      },
+      "updatedAt": "2025-12-03T12:02:00.000+01:00",
+      "status": "released",
+      "title": "test2",
+      "tags": [
+        "Minecraft Weapon"
+      ],
+      "type": "printing",
+      "id": "test2",
+      "createdAt": "2025-12-03T12:02:00.000+01:00"
     }
   ]
 }
