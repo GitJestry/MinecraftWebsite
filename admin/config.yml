@@ -5,7 +5,7 @@ backend:
   base_url: "https://decap-proxy.julian-meyfisch.workers.dev"
 
 media_folder: "assets/uploads"
-public_folder: "/assets/uploads"
+public_folder: "assets/uploads"
 
 site_url: "https://gitjestry.github.io/MinecraftWebsite"
 display_url: "https://gitjestry.github.io/MinecraftWebsite"
