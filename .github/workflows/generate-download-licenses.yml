@@ -1,0 +1,47 @@
+name: Generate download licenses
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  generate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Generate download artifacts
+        run: node scripts/generate-download-packages.js
+
+      - name: Commit updated artifacts
+        if: github.event_name == 'push'
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -am "chore: update generated download artifacts"
+            git push
+          else
+            echo "No generated changes to commit."
+          fi
+
+      - name: Ensure generated files are up to date
+        if: github.event_name != 'push'
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "Generated artifacts differ from repository contents."
+            git status --short
+            exit 1
+          fi
