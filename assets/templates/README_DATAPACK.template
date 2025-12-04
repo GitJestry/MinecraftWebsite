@@ -1,0 +1,17 @@
+# {{PROJECT_NAME}} (Datapack)
+
+**Version:** {{VERSION}}
+**Author:** {{AUTHOR}}
+**Year:** {{YEAR}}
+
+## Description
+{{DESCRIPTION}}
+
+## Installation
+1. Drop the ZIP into your world save folder under `datapacks/`.
+2. Enable the datapack when creating or loading the world.
+3. Enjoy the features — see the project page for details.
+
+## License
+Code: MIT (see LICENSE_CODE.txt)
+Assets: CC BY-NC-SA 4.0 (see LICENSE_ASSETS.txt)
