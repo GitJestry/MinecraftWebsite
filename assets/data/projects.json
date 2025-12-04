@@ -62,7 +62,7 @@
       "image": "/assets/uploads/picture.png"
     },
     {
-      "shortDescription": "A block mace design",
+      "shortDescription": " ",
       "downloadFile": "assets/data/downloads/mace.zip",
       "modalContent": {
         "infoTitle": "Project info",
@@ -113,6 +113,9 @@
       "updatedAt": "2025-12-03T10:58:00.000+01:00",
       "status": "released",
       "title": "Mace",
+      "tags": [
+        "Minecraft Weapon"
+      ],
       "type": "printing",
       "id": "mace",
       "createdAt": "2025-12-03T10:58:00.000+01:00",
