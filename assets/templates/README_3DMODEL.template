@@ -1,0 +1,15 @@
+# {{PROJECT_NAME}} (3D Model)
+
+**Version:** {{VERSION}}
+**Author:** {{AUTHOR}}
+**Year:** {{YEAR}}
+
+## Description
+{{DESCRIPTION}}
+
+## Printing Notes
+Use the recommended printer and material from the project page. Adjust your
+settings as needed and refer to the changelog for updates.
+
+## License
+Assets: CC BY-NC-SA 4.0 (see LICENSE_ASSETS.txt)
