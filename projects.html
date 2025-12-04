@@ -555,7 +555,7 @@ main p, main li, .content p, .content li, .main-content p, .main-content li, art
   .version-entry.head { border-color: rgba(96,165,250,0.7); }
 }
 .gallery { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; }
-.gallery img { width: 100%; height: 180px; object-fit: cover; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
+.gallery img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
 @media (max-width: 720px) { .gallery { grid-template-columns: repeat(2,1fr); } }
 .modal .btn-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .modal .btn { border-radius: 10px; }
