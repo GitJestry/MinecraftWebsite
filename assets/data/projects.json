@@ -123,6 +123,59 @@
       "id": "mace",
       "createdAt": "2025-12-03T10:58:00.000+01:00",
       "image": "/assets/uploads/win_20251203_10_32_16_pro.jpg"
+    },
+    {
+      "shortDescription": "this datapack adds the Elevator item like in some minigames right click to use please unzip",
+      "downloadFile": "assets/data/downloads/elevator.zip",
+      "modalContent": {
+        "infoTitle": "Project info",
+        "infoItems": [
+          {
+            "key": "Game",
+            "value": "Minecraft Java"
+          },
+          {
+            "key": "Type",
+            "value": "Datapack"
+          },
+          {
+            "key": "Status",
+            "value": "Released"
+          },
+          {
+            "key": "Minecraft",
+            "value": "1.21.11"
+          },
+          {
+            "key": "Requires",
+            "value": "nothing"
+          },
+          {
+            "key": "License",
+            "value": "MIT • CC BY-NC-SA",
+            "url": "#license"
+          }
+        ],
+        "newTab": false,
+        "versions": [
+          {
+            "release": "1.0.0",
+            "minecraft": "",
+            "date": "2026-01-22T19:23:00.000+01:00",
+            "downloadFile": "assets/data/downloads/elevator.zip",
+            "label": "",
+            "notes": "",
+            "details": ""
+          }
+        ]
+      },
+      "updatedAt": "2026-01-22T19:23:00.000+01:00",
+      "status": "released",
+      "title": "Elevator",
+      "type": "datapack",
+      "id": "elevator",
+      "createdAt": "2026-01-22T19:23:00.000+01:00",
+      "image": "assets/uploads/elevator.png"
     }
   ]
 }
