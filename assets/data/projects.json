@@ -62,69 +62,6 @@
       "image": "/assets/uploads/picture.png"
     },
     {
-      "shortDescription": "instructions included",
-      "downloadFile": "assets/data/downloads/mace.zip",
-      "modalContent": {
-        "infoTitle": "Project info",
-        "infoItems": [
-          {
-            "key": "Project type",
-            "value": "3D print"
-          },
-          {
-            "key": "Printer",
-            "value": "Bambulab P1S"
-          },
-          {
-            "key": "Material",
-            "value": "PLA Basic Black"
-          },
-          {
-            "key": "Status",
-            "value": "Released"
-          },
-          {
-            "key": "License",
-            "value": "MIT • CC BY-NC-SA",
-            "url": "#license"
-          }
-        ],
-        "newTab": false,
-        "description": [
-          "instructions included"
-        ],
-        "gallery": [
-          {
-            "src": "/assets/uploads/win_20251203_10_32_16_pro.jpg"
-          },
-          {
-            "src": "https://youtube.com/shorts/gkOz03Vq-S8?si=PGoT7FWmg4-GIx1a"
-          }
-        ],
-        "versions": [
-          {
-            "release": "1.0.0",
-            "minecraft": "",
-            "date": "2025-12-03T10:58:00.000+01:00",
-            "downloadFile": "assets/data/downloads/mace.zip",
-            "label": "",
-            "notes": "",
-            "details": ""
-          }
-        ]
-      },
-      "updatedAt": "2025-12-03T10:58:00.000+01:00",
-      "status": "released",
-      "title": "Mace",
-      "tags": [
-        "Minecraft Weapon"
-      ],
-      "type": "printing",
-      "id": "mace",
-      "createdAt": "2025-12-03T10:58:00.000+01:00",
-      "image": "/assets/uploads/win_20251203_10_32_16_pro.jpg"
-    },
-    {
       "shortDescription": "this datapack adds the Elevator item like in some minigames right click to use please unzip",
       "downloadFile": "assets/data/downloads/elevator.zip",
       "modalContent": {
