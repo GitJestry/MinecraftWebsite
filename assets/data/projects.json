@@ -176,6 +176,60 @@
       "id": "elevator",
       "createdAt": "2026-01-22T19:23:00.000+01:00",
       "image": "assets/uploads/elevator.png"
+    },
+    {
+      "shortDescription": "Instructions included",
+      "downloadFile": "assets/data/downloads/mace_small.zip",
+      "modalContent": {
+        "infoTitle": "Project info",
+        "infoItems": [
+          {
+            "key": "Project type",
+            "value": "3D print"
+          },
+          {
+            "key": "Printer",
+            "value": "Bambulab P1S"
+          },
+          {
+            "key": "Material",
+            "value": "Bambulab PLA Basic Black"
+          },
+          {
+            "key": "Status",
+            "value": "Released"
+          },
+          {
+            "key": "License",
+            "value": "MIT • CC BY-NC-SA",
+            "url": "#license"
+          }
+        ],
+        "newTab": false,
+        "gallery": [
+          {
+            "src": "assets/uploads/win_20251203_10_32_16_pro.jpg"
+          }
+        ],
+        "versions": [
+          {
+            "release": "1.0.0",
+            "minecraft": "",
+            "date": "2026-01-24T11:04:00.000+01:00",
+            "downloadFile": "assets/data/downloads/mace_small.zip",
+            "label": "",
+            "notes": "",
+            "details": ""
+          }
+        ]
+      },
+      "updatedAt": "2026-01-24T11:04:00.000+01:00",
+      "status": "released",
+      "title": "Small Mace",
+      "type": "printing",
+      "id": "small-mace",
+      "createdAt": "2026-01-24T11:04:00.000+01:00",
+      "image": "assets/uploads/win_20251203_10_32_16_pro.jpg"
     }
   ]
 }
