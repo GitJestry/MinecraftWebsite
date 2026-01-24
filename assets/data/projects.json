@@ -146,6 +146,9 @@
         "gallery": [
           {
             "src": "assets/uploads/win_20251203_10_32_16_pro.jpg"
+          },
+          {
+            "src": "https://youtu.be/NCQEomZ56Ms?si=0VKdoq0SEaEoMAom"
           }
         ],
         "versions": [
@@ -159,7 +162,7 @@
             "details": ""
           }
         ],
-        "url": "https://youtu.be/NCQEomZ56Ms?si=0VKdoq0SEaEoMAom"
+        "url": ""
       },
       "updatedAt": "2026-01-24T11:04:00.000+01:00",
       "status": "released",
