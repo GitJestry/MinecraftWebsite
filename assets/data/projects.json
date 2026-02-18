@@ -1,7 +1,7 @@
 {
   "projects": [
     {
-      "shortDescription": "adds an enchantment for boots that lets you walk on lava you can find it in bastion chests",
+      "shortDescription": "adds an enchantment for boots that lets you walk on lava you can find it in bastion chests please unzip",
       "downloadFile": "assets/data/downloads/lava_walker.zip",
       "modalContent": {
         "infoTitle": "Project info",
